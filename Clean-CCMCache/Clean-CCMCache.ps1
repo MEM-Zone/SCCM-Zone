@@ -18,11 +18,11 @@
 *********************************************************************************************************
 
 	.SYNOPSIS
-        This Powershell Script is used to clean the CCM cache of all non persisted content.
-    .DESCRIPTION
-        This Powershell Script is used to clean the CCM cache of all non persisted content that is not needed anymore.
-		It only cleans packages, applications and updates that have a installed status and are not persisted, other
-		cache items will NOT be cleaned.
+        	This Powershell Script is used to clean the CCM cache of all non persisted content.
+        .DESCRIPTION
+		This Powershell Script is used to clean the CCM cache of all non persisted content that is not needed anymore.
+	It only cleans packages, applications and updates that have a installed status and are not persisted, othercache items 
+	will NOT be cleaned.
 #>
 
 ##*=============================================
@@ -40,20 +40,20 @@ $Global:Result  =@()
 $ProgressCounter = 0
 
 ## Configure Logging
-# Set log path
+#  Set log path
 $ResultCSV = "C:\Temp\Clean-CCMCache.log"
 
-# Remove previous log it it's more than 500 KB
+#  Remove previous log it it's more than 500 KB
 If (Test-Path $ResultCSV) {
 	If ((Get-Item $ResultCSV).Length -gt 500KB) {
 		Remove-Item $ResultCSV -Force | Out-Null
 	}
 }
 
-# Get log parent path
+#  Get log parent path
 $ResultPath =  Split-Path $ResultCSV -Parent
 
-# Create path directory if it does not exist
+#  Create path directory if it does not exist
 If ((Test-Path $ResultPath) -eq $False) {
 	New-Item -Path $ResultPath -Type Directory | Out-Null
 }
@@ -104,11 +104,11 @@ Function Remove-CacheItem {
 	## Delete chache item if it's non persisted
 	If ($CM_CacheItems.ContentID -contains $CacheItemToDelete) {
 
-		# Get Cache item location and size
+		#  Get Cache item location and size
 		$CacheItemLocation = $CM_CacheItems | Where {$_.ContentID -Contains $CacheItemToDelete} | Select -ExpandProperty Location
 		$CacheItemSize =  Get-ChildItem $CacheItemLocation -Recurse -Force | Measure-Object -Property Length -Sum | Select -ExpandProperty Sum
 
-		# Build result object
+		#  Build result object
 		$ResultProps = [ordered]@{
 			'DeletionDate'	= $Date
 			'Name' = $CacheItemName
@@ -118,16 +118,16 @@ Function Remove-CacheItem {
 			'TotalDeleted(MB)' = ''
 		}
 
-		# Add items to result object
+		#  Add items to result object
 		$Global:Result  += New-Object PSObject -Property $ResultProps
 
-		# Connect to resource manager COM object
+		#  Connect to resource manager COM object
 		$CMObject = New-Object -ComObject "UIResource.UIResourceMgr"
 
-	 	# Use GetCacheInfo method to return cache properties
+	 	#  Use GetCacheInfo method to return cache properties
 		$CMCacheObjects = $CMObject.GetCacheInfo()
 
-		# Delete Cache element
+		#  Delete Cache element
 		$CMCacheObjects.GetCacheElements() | Where-Object {$_.ContentID -eq $CacheItemToDelete} |
 			ForEach-Object {
 				$CMCacheObjects.DeleteCacheElement($_.CacheElementID)
@@ -199,17 +199,17 @@ Function Remove-CachedPackages {
 	## Check if any deployed programs in the package need the cached package and add deletion or exemption list for comparison
 	ForEach ($Program in $CM_Packages) {
 
-		# Check if program in the package needs the cached package
+		#  Check if program in the package needs the cached package
 		If ($Program.LastRunStatus -eq "Succeeded" -and $Program.RepeatRunBehavior -ne "RerunAlways" -and $Program.RepeatRunBehavior -ne "RerunIfSuccess") {
 
-			# Add PackageID to Deletion List if not already added
+			#  Add PackageID to Deletion List if not already added
 			If ($Program.PackageID -NotIn $PackageIDDeleteTrue) {
 				[array]$PackageIDDeleteTrue += $Program.PackageID
 			}
 
 		} Else {
 
-				# Add PackageID to Exception List if not already added
+				#  Add PackageID to Exception List if not already added
 				If ($Program.PackageID -NotIn $PackageIDDeleteFalse) {
 				[array]$PackageIDDeleteFalse += $Program.PackageID
 			}
@@ -219,13 +219,13 @@ Function Remove-CachedPackages {
 	## Parse Deletion List and Remove Package if not in Exemption List
 	ForEach ($Package in $PackageIDDeleteTrue) {
 
-		# Show progress bar
+		#  Show progress bar
 		If ($CM_Packages.Count -ne $null) {
 			$ProgressCounter++
 			Write-Progress -Activity 'Processing Packages' -CurrentOperation $Package.PackageName -PercentComplete (($ProgressCounter / $CM_Packages.Count) * 100)
 			Start-Sleep -Milliseconds 800
 		}
-		# Call Remove Function if Package is not in $PackageIDDeleteFalse
+		#  Call Remove Function if Package is not in $PackageIDDeleteFalse
 		If ($Package -NotIn $PackageIDDeleteFalse) {
 			Remove-CacheItem -CacheTD $Package.PackageID -CacheN $Package.PackageName
 		}
@@ -252,16 +252,16 @@ Function Remove-CachedUpdates {
 	## Check if cached updates are not needed and delete them
 	ForEach ($Update in $CM_Updates) {
 
-		# Show Progrss bar
+		#  Show Progrss bar
 		If ($CM_Updates.Count -ne $null) {
 			$ProgressCounter++
 			Write-Progress -Activity 'Processing Updates' -CurrentOperation $Update.Title -PercentComplete (($ProgressCounter / $CM_Updates.Count) * 100)
 		}
 
-		# Check if update is already installed
+		#  Check if update is already installed
 		If ($Update.Status -eq "Installed") {
 
-			# Call Remove-CacheItem function
+			#  Call Remove-CacheItem function
 			Remove-CacheItem -CacheTD $Update.UniqueID -CacheN $Update.Title
 		}
 	}
@@ -290,15 +290,15 @@ Remove-CachedUpdates
 ## Get Result sort it and build Result Object
 $Result =  $Global:Result | Sort-Object Size`(MB`) -Descending
 
-# Calculate total deleted size
+#  Calculate total deleted size
 $TotalDeletedSize = $Result | Measure-Object -Property Size`(MB`) -Sum | Select -ExpandProperty Sum
 
-# If $TotalDeletedSize is zero write that nothing could be deleted
+#  If $TotalDeletedSize is zero write that nothing could be deleted
 If ($TotalDeletedSize -eq $null) {
 	$TotalDeletedSize = "Nothing to Delete!"
 }
 
-# Build Result Object
+#  Build Result Object
 $ResultProps = [ordered]@{
 	'DeletionDate' = $Date
 	'Name' = 'Total Size of Items Deleted in MB:'
@@ -308,7 +308,7 @@ $ResultProps = [ordered]@{
 	'TotalDeleted(MB)' = '{0:N2}' -f $TotalDeletedSize
 }
 
-# Add total items deleted to result object
+#  Add total items deleted to result object
 $Result += New-Object PSObject -Property $ResultProps
 
 ## Write Result Object to csv file (append)
