@@ -6,13 +6,13 @@
 *********************************************************************************************************
 * Created by Ioan Popovici, 30/03/2015  | Requirements Powershell 2.0																		*
 * ======================================================================================================*
-* Modified by   |    Date    | Revision |                            Comments														*
+* Modified by										|    Date    |	Revision	|				Comments															*
 *_______________________________________________________________________________________________________*
-* Ioan Popovici/Octavian Cordos | 30/03/2015 | v1.0      | First version                                *
-* Ioan Popovici/Octavian Cordos | 31/03/2015 | v2.0      | Vastly Improved                              *
-* Ioan Popovici 								| 08/01/2016 | v2.1      | Fixed Locale																	*
-* Octavian Cordos               | 11/01/2016 | v2.2      | Improved MW Naming														*
-* Ioan Popovici	                | 11/01/2016 | v2.3      | Added Logging and Error Detection, cleanup		*
+* Ioan Popovici/Octavian Cordos | 30/03/2015 | v1.0				| First version																*
+* Ioan Popovici/Octavian Cordos | 31/03/2015 | v2.0  	    | Vastly Improved															*
+* Ioan Popovici									| 08/01/2016 | v2.1				| Fixed Locale																*
+* Octavian Cordos               | 11/01/2016 | v2.2    	 	| Improved MW Naming													*
+* Ioan Popovici									| 11/01/2016 | v2.3				| Added Logging and Error Detection, cleanup	*
 *-------------------------------------------------------------------------------------------------------*
 *                                                                                                       *
 *********************************************************************************************************
