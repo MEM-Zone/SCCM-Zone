@@ -1,0 +1,76 @@
+//——————————————— // SQL 2014 Properties //———————————————
+
+[dynamic, provider("MS_VIEW_INSTANCE_PROVIDER"),
+SMS_Report(TRUE),
+SMS_Group_Name("SQL 2014 Property"),
+SMS_Class_ID("CUSTOM|SQL_2014_Property|2.0")]
+class SQL_2014 : SMS_Class_Template
+
+{
+    [SMS_Report(TRUE)    ]  Boolean 	IsReadOnly;
+    [SMS_Report(TRUE),key]  UInt32 	PropertyIndex;
+    [SMS_Report(TRUE),key]  String 	PropertyName;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyNumValue;
+    [SMS_Report(TRUE)    ]  String 	PropertyStrValue;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyValueType;
+    [SMS_Report(TRUE),key]  String 	ServiceName;
+    [SMS_Report(TRUE),key]  UInt32 	SqlServiceType;
+};
+
+//——————————————— // SQL 2012 Properties //———————————————
+
+[dynamic, provider("MS_VIEW_INSTANCE_PROVIDER"),
+SMS_Report(TRUE),
+SMS_Group_Name("SQL 2012 Property"),
+SMS_Class_ID("CUSTOM|SQL_2012_Property|2.0")]
+class SQL_2012 : SMS_Class_Template
+
+{
+    [SMS_Report(TRUE)    ]  Boolean 	IsReadOnly;
+    [SMS_Report(TRUE),key]  UInt32 	PropertyIndex;
+    [SMS_Report(TRUE),key]  String 	PropertyName;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyNumValue;
+    [SMS_Report(TRUE)    ]  String 	PropertyStrValue;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyValueType;
+    [SMS_Report(TRUE),key]  String 	ServiceName;
+    [SMS_Report(TRUE),key]  UInt32 	SqlServiceType;
+};
+
+//——————————————— // SQL 2008 Properties //———————————————
+
+[dynamic, provider("MS_VIEW_INSTANCE_PROVIDER"),
+SMS_Report(TRUE),
+SMS_Group_Name("SQL 2008 Property"),
+SMS_Class_ID("CUSTOM|SQL_2008_Property|2.0")]
+class SQL_2008 : SMS_Class_Template
+
+{
+    [SMS_Report(TRUE)    ]  Boolean 	IsReadOnly;
+    [SMS_Report(TRUE),key]  UInt32 	PropertyIndex;
+    [SMS_Report(TRUE),key]  String 	PropertyName;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyNumValue;
+    [SMS_Report(TRUE)    ]  String 	PropertyStrValue;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyValueType;
+    [SMS_Report(TRUE),key]  String 	ServiceName;
+    [SMS_Report(TRUE),key]  UInt32 	SqlServiceType;
+};
+
+//——————————————— // SQL 2000/2005 Properties //———————————————
+
+[dynamic, provider("MS_VIEW_INSTANCE_PROVIDER"),
+SMS_Report(TRUE),
+SMS_Group_Name("SQL Legacy Property"),
+SMS_Class_ID("CUSTOM|SQL_Legacy_Property|2.0")]
+
+class SQL_2000_And_2005 : SMS_Class_Template
+
+{
+    [SMS_Report(TRUE)    ]  Boolean 	IsReadOnly;
+    [SMS_Report(TRUE),key]  UInt32 	PropertyIndex;
+    [SMS_Report(TRUE),key]  String 	PropertyName;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyNumValue;
+    [SMS_Report(TRUE)    ]  String 	PropertyStrValue;
+    [SMS_Report(TRUE)    ]  UInt32 	PropertyValueType;
+    [SMS_Report(TRUE),key]  String 	ServiceName;
+    [SMS_Report(TRUE),key]  UInt32 	SqlServiceType;
+};
