@@ -19,7 +19,7 @@
 *********************************************************************************************************
 
 	.SYNOPSIS
-        This Powershell Script is used to clean the CCM cache of all non persisted content.
+       	This Powershell Script is used to clean the CCM cache of all non persisted content.
 	.DESCRIPTION
 		This Powershell Script is used to clean the CCM cache of all non persisted content that is not needed anymore.
 	It only cleans packages, applications and updates that have a installed status and are not persisted, othercache items
