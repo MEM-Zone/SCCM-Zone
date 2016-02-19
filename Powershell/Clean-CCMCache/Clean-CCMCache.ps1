@@ -13,15 +13,16 @@
 * Ioan Popovici | 16/11/2015 | v1.2     | Vastly Improved                                               *
 * Ioan Popovici | 03/02/2016 | v2.0     | Vastly Improved                                               *
 * Ioan Popovici | 04/02/2016 | v2.1     | Fixed TotalSize decimals                                      *
+* Ioan Popovici | 19/02/2016 | v2.2     | EventLog logging support                                      *
 *-------------------------------------------------------------------------------------------------------*
-*                                                                                                       *
+* To Do: Add Error Management (Try, Catch)                                                              *
 *********************************************************************************************************
 
 	.SYNOPSIS
-        	This Powershell Script is used to clean the CCM cache of all non persisted content.
-        .DESCRIPTION
+        This Powershell Script is used to clean the CCM cache of all non persisted content.
+	.DESCRIPTION
 		This Powershell Script is used to clean the CCM cache of all non persisted content that is not needed anymore.
-	It only cleans packages, applications and updates that have a installed status and are not persisted, othercache items 
+	It only cleans packages, applications and updates that have a installed status and are not persisted, othercache items
 	will NOT be cleaned.
 #>
 
@@ -74,6 +75,69 @@ $CM_CacheItems = Get-WmiObject -Namespace root\ccm\SoftMgmtAgent -Query 'SELECT 
 ##* FUNCTION LISTINGS
 ##*=============================================
 #region FunctionListings
+
+#region Function Write-Log
+Function Write-Log {
+<#
+.SYNOPSIS
+	Writes an event to EventLog.
+.DESCRIPTION
+	Writes an event to EventLog with a specified source.
+.PARAMETER EventLogName
+	The EventLog to write to.
+.PARAMETER EventLogEntrySource
+	The EventLog Entry Source.
+.PARAMETER EventLogEntryID
+	The EventLog Entry ID.
+.PARAMETER EventLogEntryType
+	The EventLog Entry Type. (Error | Warning | Information | SuccessAudit | FailureAudit)
+.PARAMETER EventLogEntryMessage
+	The EventLog Entry Message.
+.EXAMPLE
+	Write-Log -EventLogName "SCCM" -EventLogEntrySource "Script" -EventLogEntryID "1" -EventLogEntryType "Infromation" -EventLogEntryMessage "Clean-CCMCache was succesfull"
+.NOTES
+.LINK
+#>
+	[CmdletBinding()]
+	Param (
+		[Parameter(Mandatory=$false,Position=0)]
+		[Alias('Name')]
+		[string]$EventLogName = "SCCM",
+		[Parameter(Mandatory=$true,Position=1)]
+		[Alias('Source')]
+		[string]$EventLogEntrySource,
+		[Parameter(Mandatory=$false,Position=2)]
+		[Alias('ID')]
+		[int32]$EventLogEntryID = 1,
+		[Parameter(Mandatory=$false,Position=3)]
+		[Alias('Type')]
+		[string]$EventLogEntryType = "Information",
+		[Parameter(Mandatory=$true,Position=4)]
+		[Alias('Message')]
+		[string]$EventLogEntryMessage
+	)
+
+	## Initialize log
+	If (([System.Diagnostics.EventLog]::Exists($EventLogName) -eq $false) -or ([System.Diagnostics.EventLog]::SourceExists($EventLogEntrySource) -eq $false )) {
+
+		#  Create new log and/or source
+		New-EventLog -LogName $EventLogName -Source $EventLogEntrySource
+
+	## Write to log and console
+	} Else {
+
+			#  Write Result Object EventLog
+			Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $EventLogEntryMessage
+
+			#  Write Result Object to csv file (append)
+			$EventLogEntryMessage | Export-Csv -Path $ResultCSV -Delimiter ";" -Encoding UTF8 -NoTypeInformation -Append -Force
+
+			#  Write Result to console
+			$EventLogEntryMessage | Format-Table Name,TotalDeleted`(MB`)
+
+		}
+}
+#endregion
 
 #region Function Remove-CacheItem
 Function Remove-CacheItem {
@@ -311,11 +375,8 @@ $ResultProps = [ordered]@{
 #  Add total items deleted to result object
 $Result += New-Object PSObject -Property $ResultProps
 
-## Write Result Object to csv file (append)
-$Result | Export-Csv -Path $ResultCSV -Delimiter ";" -Encoding UTF8 -NoTypeInformation -Append -Force
-
-## Write Result to console
-$Result | Format-Table Name,TotalDeleted`(MB`)
+## Write to log and console
+Write-Log -EventLogName "SCCM" -EventLogEntrySource "Clean-CCMCache" -EventLogEntryID "1" -EventLogEntryType "Information" -EventLogEntryMessage $Result
 
 ## Let the user know we are finished
 Write-Host ""
