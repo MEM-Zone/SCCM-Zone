@@ -14,12 +14,13 @@
 * Ioan Popovici | 03/02/2016 | v2.0     | Vastly Improved                                               *
 * Ioan Popovici | 04/02/2016 | v2.1     | Fixed TotalSize decimals                                      *
 * Ioan Popovici | 19/02/2016 | v2.2     | EventLog logging support                                      *
+* Ioan Popovici | 19/02/2016 | v2.3     | Added Check for not Downloaded Cache Items, Improved Logging  *
 *-------------------------------------------------------------------------------------------------------*
 * To Do: Add Error Management (Try, Catch)                                                              *
 *********************************************************************************************************
 
 	.SYNOPSIS
-        This Powershell Script is used to clean the CCM cache of all non persisted content.
+       	This Powershell Script is used to clean the CCM cache of all non persisted content.
 	.DESCRIPTION
 		This Powershell Script is used to clean the CCM cache of all non persisted content that is not needed anymore.
 	It only cleans packages, applications and updates that have a installed status and are not persisted, othercache items
@@ -94,7 +95,7 @@ Function Write-Log {
 .PARAMETER EventLogEntryMessage
 	The EventLog Entry Message.
 .EXAMPLE
-	Write-Log -EventLogName "SCCM" -EventLogEntrySource "Script" -EventLogEntryID "1" -EventLogEntryType "Infromation" -EventLogEntryMessage "Clean-CCMCache was succesfull"
+	Write-Log -EventLogName "Configuration Manager" -EventLogEntrySource "Script" -EventLogEntryID "1" -EventLogEntryType "Infromation" -EventLogEntryMessage "Clean-CCMCache was succesfull"
 .NOTES
 .LINK
 #>
@@ -102,7 +103,7 @@ Function Write-Log {
 	Param (
 		[Parameter(Mandatory=$false,Position=0)]
 		[Alias('Name')]
-		[string]$EventLogName = "SCCM",
+		[string]$EventLogName = "Configuration Manager",
 		[Parameter(Mandatory=$true,Position=1)]
 		[Alias('Source')]
 		[string]$EventLogEntrySource,
@@ -114,7 +115,7 @@ Function Write-Log {
 		[string]$EventLogEntryType = "Information",
 		[Parameter(Mandatory=$true,Position=4)]
 		[Alias('Message')]
-		[string]$EventLogEntryMessage
+		$EventLogEntryMessage
 	)
 
 	## Initialize log
@@ -126,8 +127,9 @@ Function Write-Log {
 	## Write to log and console
 	} Else {
 
-			#  Write Result Object EventLog
-			Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $EventLogEntryMessage
+			#  Convert the Result to string and Write it to the EventLog
+			$ResultString = Out-String -InputObject $Result -Width 1000
+			Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $ResultString
 
 			#  Write Result Object to csv file (append)
 			$EventLogEntryMessage | Export-Csv -Path $ResultCSV -Delimiter ";" -Encoding UTF8 -NoTypeInformation -Append -Force
@@ -172,14 +174,20 @@ Function Remove-CacheItem {
 		$CacheItemLocation = $CM_CacheItems | Where {$_.ContentID -Contains $CacheItemToDelete} | Select -ExpandProperty Location
 		$CacheItemSize =  Get-ChildItem $CacheItemLocation -Recurse -Force | Measure-Object -Property Length -Sum | Select -ExpandProperty Sum
 
+		#  Check if cache item is downloaded by loking at the size
+		If ($CacheItemSize -eq $null -or $CacheItemSize -eq "0.00") {
+			$CacheItemStatus = "Download not Complete/Started!"
+		} Else {
+				$CacheItemStatus = "Downloaded!"
+			}
+
 		#  Build result object
 		$ResultProps = [ordered]@{
-			'DeletionDate'	= $Date
 			'Name' = $CacheItemName
 			'ID' = $CacheItemToDelete
 			'Location' = $CacheItemLocation
 			'Size(MB)' = "{0:N2}" -f ($CacheItemSize / 1MB)
-			'TotalDeleted(MB)' = ''
+			'Status' = $CacheItemStatus
 		}
 
 		#  Add items to result object
@@ -204,7 +212,7 @@ Function Remove-CacheItem {
 Function Remove-CachedApplications {
 <#
 .SYNOPSIS
-	Removes SCCM cached application.
+	Removes cached application.
 .DESCRIPTION
 	Removes specified SCCM cache application if it's already installed.
 .PARAMETER
@@ -354,29 +362,31 @@ Remove-CachedUpdates
 ## Get Result sort it and build Result Object
 $Result =  $Global:Result | Sort-Object Size`(MB`) -Descending
 
+
 #  Calculate total deleted size
 $TotalDeletedSize = $Result | Measure-Object -Property Size`(MB`) -Sum | Select -ExpandProperty Sum
 
 #  If $TotalDeletedSize is zero write that nothing could be deleted
-If ($TotalDeletedSize -eq $null) {
+If ($TotalDeletedSize -eq $null -or $TotalDeletedSize -eq "0.00") {
 	$TotalDeletedSize = "Nothing to Delete!"
-}
+} Else {
+		$TotalDeletedSize = '{0:N2}' -f $TotalDeletedSize
+	}
 
 #  Build Result Object
 $ResultProps = [ordered]@{
-	'DeletionDate' = $Date
-	'Name' = 'Total Size of Items Deleted in MB:'
-	'ID' = ''
-	'Location' = ''
-	'Size(MB)' = ''
-	'TotalDeleted(MB)' = '{0:N2}' -f $TotalDeletedSize
+	'Name' = 'Total Size of Items Deleted in MB: '+$TotalDeletedSize
+	'ID' = 'N/A'
+	'Location' = 'N/A'
+	'Size(MB)' = 'N/A'
+	'Status' = ' ***** Last Run Date: '+$Date+' *****'
 }
 
 #  Add total items deleted to result object
 $Result += New-Object PSObject -Property $ResultProps
 
 ## Write to log and console
-Write-Log -EventLogName "SCCM" -EventLogEntrySource "Clean-CCMCache" -EventLogEntryID "1" -EventLogEntryType "Information" -EventLogEntryMessage $Result
+Write-Log -Source "Clean-CCMCache" -Message $Result
 
 ## Let the user know we are finished
 Write-Host ""
