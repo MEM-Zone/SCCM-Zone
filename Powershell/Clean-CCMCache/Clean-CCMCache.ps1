@@ -227,7 +227,7 @@ Function Remove-CachedApplications {
 	## Check for installed applications
 	Foreach ($Application in $CM_Applications) {
 
-		## Show progrss bar
+		## Show progress bar
 		If ($CM_Applications.Count -ne $null) {
 			$ProgressCounter++
 			Write-Progress -Activity 'Processing Applications' -CurrentOperation $Application.FullName -PercentComplete (($ProgressCounter / $CM_Applications.Count) * 100)
