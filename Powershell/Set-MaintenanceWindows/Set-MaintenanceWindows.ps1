@@ -4,23 +4,23 @@
 *** This Powershell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 30/03/2015  | Requirements Powershell 2.0					*
+* Created by Ioan Popovici, 30/03/2015       | Requirements Powershell 2.0                              *
 * ======================================================================================================*
-* Modified by			|    Date    |	Revision  | 			Comments		*
+* Modified by                   |    Date    | Revision | Comments                                      *
 *_______________________________________________________________________________________________________*
-* Ioan Popovici/Octavian Cordos | 30/03/2015 | v1.0	  | First version				*
-* Ioan Popovici/Octavian Cordos | 31/03/2015 | v2.0  	  | Vastly Improved				*
-* Ioan Popovici			| 08/01/2016 | v2.1	  | Fixed Locale				*
-* Octavian Cordos               | 11/01/2016 | v2.2	  | Improved MW Naming				*
-* Ioan Popovici			| 11/01/2016 | v2.3	  | Added Logging and Error Detection, cleanup	*
+* Ioan Popovici/Octavian Cordos | 30/03/2015 | v1.0     | First version                                 *
+* Ioan Popovici/Octavian Cordos | 31/03/2015 | v2.0     | Vastly Improved                               *
+* Ioan Popovici                 | 08/01/2016 | v2.1     | Fixed Locale                                  *
+* Octavian Cordos               | 11/01/2016 | v2.2     | Improved MW Naming                            *
+* Ioan Popovici                 | 11/01/2016 | v2.3     | Added Logging and Error Detection, cleanup    *
 *-------------------------------------------------------------------------------------------------------*
 *                                                                                                       *
 *********************************************************************************************************
 
-	.SYNOPSIS
-        	This Powershell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
-    	.DESCRIPTION
-        	This Powershell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
+    .SYNOPSIS
+        This Powershell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
+    .DESCRIPTION
+        This Powershell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
 #>
 
 ##*=============================================
@@ -46,10 +46,10 @@ $MonthNames = $MonthArray.MonthNames
 $LogPath = "C:\Temp\MW"
 $ErrorLog = $LogPath+"\MWError.log"
 If ((Test-Path $LogPath) -eq $False) {
-	New-Item -Path $LogPath -Type Directory | Out-Null
+    New-Item -Path $LogPath -Type Directory | Out-Null
 } ElseIf (Test-Path $LogPath) {
-		Remove-Item $LogPath\* -Recurse -Force
-	}
+        Remove-Item $LogPath\* -Recurse -Force
+    }
 #  Clean Log
 Get-Date | Out-File $ErrorLog -Force
 
@@ -70,34 +70,34 @@ CD VSM:
 Function Write-Log {
 <#
 .SYNOPSIS
-	Write messages to a log file in CMTrace.exe compatible format or Legacy text file format.
+    Write messages to a log file in CMTrace.exe compatible format or Legacy text file format.
 .DESCRIPTION
-	Write messages to a log file in CMTrace.exe compatible format or Legacy text file format and optionally display in the console.
+    Write messages to a log file in CMTrace.exe compatible format or Legacy text file format and optionally display in the console.
 .PARAMETER Message
-	The message to write to the log file or output to the console.
+    The message to write to the log file or output to the console.
 .EXAMPLE
-	Write-Log -Message "Error"
+    Write-Log -Message "Error"
 .NOTES
 .LINK
 #>
-	[CmdletBinding()]
-	Param (
-		[Parameter(Mandatory=$true,Position=0)]
-		[Alias('Text')]
-		[string]$Message
-	)
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$true,Position=0)]
+        [Alias('Text')]
+        [string]$Message
+    )
 
-	## Getting the Date and time
-	$DateAndTime = Get-Date
+    ## Getting the Date and time
+    $DateAndTime = Get-Date
 
-	### Writing to log file
-	"$DateAndTime : $Message" | Out-File $ErrorLog -Append
-	"$DateAndTime : $_" | Out-File $ErrorLog -Append
+    ### Writing to log file
+    "$DateAndTime : $Message" | Out-File $ErrorLog -Append
+    "$DateAndTime : $_" | Out-File $ErrorLog -Append
 
-	## Writing to Console
-	Write-Host $Message  -ForegroundColor Red -BackgroundColor White
-	Write-Host $_.Exception -ForegroundColor White -BackgroundColor Red
-	Write-Host ""
+    ## Writing to Console
+    Write-Host $Message  -ForegroundColor Red -BackgroundColor White
+    Write-Host $_.Exception -ForegroundColor White -BackgroundColor Red
+    Write-Host ""
 }
 #endregion
 
@@ -105,41 +105,41 @@ Function Write-Log {
 Function Get-PatchTuesday {
 <#
 .SYNOPSIS
-	Calculate Microsoft Patch Tuesday and return it to the pipeline.
+    Calculate Microsoft Patch Tuesday and return it to the pipeline.
 .DESCRIPTION
-	Get Microsoft Patch tuesday for a specific month.
+    Get Microsoft Patch tuesday for a specific month.
 .PARAMETER Year
-	The year for which to calculate Patch Tuesday.
+    The year for which to calculate Patch Tuesday.
 .PARAMETER Month
-	The month for which to calculate Patch Tuesday.
+    The month for which to calculate Patch Tuesday.
 .EXAMPLE
-	Get-PatchTuesday -Year 2015 -Month 3
+    Get-PatchTuesday -Year 2015 -Month 3
 .NOTES
 .LINK
 #>
-	[CmdletBinding()]
-	Param (
-		[Parameter(Mandatory=$true,Position=0)]
-		[Alias('Yr')]
-		[string]$Year,
-		[Parameter(Mandatory=$true,Position=1)]
-		[Alias('Mo')]
-		[string]$Month
-	)
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$true,Position=0)]
+        [Alias('Yr')]
+        [string]$Year,
+        [Parameter(Mandatory=$true,Position=1)]
+        [Alias('Mo')]
+        [string]$Month
+    )
 
-	## Build Target Month
-	[DateTime]$StartingMonth = $Month+"/1/"+$Year
+    ## Build Target Month
+    [DateTime]$StartingMonth = $Month+"/1/"+$Year
 
-	## Search for First Tuesday
+    ## Search for First Tuesday
     While ($StartingMonth.DayofWeek -ine "Tuesday") {
-		$StartingMonth = $StartingMonth.AddDays(1)
-	}
+        $StartingMonth = $StartingMonth.AddDays(1)
+    }
 
-	## Set Second Tuesday of the month by adding 7 days
+    ## Set Second Tuesday of the month by adding 7 days
     $PatchTuesday = $StartingMonth.AddDays(7)
 
-	## Return Patch Tuesday
-	Return $PatchTuesday
+    ## Return Patch Tuesday
+    Return $PatchTuesday
  }
 #endregion
 
@@ -147,43 +147,43 @@ Function Get-PatchTuesday {
 Function Remove-MaintenanceWindows {
 <#
 .SYNOPSIS
-	Remove Existing Maintenance Windows.
+    Remove Existing Maintenance Windows.
 .DESCRIPTION
-	Remove existing maintenance windows from a collection.
+    Remove existing maintenance windows from a collection.
 .PARAMETER CollectionName
-	The collection name for which to remove the Mainteance Windows.
+    The collection name for which to remove the Mainteance Windows.
 .EXAMPLE
-	Remove-MaintenanceWindows -Collection "Computer Collection"
+    Remove-MaintenanceWindows -Collection "Computer Collection"
 .NOTES
 .LINK
 #>
-	[CmdletBinding()]
-	Param (
-		[Parameter(Mandatory=$true,Position=0)]
-		[Alias('Collection')]
-		[string]$CollectionName
-	)
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$true,Position=0)]
+        [Alias('Collection')]
+        [string]$CollectionName
+    )
 
-	## Get CollectionID
-	Try {
-		$CollectionID = (Get-CMDeviceCollection -Name $CollectionName -ErrorAction Stop -ErrorVariable Error).CollectionID
-	}
-	Catch {
-		Write-Log -Message "Getting $CollectionName ID Failed!"
-	}
+    ## Get CollectionID
+    Try {
+        $CollectionID = (Get-CMDeviceCollection -Name $CollectionName -ErrorAction Stop -ErrorVariable Error).CollectionID
+    }
+    Catch {
+        Write-Log -Message "Getting $CollectionName ID Failed!"
+    }
 
-	## Get Collection Maintenance Windows and delete them
-	Try {
-		Get-CMMaintenanceWindow -CollectionId $CollectionID | ForEach-Object {
-			Remove-CMMaintenanceWindow -CollectionID $CollectionID -Name $_.Name -Force -ErrorAction Stop -ErrorVariable Error
-			Write-Host $_.Name " - Removed!"  -ForegroundColor Green
-		}
-	}
-	Catch {
+    ## Get Collection Maintenance Windows and delete them
+    Try {
+        Get-CMMaintenanceWindow -CollectionId $CollectionID | ForEach-Object {
+            Remove-CMMaintenanceWindow -CollectionID $CollectionID -Name $_.Name -Force -ErrorAction Stop -ErrorVariable Error
+            Write-Host $_.Name " - Removed!"  -ForegroundColor Green
+        }
+    }
+    Catch {
 
-		#  Write to log in case of failure
-		Write-Log -Message "$_.Name  - Removal Failed!"
-	}
+        #  Write to log in case of failure
+        Write-Log -Message "$_.Name  - Removal Failed!"
+    }
 }
 #endregion
 
@@ -191,94 +191,94 @@ Function Remove-MaintenanceWindows {
 Function Set-MaintenanceWindows {
 <#
 .SYNOPSIS
-	Remove Existing Maintenance Windows.
+    Remove Existing Maintenance Windows.
 .DESCRIPTION
-	Remove existing maintenance windows from a collection.
+    Remove existing maintenance windows from a collection.
 .PARAMETER CollectionName
-	The collection name for which to remove the Mainteance Windows.
+    The collection name for which to remove the Mainteance Windows.
 .PARAMETER MWYear
-	The Maintenance Window Start Year.
+    The Maintenance Window Start Year.
 .PARAMETER MWMonth
-	The Maintenance Window Start Month.
+    The Maintenance Window Start Month.
 .PARAMETER MWOffsetWeeks
-	The Maintenance Window offset number of weeks after Patch Tuesday.
+    The Maintenance Window offset number of weeks after Patch Tuesday.
 .PARAMETER MWOffsetWeeks
-	The Maintenance Window offset number of days after Tuesday.
+    The Maintenance Window offset number of days after Tuesday.
 .PARAMETER MWStartTime
-	The Maintenance Window Start Time.
+    The Maintenance Window Start Time.
 .PARAMETER MWStopTime
-	The Maintenance Window Stop Time.
+    The Maintenance Window Stop Time.
 .EXAMPLE
-	Remove-MaintenanceWindows -CollectionName "Computer Collection" -MWYear 2015 -MWMonth 3 -MWOffsetWeeks 3 -MWOffsetDays 2 -MWStartTime "01:00:00"  -MWStopTime "02:00:00"
+    Remove-MaintenanceWindows -CollectionName "Computer Collection" -MWYear 2015 -MWMonth 3 -MWOffsetWeeks 3 -MWOffsetDays 2 -MWStartTime "01:00:00"  -MWStopTime "02:00:00"
 .NOTES
 .LINK
 #>
-	Param (
-		[Parameter(Mandatory=$true,Position=0)]
-		[Alias('Collection')]
-		[string]$CollectionName,
-		[Parameter(Mandatory=$true,Position=1)]
-		[Alias('Year')]
-		[int16]$MWYear,
-		[Parameter(Mandatory=$true,Position=2)]
-		[Alias('Month')]
-		[int16]$MWMonth,
-		[Parameter(Mandatory=$true,Position=3)]
-		[Alias('Weeks')]
-		[int16]$MWOffsetWeeks,
-		[Parameter(Mandatory=$true,Position=4)]
-		[Alias('Days')]
-		[int16]$MWOffsetDays,
-		[Parameter(Mandatory=$true,Position=5)]
-		[Alias('StartTime')]
-		[string]$MWStartTime,
-		[Parameter(Mandatory=$true,Position=6)]
-		[Alias('StopTime')]
-		[string]$MWStopTime
-	)
+    Param (
+        [Parameter(Mandatory=$true,Position=0)]
+        [Alias('Collection')]
+        [string]$CollectionName,
+        [Parameter(Mandatory=$true,Position=1)]
+        [Alias('Year')]
+        [int16]$MWYear,
+        [Parameter(Mandatory=$true,Position=2)]
+        [Alias('Month')]
+        [int16]$MWMonth,
+        [Parameter(Mandatory=$true,Position=3)]
+        [Alias('Weeks')]
+        [int16]$MWOffsetWeeks,
+        [Parameter(Mandatory=$true,Position=4)]
+        [Alias('Days')]
+        [int16]$MWOffsetDays,
+        [Parameter(Mandatory=$true,Position=5)]
+        [Alias('StartTime')]
+        [string]$MWStartTime,
+        [Parameter(Mandatory=$true,Position=6)]
+        [Alias('StopTime')]
+        [string]$MWStopTime
+    )
 
-	## Get CollectionID
-	Try {
-		$CollectionID = (Get-CMDeviceCollection -Name $CollectionName -ErrorAction Stop -ErrorVariable Error).CollectionID
-	}
-	Catch {
+    ## Get CollectionID
+    Try {
+        $CollectionID = (Get-CMDeviceCollection -Name $CollectionName -ErrorAction Stop -ErrorVariable Error).CollectionID
+    }
+    Catch {
 
-		#  Write to log in case of failure
-		Write-Log "Getting $CollectionName ID - Failed!"
-	}
+        #  Write to log in case of failure
+        Write-Log "Getting $CollectionName ID - Failed!"
+    }
 
-	## Get PatchTuesday
-	$PatchTuesday = Get-PatchTuesday $MWYear $MWMonth
+    ## Get PatchTuesday
+    $PatchTuesday = Get-PatchTuesday $MWYear $MWMonth
 
-	## Setting Patch Day, adding offset days and weeks. Get-Date is used to get the date in the same cast, otherwise we cannot convert the date from string to datetime format.
-	$PatchDay = (Get-Date -Date $PatchTuesday).AddDays($MWOffsetDays+($MWOffsetWeeks*7))
+    ## Setting Patch Day, adding offset days and weeks. Get-Date is used to get the date in the same cast, otherwise we cannot convert the date from string to datetime format.
+    $PatchDay = (Get-Date -Date $PatchTuesday).AddDays($MWOffsetDays+($MWOffsetWeeks*7))
 
-	## Check if we got ourselves in the next year and return to the main script if true
-	If ($PatchDay.Year -gt $MWYear) {
-		Write-Warning "Year threshold detected! Ending Cycle..."
-		Return
-	}
+    ## Check if we got ourselves in the next year and return to the main script if true
+    If ($PatchDay.Year -gt $MWYear) {
+        Write-Warning "Year threshold detected! Ending Cycle..."
+        Return
+    }
 
-	## Setting Maintenance Window Start and Stop times
-	$MWStartTime = (Get-Date -Format "M/dd/yyyy HH:mm:ss" -Date $PatchDay) -Replace "00:00:00", $MWStartTime
-	$MWStopTime = (Get-Date -Format "M/dd/yyyy HH:mm:ss" -Date $PatchDay) -Replace "00:00:00", $MWStopTime
+    ## Setting Maintenance Window Start and Stop times
+    $MWStartTime = (Get-Date -Format "M/dd/yyyy HH:mm:ss" -Date $PatchDay) -Replace "00:00:00", $MWStartTime
+    $MWStopTime = (Get-Date -Format "M/dd/yyyy HH:mm:ss" -Date $PatchDay) -Replace "00:00:00", $MWStopTime
 
-	## Create The Schedule Token
+    ## Create The Schedule Token
     $MWSchedule = New-CMSchedule -Start $MWStartTime -End $MWStopTime -NonRecurring
 
     ## Set Maintenance Window Naming Convention MW Month and Actual Patches being deployed Month
     $MWName =  'MW.NR.'+(Get-Date -Uformat %B $MWStartTime)+'.Patch_Group_'+$MWOffsetWeeks+'.'+$MonthNames[$MWMonth-1]+'_Updates'
 
-	## Set Maintenance Window
+    ## Set Maintenance Window
     Try {
-		$SetNewMW = New-CMMaintenanceWindow -CollectionID $CollectionID -Schedule $MWSchedule -Name $MWName -ApplyTo Any -ErrorVariable Error -ErrorAction Stop
-		Write-Host "Setting $MWName on $CollectionName - Successful" -ForegroundColor Green
-	}
-	Catch {
+        $SetNewMW = New-CMMaintenanceWindow -CollectionID $CollectionID -Schedule $MWSchedule -Name $MWName -ApplyTo Any -ErrorVariable Error -ErrorAction Stop
+        Write-Host "Setting $MWName on $CollectionName - Successful" -ForegroundColor Green
+    }
+    Catch {
 
-		#  Write to log in case of failure
-		Write-Log "Setting $MWName on $CollectionName - Failed!"
-	}
+        #  Write to log in case of failure
+        Write-Log "Setting $MWName on $CollectionName - Failed!"
+    }
 }
 #endregion
 
@@ -295,30 +295,30 @@ Function Set-MaintenanceWindows {
 ## Process Imported CSV Object Data
 $MWCSVData | ForEach-Object {
 
-	#  Check if we need the Remove Existing Maintenance Window is set
-	If ($_.RemoveExistingMW -eq 1) {
-		Write-Host ""
-		Write-Host "Remove Existing Maintenance Windows from" $_.CollectionName":" -ForegroundColor Blue -BackgroundColor White
-		Write-Host ""
-		Remove-MaintenanceWindows $_.CollectionName
-	}
+    #  Check if we need the Remove Existing Maintenance Window is set
+    If ($_.RemoveExistingMW -eq 1) {
+        Write-Host ""
+        Write-Host "Remove Existing Maintenance Windows from" $_.CollectionName":" -ForegroundColor Blue -BackgroundColor White
+        Write-Host ""
+        Remove-MaintenanceWindows $_.CollectionName
+    }
 
-	#  Check if we need to set Maintenance Windows for the whole year
-	If ($_.SetForWholeYear -eq 1) {
-		Write-Host ""
-		Write-Host "Setting Maintenance Windows on" $_.CollectionName "for the whole year:" -ForegroundColor Blue -BackgroundColor White
-		Write-Host ""
-		For ($Month = [int]$_.MWMonth; $Month -le 12; $Month++) {
-			Set-MaintenanceWindows -CollectionName $_.CollectionName -MWYear $_.MWYear -MWMonth $Month -MWOffsetWeeks $_.MWOffsetWeeks -MWOffsetDays $_.MWOffsetDays -MWStartTime $_.MWStartTime -MWStopTime $_.MWStopTime
-		}
+    #  Check if we need to set Maintenance Windows for the whole year
+    If ($_.SetForWholeYear -eq 1) {
+        Write-Host ""
+        Write-Host "Setting Maintenance Windows on" $_.CollectionName "for the whole year:" -ForegroundColor Blue -BackgroundColor White
+        Write-Host ""
+        For ($Month = [int]$_.MWMonth; $Month -le 12; $Month++) {
+            Set-MaintenanceWindows -CollectionName $_.CollectionName -MWYear $_.MWYear -MWMonth $Month -MWOffsetWeeks $_.MWOffsetWeeks -MWOffsetDays $_.MWOffsetDays -MWStartTime $_.MWStartTime -MWStopTime $_.MWStopTime
+        }
 
-	#  Run without removing Maintenance Windows and set Maintenance Window just for one month
-	} Else {
-			Write-Host ""
-			Write-Host "Setting Maintenance Windows on" $_.CollectionName "for " $MonthNames[$_.MWMonth-1]":" -ForegroundColor Blue -BackgroundColor White
-			Write-Host ""
-			Set-MaintenanceWindows -CollectionName $_.CollectionName -MWYear $_.MWYear -MWMonth $_.MWMonth -MWOffsetWeeks $_.MWOffsetWeeks -MWOffsetDays $_.MWOffsetDays -MWStartTime $_.MWStartTime -MWStopTime $_.MWStopTime
-		}
+    #  Run without removing Maintenance Windows and set Maintenance Window just for one month
+    } Else {
+            Write-Host ""
+            Write-Host "Setting Maintenance Windows on" $_.CollectionName "for " $MonthNames[$_.MWMonth-1]":" -ForegroundColor Blue -BackgroundColor White
+            Write-Host ""
+            Set-MaintenanceWindows -CollectionName $_.CollectionName -MWYear $_.MWYear -MWMonth $_.MWMonth -MWOffsetWeeks $_.MWOffsetWeeks -MWOffsetDays $_.MWOffsetDays -MWStartTime $_.MWStartTime -MWStopTime $_.MWStopTime
+        }
 }
 Write-Host ""
 Write-Host "Processing Finished!" -BackgroundColor Green -ForegroundColor White

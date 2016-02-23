@@ -6,7 +6,7 @@
 *********************************************************************************************************
 * Created by Ioan Popovici, 13/11/2015  | Requirements Powershell 3.0                                   *
 * ======================================================================================================*
-* Modified by   |    Date    | Revision |                            Comments                           *
+* Modified by   |    Date    | Revision | Comments                                                      *
 *_______________________________________________________________________________________________________*
 * Ioan Popovici | 13/11/2015 | v1.0     | First version                                                 *
 *-------------------------------------------------------------------------------------------------------*
@@ -16,7 +16,7 @@
     .SYNOPSIS
         This Powershell Script is used to get the Bitlocker protection status.
     .DESCRIPTION
-		This Powershell Script is used to get the Bitlocker protection status for C drive.
+        This Powershell Script is used to get the Bitlocker protection status for C drive.
 #>
 
 ##*=============================================
