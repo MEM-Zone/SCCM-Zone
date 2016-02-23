@@ -121,7 +121,7 @@ If ((Test-Path $ADForestListCSV) -eq $False) {
 ForEach ($Forest in $ADForestList) {
 
     #  Initialize variables
-      $ADForest = $null
+    $ADForest = $null
     $ADForestDomains = $null
     $Domain = $null
     $ProgressCounterDomain = 0
