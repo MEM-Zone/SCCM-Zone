@@ -11,13 +11,13 @@ class SQL_2014
 
 {
     [PropertySources{"IsReadOnly"}        ] Boolean IsReadOnly;
-    [PropertySources{"PropertyIndex"},KEY ] UInt32 PropertyIndex;
-    [PropertySources{"PropertyName"},KEY  ] String PropertyName;
-    [PropertySources{"PropertyNumValue"}  ] UInt32 PropertyNumValue;
-    [PropertySources{"PropertyStrValue"}  ] String PropertyStrValue;
-    [PropertySources{"PropertyValueType"} ] UInt32 PropertyValueType;
-    [PropertySources{"ServiceName"},KEY   ] String ServiceName;
-    [PropertySources{"SqlServiceType"},KEY] UInt32 SqlServiceType;
+    [PropertySources{"PropertyIndex"},KEY ] UInt32  PropertyIndex;
+    [PropertySources{"PropertyName"},KEY  ] String  PropertyName;
+    [PropertySources{"PropertyNumValue"}  ] UInt32  PropertyNumValue;
+    [PropertySources{"PropertyStrValue"}  ] String  PropertyStrValue;
+    [PropertySources{"PropertyValueType"} ] UInt32  PropertyValueType;
+    [PropertySources{"ServiceName"},KEY   ] String  ServiceName;
+    [PropertySources{"SqlServiceType"},KEY] UInt32  SqlServiceType;
 };
 
 //——————————————— // SQL 2012 Properties //———————————————
@@ -28,13 +28,13 @@ class SQL_2012
 
 {
     [PropertySources{"IsReadOnly"}        ] Boolean IsReadOnly;
-    [PropertySources{"PropertyIndex"},KEY ] UInt32 PropertyIndex;
-    [PropertySources{"PropertyName"},KEY  ] String PropertyName;
-    [PropertySources{"PropertyNumValue"}  ] UInt32 PropertyNumValue;
-    [PropertySources{"PropertyStrValue"}  ] String PropertyStrValue;
-    [PropertySources{"PropertyValueType"} ] UInt32 PropertyValueType;
-    [PropertySources{"ServiceName"},KEY   ] String ServiceName;
-    [PropertySources{"SqlServiceType"},KEY] UInt32 SqlServiceType;
+    [PropertySources{"PropertyIndex"},KEY ] UInt32  PropertyIndex;
+    [PropertySources{"PropertyName"},KEY  ] String  PropertyName;
+    [PropertySources{"PropertyNumValue"}  ] UInt32  PropertyNumValue;
+    [PropertySources{"PropertyStrValue"}  ] String  PropertyStrValue;
+    [PropertySources{"PropertyValueType"} ] UInt32  PropertyValueType;
+    [PropertySources{"ServiceName"},KEY   ] String  ServiceName;
+    [PropertySources{"SqlServiceType"},KEY] UInt32  SqlServiceType;
 };
 
 //——————————————— // SQL 2008 Properties //———————————————
@@ -45,13 +45,13 @@ class SQL_2008
 
 {
     [PropertySources{"IsReadOnly"}        ] Boolean IsReadOnly;
-    [PropertySources{"PropertyIndex"},KEY ] UInt32 PropertyIndex;
-    [PropertySources{"PropertyName"},KEY  ] String PropertyName;
-    [PropertySources{"PropertyNumValue"}  ] UInt32 PropertyNumValue;
-    [PropertySources{"PropertyStrValue"}  ] String PropertyStrValue;
-    [PropertySources{"PropertyValueType"} ] UInt32 PropertyValueType;
-    [PropertySources{"ServiceName"},KEY   ] String ServiceName;
-    [PropertySources{"SqlServiceType"},KEY] UInt32 SqlServiceType;
+    [PropertySources{"PropertyIndex"},KEY ] UInt32  PropertyIndex;
+    [PropertySources{"PropertyName"},KEY  ] String  PropertyName;
+    [PropertySources{"PropertyNumValue"}  ] UInt32  PropertyNumValue;
+    [PropertySources{"PropertyStrValue"}  ] String  PropertyStrValue;
+    [PropertySources{"PropertyValueType"} ] UInt32  PropertyValueType;
+    [PropertySources{"ServiceName"},KEY   ] String  ServiceName;
+    [PropertySources{"SqlServiceType"},KEY] UInt32  SqlServiceType;
 };
 
 //——————————————— // SQL 2000/2005 Properties //———————————————
@@ -62,13 +62,13 @@ class SQL_2000_And_2005
 
 {
    [PropertySources{"IsReadOnly"}        ] Boolean IsReadOnly;
-   [PropertySources{"PropertyIndex"},KEY ] UInt32 PropertyIndex;
-   [PropertySources{"PropertyName"},KEY  ] String PropertyName;
-   [PropertySources{"PropertyNumValue"}  ] UInt32 PropertyNumValue;
-   [PropertySources{"PropertyStrValue"}  ] String PropertyStrValue;
-   [PropertySources{"PropertyValueType"} ] UInt32 PropertyValueType;
-   [PropertySources{"ServiceName"},KEY   ] String ServiceName;
-   [PropertySources{"SqlServiceType"},KEY] UInt32 SqlServiceType;
+   [PropertySources{"PropertyIndex"},KEY ] UInt32  PropertyIndex;
+   [PropertySources{"PropertyName"},KEY  ] String  PropertyName;
+   [PropertySources{"PropertyNumValue"}  ] UInt32  PropertyNumValue;
+   [PropertySources{"PropertyStrValue"}  ] String  PropertyStrValue;
+   [PropertySources{"PropertyValueType"} ] UInt32  PropertyValueType;
+   [PropertySources{"ServiceName"},KEY   ] String  ServiceName;
+   [PropertySources{"SqlServiceType"},KEY] UInt32  SqlServiceType;
 };
 
 //========================
