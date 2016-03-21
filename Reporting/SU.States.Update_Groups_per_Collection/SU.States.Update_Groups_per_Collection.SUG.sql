@@ -3,18 +3,24 @@ DECLARE @CollID varchar(8) = 'Collection ID for Testing'
 DECLARE @UserSIDs VARCHAR(16);
 SELECT @UserSIDs = 'disabled';
 */
-DECLARE @lcid AS int SET @lcid = dbo.fn_LShortNameToLCID('English') --Getting Deployments IDs
+
+-- Getting Deployments IDs
+DECLARE @lcid AS int SET @lcid = dbo.fn_LShortNameToLCID('English')
 
 SELECT cia.AssignmentID AS id INTO #ASSIGNID
 FROM fn_rbac_CIAssignmentToGroup(@UserSIDs) atg
 JOIN fn_rbac_AuthListInfo(@lcid, @UserSIDs) ugi ON ugi.CI_ID = atg.AssignedUpdateGroup
 JOIN v_CIAssignment cia ON atg.AssignmentID = cia.AssignmentID
+
+-- Software update Goup Config Item ID for testing
 WHERE CI_ID IN (17143786,
                 17152698,
-                17159821)-- Software update Goup Config Item ID for testing
---    CI_ID in (@SUGS) --report usage
- --Getting Updates States for updates in selected Update Groups
+                17159821)
 
+-- Report Usage
+   -- CI_ID in (@SUGS)
+
+-- Getting Updates States for updates in selected Update Groups
     SELECT uc.ResourceID,
            uc.StateType,
            uc.StateID INTO #updatestates_combined
@@ -47,8 +53,9 @@ WHERE CI_ID IN (17143786,
 GROUP BY uc.ResourceID,
          s.Name0,
          s.Full_Domain_Name0,
-         sn.StateName --Pivoting Data and setting overall Compliance State
+         sn.StateName
 
+-- Pivoting Data and setting overall Compliance State
 SELECT *,
        CASE
            WHEN [Update is installed] IS NOT NULL
@@ -73,8 +80,7 @@ SELECT *,
 FROM #updates_status pivot(sum(countstatus)
                            FOR [status] IN ([Detection state unknown],[Downloaded update],[Failed to download update],[Failed to install update],[General failure],[Installing update],[Pending system restart],[Successfully installed update],[Update is installed],[Update is not required],[Update is required],[Waiting for another installation to complete],[Waiting for maintenance window before installing]) ) AS results;
 
- --Cleanup
-
+ -- Cleanup
 DROP TABLE #updates_status
 DROP TABLE #ASSIGNID
 DROP TABLE #updatestates_combined
