@@ -209,7 +209,7 @@ Function Set-MaintenanceWindows {
 .PARAMETER MWStopTime
     The Maintenance Window Stop Time.
 .EXAMPLE
-    Remove-MaintenanceWindows -CollectionName "Computer Collection" -MWYear 2015 -MWMonth 3 -MWOffsetWeeks 3 -MWOffsetDays 2 -MWStartTime "01:00:00"  -MWStopTime "02:00:00"
+    Set-MaintenanceWindows -CollectionName "Computer Collection" -MWYear 2015 -MWMonth 3 -MWOffsetWeeks 3 -MWOffsetDays 2 -MWStartTime "01:00:00"  -MWStopTime "02:00:00"
 .NOTES
 .LINK
 #>
