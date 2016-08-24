@@ -2,6 +2,22 @@
 // Added extensions start
 //========================
 
+//——————————————— // SQL 2016 Properties //———————————————
+
+[UNION, ViewSources{"select IsReadOnly,PropertyIndex,PropertyName,PropertyNumValue,PropertyStrValue,PropertyValueType,ServiceName,SqlServiceType from sqlServiceAdvancedProperty"},ViewSpaces{"\\\\.\\root\\microsoft\\sqlserver\\computermanagement13"}, dynamic,Provider("MS_VIEW_INSTANCE_PROVIDER")]
+
+class SQL_2016
+
+{
+    [PropertySources{"IsReadOnly"}        ] Boolean IsReadOnly;
+    [PropertySources{"PropertyIndex"},KEY ] UInt32  PropertyIndex;
+    [PropertySources{"PropertyName"},KEY  ] String  PropertyName;
+    [PropertySources{"PropertyNumValue"}  ] UInt32  PropertyNumValue;
+    [PropertySources{"PropertyStrValue"}  ] String  PropertyStrValue;
+    [PropertySources{"PropertyValueType"} ] UInt32  PropertyValueType;
+    [PropertySources{"ServiceName"},KEY   ] String  ServiceName;
+    [PropertySources{"SqlServiceType"},KEY] UInt32  SqlServiceType;
+};
 
 //——————————————— // SQL 2014 Properties //———————————————
 
