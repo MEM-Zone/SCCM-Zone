@@ -13,6 +13,8 @@
 * Ioan Popovici                 | 08/01/2016 | v2.1     | Fixed Locale                                  *
 * Octavian Cordos               | 11/01/2016 | v2.2     | Improved MW Naming                            *
 * Ioan Popovici                 | 11/01/2016 | v2.3     | Added Logging and Error Detection, cleanup    *
+* Ioan Popovici                 | 12/09/2016 | v2.4     | Added MW Type                                 *
+* Ioan Popovici                 | 12/09/2016 | v2.5     | Improved Logging and Variable Naminc          *
 *-------------------------------------------------------------------------------------------------------*
 *                                                                                                       *
 *********************************************************************************************************
@@ -28,33 +30,36 @@
 ##*=============================================
 #region Initialization
 
-## Cleaning prompt history
+## Cleaning prompt history (for testing only)
 CLS
 
-## Get Running Path
-$CurrentDir = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Definition)
+## Get Script Path and Name
+[string]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+[string]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
 
-## Import Modules and Files
-$MWCSVData = Import-Csv $CurrentDir\"Set-MaintenanceWindows.csv"
-Import-Module "E:\SCCM\AdminConsole\bin\ConfigurationManager.psd1"
+## CSV and Log file initialization
+#  Set the CSV file name
+[string]$csvFileName = $ScriptName
 
-## Set Global variables
-$MonthArray = New-Object System.Globalization.DateTimeFormatInfo
-$MonthNames = $MonthArray.MonthNames
+#  Get CSV file name with extension
+[string]$csvFileNameWithExtension = $ScriptName+".csv"
 
-## Log Initialization
-$LogPath = "C:\Temp\MW"
-$ErrorLog = $LogPath+"\MWError.log"
-If ((Test-Path $LogPath) -eq $False) {
-    New-Item -Path $LogPath -Type Directory | Out-Null
-} ElseIf (Test-Path $LogPath) {
-        Remove-Item $LogPath\* -Recurse -Force
-    }
-#  Clean Log
-Get-Date | Out-File $ErrorLog -Force
+#  Assemble CSV file path
+[string]$csvFilePath = (Join-Path -Path $ScriptPath -ChildPath $csvFileName)+".csv"
 
-## Change Path to CM Site
-CD VSM:
+## Assemble Log file Path
+[string]$LogFilePath = (Join-Path -Path $ScriptPath -ChildPath $ScriptName)+".log"
+
+## Import modules and files
+## Import the CSV file
+$csvFileData = Import-Csv -Path $csvFilePath -Encoding 'UTF8'
+Import-Module $env:SMS_ADMIN_UI_PATH.Replace("\bin\i386","\bin\configurationmanager.psd1")
+
+## Get the CMSITE SiteCode and change connection context
+$SiteCode = Get-PSDrive -PSProvider CMSITE
+
+#  Change the connection context
+Set-Location "$($SiteCode.Name):\"
 
 #endregion
 ##*=============================================
@@ -70,36 +75,101 @@ CD VSM:
 Function Write-Log {
 <#
 .SYNOPSIS
-    Write messages to a log file in CMTrace.exe compatible format or Legacy text file format.
+    Writes data to Log, EventLog and Console.
 .DESCRIPTION
-    Write messages to a log file in CMTrace.exe compatible format or Legacy text file format and optionally display in the console.
-.PARAMETER Message
-    The message to write to the log file or output to the console.
+    Writes data to Log, EventLog and Console.
+.PARAMETER EventLogName
+    The EventLog to write to.
+.PARAMETER FileLogName
+    The File Log Name to write to.
+.PARAMETER EventLogEntrySource
+    The EventLog Entry Source.
+.PARAMETER EventLogEntryID
+    The EventLog Entry ID.
+.PARAMETER EventLogEntryType
+    The EventLog Entry Type. (Error | Warning | Information | SuccessAudit | FailureAudit)
+.PARAMETER EventLogEntryMessage
+    The EventLog Entry Message.
 .EXAMPLE
-    Write-Log -Message "Error"
+    Write-Log -EventLogEntryMessage "Set-ClientMW was successful" -EventLogName "Configuration Manager" -EventLogEntrySource "Script" -EventLogEntryID "1" -EventLogEntryType "Information"
 .NOTES
 .LINK
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true,Position=0)]
-        [Alias('Text')]
-        [string]$Message
+        [Parameter(Mandatory=$false,Position=0)]
+        [Alias('Message')]
+        [string]$EventLogEntryMessage,
+        [Parameter(Mandatory=$false,Position=1)]
+        [Alias('EName')]
+        [string]$EventLogName = "Configuration Manager",
+        [Parameter(Mandatory=$false,Position=2)]
+        [Alias('Source')]
+        [string]$EventLogEntrySource = $ScriptName,
+        [Parameter(Mandatory=$false,Position=3)]
+        [Alias('ID')]
+        [int32]$EventLogEntryID = 1,
+        [Parameter(Mandatory=$false,Position=4)]
+        [Alias('Type')]
+        [string]$EventLogEntryType = "Information",
+        [Parameter(Mandatory=$false,Position=5)]
+        [Alias('SkipEL')]
+        [switch]$SkipEventLog
     )
 
-    ## Getting the Date and time
-    $DateAndTime = Get-Date
+    ## Initialization
 
-    ### Writing to log file
-    "$DateAndTime : $Message" | Out-File $ErrorLog -Append
-    "$DateAndTime : $_" | Out-File $ErrorLog -Append
+    #  Getting the Date and time
+    [string]$LogTime = (Get-Date -Format 'MM-dd-yyyy HH:mm:ss').ToString()
 
-    ## Writing to Console
-    Write-Host $Message  -ForegroundColor Red -BackgroundColor White
-    Write-Host $_.Exception -ForegroundColor White -BackgroundColor Red
-    Write-Host ""
-}
-#endregion
+    #  Archive FileLog if it exists and it's larger than 50 KB
+    If ((Test-Path $LogFilePath) -and (Get-Item $LogFilePath).Length -gt 50KB) {
+        Get-ChildItem -Path $LogFilePath | Rename-Item -NewName { $_.Name -Replace '\.log','.lo_' } -Force
+    }
+
+    # Create EventLog and Event Source if they do not exist
+    If ([System.Diagnostics.EventLog]::Exists($EventLogName) -eq $False -or [System.Diagnostics.EventLog]::SourceExists($EventLogEntrySource) -eq $False) {
+
+        ([System.Diagnostics.EventLog]::Exists($EventLogName) -eq $False -or [System.Diagnostics.EventLog]::SourceExists($EventLogEntrySource) -eq $False)
+        #  Create new EventLog and/or Source
+        New-EventLog -LogName $EventLogName -Source $EventLogEntrySource
+    }
+
+    ## Error Logging
+    #  If Exception was Triggered
+    If ($_.Exception) {
+
+        #  Write to EventLog
+        Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType "Error" -Message "$EventLogEntryMessage `n$_"
+
+        #  Write to Console
+        Write-Host `n$EventLogEntryMessage -BackgroundColor Red -ForegroundColor White
+        Write-Host $_.Exception -BackgroundColor Red -ForegroundColor White
+    }
+    Else {
+
+        #  Skip Event Log if requested
+        If ($SkipEventLog) {
+
+            #  Write to Console
+            Write-Host $EventLogEntryMessage -BackgroundColor White -ForegroundColor Blue
+        }
+        Else {
+
+            #  Write to EventLog
+            Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $EventLogEntryMessage
+
+            #  Write to Console
+            Write-Host $EventLogEntryMessage -BackgroundColor White -ForegroundColor Blue
+        }
+    }
+
+    ##  Construct LogLine
+    [string]$LogLine = "$LogTime : $EventLogEntryMessage"
+
+    ## Write to Log File
+    $LogLine | Out-File -FilePath $LogFilePath -Append -NoClobber -Force -Encoding 'UTF8' -ErrorAction 'Stop'
+}#endregion
 
 #region Function Get-PatchTuesday
 Function Get-PatchTuesday {
@@ -176,13 +246,17 @@ Function Remove-MaintenanceWindows {
     Try {
         Get-CMMaintenanceWindow -CollectionId $CollectionID | ForEach-Object {
             Remove-CMMaintenanceWindow -CollectionID $CollectionID -Name $_.Name -Force -ErrorAction Stop -ErrorVariable Error
-            Write-Host $_.Name " - Removed!"  -ForegroundColor Green
+
+            #  Write to Log and Console
+            $Message = $_.Name+" - Removed!"
+            Write-Log -Message $Message -SkipEventLog
         }
     }
     Catch {
 
-        #  Write to log in case of failure
-        Write-Log -Message "$_.Name  - Removal Failed!"
+        #  Write to Log and Console in case of failure
+        $Message = $_.Name+" - Removal Failed!"
+        Write-Log -Message $Message -SkipEventLog
     }
 }
 #endregion
@@ -196,20 +270,22 @@ Function Set-MaintenanceWindows {
     Remove existing maintenance windows from a collection.
 .PARAMETER CollectionName
     The collection name for which to remove the Mainteance Windows.
-.PARAMETER MWYear
+.PARAMETER Year
     The Maintenance Window Start Year.
-.PARAMETER MWMonth
+.PARAMETER Month
     The Maintenance Window Start Month.
-.PARAMETER MWOffsetWeeks
+.PARAMETER OffsetWeeks
     The Maintenance Window offset number of weeks after Patch Tuesday.
-.PARAMETER MWOffsetWeeks
+.PARAMETER OffsetWeeks
     The Maintenance Window offset number of days after Tuesday.
-.PARAMETER MWStartTime
+.PARAMETER StartTime
     The Maintenance Window Start Time.
-.PARAMETER MWStopTime
+.PARAMETER StopTime
     The Maintenance Window Stop Time.
+.PARAMETER ApplyTo
+    Maintenance Window Applys to Any/SoftwareUpdates/TaskSequences.
 .EXAMPLE
-    Set-MaintenanceWindows -CollectionName "Computer Collection" -MWYear 2015 -MWMonth 3 -MWOffsetWeeks 3 -MWOffsetDays 2 -MWStartTime "01:00:00"  -MWStopTime "02:00:00"
+    Set-MaintenanceWindows -CollectionName "Computer Collection" -Year 2015 -Month 3 -OffsetWeeks 3 -OffsetDays 2 -StartTime "01:00:00"  -StopTime "02:00:00" -ApplyTo SoftwareUpdates
 .NOTES
 .LINK
 #>
@@ -218,23 +294,26 @@ Function Set-MaintenanceWindows {
         [Alias('Collection')]
         [string]$CollectionName,
         [Parameter(Mandatory=$true,Position=1)]
-        [Alias('Year')]
-        [int16]$MWYear,
+        [Alias('Yr')]
+        [int16]$Year,
         [Parameter(Mandatory=$true,Position=2)]
-        [Alias('Month')]
-        [int16]$MWMonth,
+        [Alias('Mo')]
+        [int16]$Month,
         [Parameter(Mandatory=$true,Position=3)]
         [Alias('Weeks')]
-        [int16]$MWOffsetWeeks,
+        [int16]$OffsetWeeks,
         [Parameter(Mandatory=$true,Position=4)]
         [Alias('Days')]
-        [int16]$MWOffsetDays,
+        [int16]$OffsetDays,
         [Parameter(Mandatory=$true,Position=5)]
-        [Alias('StartTime')]
-        [string]$MWStartTime,
+        [Alias('Start')]
+        [string]$StartTime,
         [Parameter(Mandatory=$true,Position=6)]
-        [Alias('StopTime')]
-        [string]$MWStopTime
+        [Alias('Stop')]
+        [string]$StopTime,
+        [Parameter(Mandatory=$true,Position=7)]
+        [Alias('Apply')]
+        [string]$ApplyTo
     )
 
     ## Get CollectionID
@@ -244,43 +323,91 @@ Function Set-MaintenanceWindows {
     Catch {
 
         #  Write to log in case of failure
-        Write-Log "Getting $CollectionName ID - Failed!"
+        Write-Log -Message "Getting $CollectionName ID - Failed!"
     }
 
     ## Get PatchTuesday
-    $PatchTuesday = Get-PatchTuesday $MWYear $MWMonth
+    $PatchTuesday = Get-PatchTuesday $Year $Month
 
     ## Setting Patch Day, adding offset days and weeks. Get-Date is used to get the date in the same cast, otherwise we cannot convert the date from string to datetime format.
-    $PatchDay = (Get-Date -Date $PatchTuesday).AddDays($MWOffsetDays+($MWOffsetWeeks*7))
+    $PatchDay = (Get-Date -Date $PatchTuesday).AddDays($OffsetDays+($OffsetWeeks*7))
 
     ## Check if we got ourselves in the next year and return to the main script if true
-    If ($PatchDay.Year -gt $MWYear) {
-        Write-Warning "Year threshold detected! Ending Cycle..."
+    If ($PatchDay.Year -gt $Year) {
+        Write-Log -Message "Year threshold detected! Ending Cycle..." -SkipEventLog
         Return
     }
 
     ## Setting Maintenance Window Start and Stop times
-    $MWStartTime = (Get-Date -Format "M/dd/yyyy HH:mm:ss" -Date $PatchDay) -Replace "00:00:00", $MWStartTime
-    $MWStopTime = (Get-Date -Format "M/dd/yyyy HH:mm:ss" -Date $PatchDay) -Replace "00:00:00", $MWStopTime
+    $MWStartTime = (Get-Date -Format "dd/M/yyyy HH:mm" -Date $PatchDay) -Replace "00:00", $StartTime
+    $MWStopTime = (Get-Date -Format "dd/M/yyyy HH:mm" -Date $PatchDay) -Replace "00:00", $StopTime
 
     ## Create The Schedule Token
     $MWSchedule = New-CMSchedule -Start $MWStartTime -End $MWStopTime -NonRecurring
 
-    ## Set Maintenance Window Naming Convention MW Month and Actual Patches being deployed Month
-    $MWName =  'MW.NR.'+(Get-Date -Uformat %B $MWStartTime)+'.Patch_Group_'+$MWOffsetWeeks+'.'+$MonthNames[$MWMonth-1]+'_Updates'
+    ## Set Maintenance Window Naming Convention for MW
+    If ($ApplyTo -eq "Any") { $MWType = "MWA" }
+    ElseIf ($ApplyTo -match "Software") { $MWType = "MWU" }
+    ElseIf ($ApplyTo -match "Task") { $MWType = "MWT" }
+
+    $MWName =  $MWType+".NR."+(Get-Date -Uformat %Y.%B.%d $MWStartTime)+"."+$StartTime+"-"+$StopTime
 
     ## Set Maintenance Window
     Try {
-        $SetNewMW = New-CMMaintenanceWindow -CollectionID $CollectionID -Schedule $MWSchedule -Name $MWName -ApplyTo Any -ErrorVariable Error -ErrorAction Stop
-        Write-Host "Setting $MWName on $CollectionName - Successful" -ForegroundColor Green
+        $SetNewMW = New-CMMaintenanceWindow -CollectionID $CollectionID -Schedule $MWSchedule -Name $MWName -ApplyTo $ApplyTo -ErrorVariable Error -ErrorAction Stop
+        Write-Log -Message "Setting $MWName on $CollectionName - Successful" -SkipEventLog
     }
     Catch {
 
         #  Write to log in case of failure
-        Write-Log "Setting $MWName on $CollectionName - Failed!"
+        Write-Log -Message "Setting $MWName on $CollectionName - Failed!"
     }
 }
 #endregion
+
+#region Function Get-MaintenanceWindows
+Function Get-MaintenanceWindows {
+<#
+.SYNOPSIS
+    Get Existing Maintenance Windows.
+.DESCRIPTION
+    Get the existing maintenance windows for a collection.
+.PARAMETER CollectionName
+    The collection name for which to list the Mainteance Windows.
+.EXAMPLE
+    Get-MaintenanceWindows -Collection "Computer Collection"
+.NOTES
+.LINK
+#>
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$true,Position=0)]
+        [Alias('Collection')]
+        [string]$CollectionName
+    )
+
+    ## Get CollectionID
+    Try {
+        $CollectionID = (Get-CMDeviceCollection -Name $CollectionName -ErrorAction Stop -ErrorVariable Error).CollectionID
+    }
+
+    #  Write to log in case of failure
+    Catch {
+        Write-Log -Message "Getting $CollectionName ID Failed!"
+    }
+
+    ## Get Collection Maintenance Windows
+    Try {
+        Get-CMMaintenanceWindow -CollectionId $CollectionID
+    }
+
+    #  Write to log in case of failure
+    Catch {
+        Write-Log -Message "Get Maintenance Windows for $CollectionName - Failed!"
+    }
+}
+#endregion
+
 
 #endregion
 ##*=============================================
@@ -293,38 +420,73 @@ Function Set-MaintenanceWindows {
 #region ScriptBody
 
 ## Process Imported CSV Object Data
-$MWCSVData | ForEach-Object {
+$csvFileData | ForEach-Object {
 
     #  Check if we need the Remove Existing Maintenance Window is set
-    If ($_.RemoveExistingMW -eq 1) {
-        Write-Host ""
-        Write-Host "Remove Existing Maintenance Windows from" $_.CollectionName":" -ForegroundColor Blue -BackgroundColor White
-        Write-Host ""
+    If ($_.RemoveExisting -eq 'YES' ) {
+
+        #  Write to Log and Console
+        $Message = "`n Remove Existing Maintenance Windows from "+$_.CollectionName
+        Write-Log -Message $Message -SkipEventLog
+
+        #  Remove Maintenance Window
         Remove-MaintenanceWindows $_.CollectionName
     }
 
     #  Check if we need to set Maintenance Windows for the whole year
-    If ($_.SetForWholeYear -eq 1) {
-        Write-Host ""
-        Write-Host "Setting Maintenance Windows on" $_.CollectionName "for the whole year:" -ForegroundColor Blue -BackgroundColor White
-        Write-Host ""
-        For ($Month = [int]$_.MWMonth; $Month -le 12; $Month++) {
-            Set-MaintenanceWindows -CollectionName $_.CollectionName -MWYear $_.MWYear -MWMonth $Month -MWOffsetWeeks $_.MWOffsetWeeks -MWOffsetDays $_.MWOffsetDays -MWStartTime $_.MWStartTime -MWStopTime $_.MWStopTime
+    If ($_.SetForWholeYear -eq "YES") {
+
+        #  Write to Log and Console
+        $Message =  "`n `n Setting Maintenance Windows on"+$_.CollectionName+" for the whole year:"
+        Write-Log -Message $Message -SkipEventLog
+
+        #  Set Maintenance Windows for the whole year
+        For ($Month = [int]$_.Month; $Month -le 12; $Month++) {
+            Set-MaintenanceWindows -CollectionName $_.CollectionName -Year $_.Year -Month $Month -OffsetWeeks $_.OffsetWeeks -OffsetDays $_.OffsetDays -StartTime $_.StartTime -StopTime $_.StopTime -ApplyTo $_.ApplyTo
         }
 
     #  Run without removing Maintenance Windows and set Maintenance Window just for one month
     } Else {
-            Write-Host ""
-            Write-Host "Setting Maintenance Windows on" $_.CollectionName "for " $MonthNames[$_.MWMonth-1]":" -ForegroundColor Blue -BackgroundColor White
-            Write-Host ""
-            Set-MaintenanceWindows -CollectionName $_.CollectionName -MWYear $_.MWYear -MWMonth $_.MWMonth -MWOffsetWeeks $_.MWOffsetWeeks -MWOffsetDays $_.MWOffsetDays -MWStartTime $_.MWStartTime -MWStopTime $_.MWStopTime
+
+            #  Write to Log and Console
+            $Message = "`n `n Setting Maintenance Windows on "+$_.CollectionName+" for "+(Get-Culture).DateTimeFormat.GetMonthName($_.Month)+":"
+            Write-Log -Message $Message -SkipEventLog
+
+            #  Set Maintenance Windows
+            Set-MaintenanceWindows -CollectionName $_.CollectionName -Year $_.Year -Month $_.Month -OffsetWeeks $_.OffsetWeeks -OffsetDays $_.OffsetDays -StartTime $_.StartTime -StopTime $_.StopTime -ApplyTo $_.ApplyTo
         }
 }
-Write-Host ""
-Write-Host "Processing Finished!" -BackgroundColor Green -ForegroundColor White
+
+## Get Maintanance Windows for Unique Collections
+
+#  Result variable
+[array]$Result =@()
+
+#  Parsing CSV Collection Names
+$csvFileData.CollectionName | Select-Object -Unique | ForEach-Object {
+
+    #  Getting Maintenance Windows for Collection (Split to New Line)
+    $MaintenanceWindows = Get-MaintenanceWindows -CollectionName $_ | ForEach-Object { $_.Name+"`n" }
+
+    #  Creating Result with Descriptors
+    $Result+= "`n Listing All Maintenance Windows for Collection: "+$_+" "+"`n "+$MaintenanceWindows
+}
+
+#  Convert the Result to string and Write it to the Log, EventLog and Console
+[string]$ResultString = Out-String -InputObject $Result
+Write-Log -Message $ResultString
+
+## E-Mail Result
+#Send-Mail -Body $ResultString
+
+## Write to FileLog
+Write-Log -Message "Processing Finished..." -SkipEventLog
 
 ## Return to Script Path
-CD $CurrentDir
+Set-Location $ScriptPath
+
+## Remove SCCM PSH Module
+Remove-Module "ConfigurationManager" -Force -ErrorAction 'Continue'
 
 #endregion
 ##*=============================================
