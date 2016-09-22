@@ -4,19 +4,22 @@
 *** This powershell script is used to set maintenance windows based on CSV file                       ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 03/07/2016  | Requirements: Powershell 3.0, SCCM client SDK, local FS only  *
+* Created by Ioan Popovici, 2016-07-03  | Requirements: Powershell 3.0, SCCM client SDK, local FS only  *
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 03/07/2016 | v1.0     | First version                                 *
-* Ioan Popovici                 | 04/07/2016 | v2.0     | Vastly improved                               *
-* Ioan Popovici                 | 07/07/2016 | v3.0     | Added FileSystemWatcher and workaround        *
-* Ioan Popovici                 | 07/07/2016 | v3.1     | Cleanup and run from shell optimisations      *
-* Ioan Popovici                 | 12/09/2016 | v3.2     | Added MW type                                 *
-* Ioan Popovici                 | 12/09/2016 | v3.3     | Improved logging and variable Naming          *
-* Ioan Popovici                 | 12/09/2016 | v3.4     | Overall improvements                          *
+* Ioan Popovici                 | 2016-07-03 | v1.0     | First version                                 *
+* Ioan Popovici                 | 2016-07-04 | v2.0     | Vastly improved                               *
+* Ioan Popovici                 | 2016-07-07 | v3.0     | Added FileSystemWatcher and workaround        *
+* Ioan Popovici                 | 2016-07-07 | v3.1     | Cleanup and run from shell optimisations      *
+* Ioan Popovici                 | 2016-09-12 | v3.2     | Added MW type                                 *
+* Ioan Popovici                 | 2016-09-12 | v3.3     | Improved logging and variable Naming          *
+* Ioan Popovici                 | 2016-09-12 | v3.4     | Overall improvements                          *
+* Ioan Popovici                 | 2016-09-21 | v3.4     | Fixed locale PS Bug, logging                  *
+* Ioan Popovici                 | 2016-09-21 | v3.5     | Added email options to csv                    *
+* Ioan Popovici                 | 2016-09-22 | v3.6     | Fixed email and error handling                *
 *-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoExit -File                 *
+* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoExit -NoProfile -File      *
 * Set-ClientMaintenanceWindows.ps1                                                                      *
 *********************************************************************************************************
 
@@ -31,28 +34,28 @@
 ##*=============================================
 #region VariableDeclaration
 
-    ## Cleaning prompt history (for testing only)
-    CLS
-
     ## Get script path and name
-    [string]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-    [string]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+    [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+    [String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
 
     ## CSV and log file initialization
     #  Set the CSV file name
-    [string]$csvFileName = $ScriptName
+    [String]$csvFileName = $ScriptName
 
     #  Get CSV file name with extension
-    [string]$csvFileNameWithExtension = $ScriptName+'.csv'
+    [String]$csvFileNameWithExtension = $ScriptName+'.csv'
 
     #  Assemble CSV file path
-    [string]$csvFilePath = (Join-Path -Path $ScriptPath -ChildPath $csvFileName)+'.csv'
+    [String]$csvFilePath = (Join-Path -Path $ScriptPath -ChildPath $csvFileName)+'.csv'
 
     #  Assemble log file Path
-    [string]$LogFilePath = (Join-Path -Path $ScriptPath -ChildPath $ScriptName)+'.log'
+    [String]$LogFilePath = (Join-Path -Path $ScriptPath -ChildPath $ScriptName)+'.log'
 
     ## Initialize CSV file read time with current time
-	[datetime]$csvFileReadTime = (Get-Date)
+	[DateTime]$csvFileReadTime = (Get-Date)
+
+    ## Global error result array list
+    [System.Collections.ArrayList]$Global:ErrorResult = @()
 
 #endregion
 ##*=============================================
@@ -96,19 +99,19 @@ Function Write-Log {
     Param (
         [Parameter(Mandatory=$false,Position=0)]
         [Alias('Message')]
-        [string]$EventLogEntryMessage,
+        [String]$EventLogEntryMessage,
         [Parameter(Mandatory=$false,Position=1)]
         [Alias('EName')]
-        [string]$EventLogName = 'Configuration Manager',
+        [String]$EventLogName = 'Configuration Manager',
         [Parameter(Mandatory=$false,Position=2)]
         [Alias('Source')]
-        [string]$EventLogEntrySource = $ScriptName,
+        [String]$EventLogEntrySource = $ScriptName,
         [Parameter(Mandatory=$false,Position=3)]
         [Alias('ID')]
         [int32]$EventLogEntryID = 1,
         [Parameter(Mandatory=$false,Position=4)]
         [Alias('Type')]
-        [string]$EventLogEntryType = 'Information',
+        [String]$EventLogEntryType = 'Information',
         [Parameter(Mandatory=$false,Position=5)]
         [Alias('SkipEL')]
         [switch]$SkipEventLog
@@ -116,7 +119,7 @@ Function Write-Log {
 
     ## Initialization
     #  Getting the date and time
-    [string]$LogTime = (Get-Date -Format 'dd-MM-yyyy HH:mm:ss').ToString()
+    [String]$LogTime = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss').ToString()
 
     #  Archive log file if it exists and it's larger than 50 KB
     If ((Test-Path $LogFilePath) -and (Get-Item $LogFilePath).Length -gt 50KB) {
@@ -139,6 +142,18 @@ Function Write-Log {
         #  Write to console
         Write-Host `n$EventLogEntryMessage -BackgroundColor Red -ForegroundColor White
         Write-Host $_.Exception -BackgroundColor Red -ForegroundColor White
+
+        #  Assemble log file line
+        [String]$LogLine = "$LogTime : $_.Exception"
+
+        #  Write to log file
+        $LogLine | Out-File -FilePath $LogFilePath -Append -NoClobber -Force -Encoding 'UTF8' -ErrorAction 'Continue'
+
+        #  Add to error result array
+        $Global:ErrorResult.Add($LogLine)
+
+        #  Breaking Cycle so we don't get stuck in a loop :)
+        Break
     }
     Else {
 
@@ -158,8 +173,8 @@ Function Write-Log {
         }
     }
 
-    ##  Assemble log line
-    [string]$LogLine = "$LogTime : $EventLogEntryMessage"
+    ##  Assemble log file line
+    [String]$LogLine = "$LogTime : $EventLogEntryMessage"
 
     ## Write to log file
     $LogLine | Out-File -FilePath $LogFilePath -Append -NoClobber -Force -Encoding 'UTF8' -ErrorAction 'Continue'
@@ -186,7 +201,7 @@ Function Get-MaintenanceWindows {
     Param (
         [Parameter(Mandatory=$true,Position=0)]
         [Alias('Collection')]
-        [string]$CollectionName
+        [String]$CollectionName
     )
 
     ## Get CollectionID
@@ -231,7 +246,7 @@ Function Remove-MaintenanceWindows {
     Param (
         [Parameter(Mandatory=$true,Position=0)]
         [Alias('Collection')]
-        [string]$CollectionName
+        [String]$CollectionName
     )
 
     ## Get collection ID
@@ -275,7 +290,7 @@ Function Set-MaintenanceWindows {
 .PARAMETER ApplyTo
     Maintenance window applicability (Any | SoftwareUpdates | TaskSequences).
 .EXAMPLE
-    Set-MaintenanceWindows -CollectionName 'Computer Collection' -Date '01/09/2017' -StartTime '01:00'  -StopTime '02:00' -ApplyTo SoftwareUpdates
+    Set-MaintenanceWindows -CollectionName 'Computer Collection' -Date '2017-09-21' -StartTime '01:00'  -StopTime '02:00' -ApplyTo SoftwareUpdates
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
@@ -285,19 +300,19 @@ Function Set-MaintenanceWindows {
     Param (
         [Parameter(Mandatory=$true,Position=0)]
         [Alias('Collection')]
-        [string]$CollectionName,
+        [String]$CollectionName,
         [Parameter(Mandatory=$true,Position=1)]
         [Alias('Da')]
-        [string]$Date,
+        [String]$Date,
         [Parameter(Mandatory=$true,Position=2)]
         [Alias('SartT')]
-        [string]$StartTime,
+        [String]$StartTime,
         [Parameter(Mandatory=$true,Position=3)]
         [Alias('StopT')]
-        [string]$StopTime,
+        [String]$StopTime,
         [Parameter(Mandatory=$true,Position=4)]
         [Alias('Apply')]
-        [string]$ApplyTo
+        [String]$ApplyTo
     )
 
     ## Get collection ID
@@ -311,11 +326,25 @@ Function Set-MaintenanceWindows {
     }
 
     ## Setting maintenance window start and stop times
-    $MWStartTime = Get-Date -Format 'dd/MM/yyyy HH:mm' -Date ($Date+' '+$StartTime)
-    $MWStopTime = Get-Date -Format 'dd/MM/yyyy HH:mm' -Date ($Date+' '+$StopTime)
+    Try {
+        $MWStartTime = Get-Date -Format 'yyyy-MM-dd HH:mm' -Date ($Date+' '+$StartTime) -ErrorAction 'Stop'
+        $MWStopTime = Get-Date -Format 'yyyy-MM-dd HH:mm' -Date ($Date+' '+$StopTime) -ErrorAction 'Stop'
+    }
+    Catch {
+
+        #  Write to log in case of failure
+        Write-Log -Message "Creating Start/Stop token for $CollectionName - Failed!"
+    }
 
     ## Create the schedule token
-    $MWSchedule = New-CMSchedule -Start $MWStartTime -End $MWStopTime -NonRecurring
+    Try {
+        $MWSchedule = New-CMSchedule -Start $MWStartTime -End $MWStopTime -NonRecurring -ErrorAction 'Stop'
+    }
+    Catch {
+
+        #  Write to log in case of failure
+        Write-Log -Message "Creating schedule token for $CollectionName - Failed!"
+    }
 
     ## Set maintenance window naming convention
     If ($ApplyTo -eq 'Any') { $MWType = 'MWA' }
@@ -323,8 +352,7 @@ Function Set-MaintenanceWindows {
     ElseIf ($ApplyTo -match 'Task') { $MWType = 'MWT' }
 
     # Set maintenance window name
-    $MWName =  $MWType+'.NR.'+(Get-Date -Uformat %Y.%B.%d $MWStartTime)+'.'+$StartTime+'-'+$StopTime
-
+    $MWName =  $MWType+'.NR.'+(Get-Date -Uformat %Y-%B-%d $MWStartTime -ErrorAction 'Continue')+'.'+$StartTime+'-'+$StopTime
     ## Set maintenance window on collection
     Try {
         $SetNewMW = New-CMMaintenanceWindow -CollectionID $CollectionID -Schedule $MWSchedule -Name $MWName -ApplyTo $ApplyTo -ErrorAction 'Stop'
@@ -355,12 +383,14 @@ Function Send-Mail {
     Carbon copy.
 .PARAMETER Body
     E-Mail body.
+.PARAMETER Attachments
+    E-Mail Attachments.
 .PARAMETER SMTPServer
     E-Mail SMTPServer.
 .PARAMETER SMTPPort
     E-Mail SMTPPort.
 .EXAMPLE
-    Set-Mail -Body 'Test' -CC 'test@visma.com'
+    Send-Mail -From 'test@test.com' -To "test@test.com" -Subject "test" -Body 'Test' -CC 'test@test.com' -Attachments 'C:\Temp\test.log'
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
@@ -368,28 +398,35 @@ Function Send-Mail {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
-        [string]$From = 'SCCM Site Server <noreply@visma.com>',
-        [Parameter(Mandatory=$false,Position=1)]
-        [string]$To = 'SCCM Team <SCCM-Team@visma.com>',
+        [Parameter(Mandatory=$true,Position=0)]
+        [String]$From,
+        [Parameter(Mandatory=$true,Position=1)]
+        [String]$To,
         [Parameter(Mandatory=$false,Position=2)]
-        [string]$CC,
-        [Parameter(Mandatory=$false,Position=3)]
-        [string]$Subject = 'Info: Maintenance Window Set!',
+        [String]$CC,
+        [Parameter(Mandatory=$true,Position=3)]
+        [String]$Subject,
         [Parameter(Mandatory=$true,Position=4)]
-        [string]$Body,
+        [String]$Body,
         [Parameter(Mandatory=$false,Position=5)]
-        [string]$SMTPServer = 'mail.datakraftverk.no',
+        [String]$Attachments = $LogFilePath,
         [Parameter(Mandatory=$false,Position=6)]
-        [string]$SMTPPort = "25"
+        [String]$SMTPServer = 'mail.test.com',
+        [Parameter(Mandatory=$false,Position=7)]
+        [String]$SMTPPort = "25"
     )
 
+    ## Send mail with error handling
     Try {
-        If ($CC) {
-            Send-MailMessage -From $From -To $To -Subject $Subject -CC $CC -Body $Body -SmtpServer $SMTPServer -Port $SMTPPort -ErrorAction 'Stop'
+
+        #  With CC
+        If ($CC -ne [String]::Empty -and $CC -ne 'NO') {
+            Send-MailMessage -From $From -To $To -Subject $Subject -CC $CC -Body $Body -Attachments $Attachments -SmtpServer $SMTPServer -Port $SMTPPort -ErrorAction 'Stop'
         }
-        Else {
-            Send-MailMessage -From $From -To $To -Subject $Subject -Body $Body -SmtpServer $SMTPServer -Port $SMTPPort -ErrorAction 'Stop'
+
+        #  Without CC
+        Elseif ($CC -eq [String]::Empty -or $CC -eq 'NO') {
+            Send-MailMessage -From $From -To $To -Subject $Subject -Body $Body -Attachments $Attachments -SmtpServer $SMTPServer -Port $SMTPPort -ErrorAction 'Stop'
         }
     }
     Catch {
@@ -426,57 +463,86 @@ Function Start-DataProcessing {
     #  Change the connection context
     Set-Location "$($SiteCode.Name):\"
 
-    ##  Import the CSV file
+    ## Import the CSV file
     Try {
         $csvFileData = Import-Csv -Path $csvFilePath -Encoding 'UTF8' -ErrorAction 'Stop'
     }
     Catch {
+
+        #  Write to log
         Write-Log -Message 'Importing CSV Data - Failed!'
     }
 
     ## Process imported CSV file data
-    $csvFileData | ForEach-Object {
+    Try {
 
-        #  Check if we need to remove existing maintenance windows
-        If ($_.RemoveExisting -eq 'YES' ) {
+        #  Process imported CSV file data
+        $csvFileData | ForEach-Object {
 
-            #  Write to log
-            Write-Log -Message ('Removing maintenance windows from:  '+$_.CollectionName) -SkipEventLog
+            #  Check if we need to remove existing maintenance windows
+            If ($_.RemoveExisting -eq 'YES' ) {
 
-            #  Remove maintenance window
-            Remove-MaintenanceWindows -CollectionName $_.CollectionName
+                #  Write to log
+                Write-Log -Message ('Removing maintenance windows from:  '+$_.CollectionName) -SkipEventLog
+
+                #  Remove maintenance window
+                Remove-MaintenanceWindows -CollectionName $_.CollectionName
+            }
+
+            #  Set Maintenance Window
+            Set-MaintenanceWindows -CollectionName $_.CollectionName -Date $_.Date -StartTime $_.StartTime -StopTime $_.StopTime -ApplyTo $_.ApplyTo
         }
 
-        #  Set Maintenance Window
-        Set-MaintenanceWindows -CollectionName $_.CollectionName -Date $_.Date -StartTime $_.StartTime -StopTime $_.StopTime -ApplyTo $_.ApplyTo
+        #  Initialize result array
+        [array]$Result =@()
+
+        #  Parsing CSV unique collection names
+        $csvFileData.CollectionName | Select-Object -Unique | ForEach-Object {
+
+            #  Getting maintenance windows for collection (split to new line)
+            $MaintenanceWindows = Get-MaintenanceWindows -CollectionName $_ | ForEach-Object { $_.Name+"`n" }
+
+            #  Assemble result with descriptors
+            $Result+= "`nListing all maintenance windows for: "+$_+" "+"`n`n "+$MaintenanceWindows
+        }
+
+        #  Convert the result to String and write it to log
+        [String]$ResultString = Out-String -InputObject $Result
+        Write-Log -Message $ResultString
+
+        ## Return to Script Path
+        Set-Location $ScriptPath
+
+        ## Remove SCCM PSH Module
+        Remove-Module 'ConfigurationManager' -Force -ErrorAction 'Continue'
     }
+    Catch {
 
-    ## Get maintenance windows for unique collections
-    #  Initialize result array
-    [array]$Result =@()
-
-    #  Parsing CSV collection names
-    $csvFileData.CollectionName | Select-Object -Unique | ForEach-Object {
-
-        #  Getting maintenance windows for collection (split to new line)
-        $MaintenanceWindows = Get-MaintenanceWindows -CollectionName $_ | ForEach-Object { $_.Name+"`n" }
-
-        #  Assemble result with descriptors
-        $Result+= "`n Listing all maintenance windows for: "+$_+" "+"`n "+$MaintenanceWindows
+        #  Not needed, empty
     }
+    Finally {
 
-    #  Convert the result to string and write it to log
-    [string]$ResultString = Out-String -InputObject $Result
-    Write-Log -Message $ResultString
+        #  Send Mail Report if needed
+        If ($csvFileData.SendMail -eq 'YES' -and -not $Global:ErrorResult) {
 
-    ## E-Mail result
-    Send-Mail -Body $ResultString
+            #  Write to log
+            Write-Log -Message "Sending Mail Report..."
 
-    ## Return to Script Path
-    Set-Location $ScriptPath
+            #  Sending mail
+            Send-Mail -Subject 'Info: Setting Maintenance Window - Success!' -Body $ResultString -From $csvFileData.MailFrom[0] -To $csvFileData.MailTo[0] -CC $csvFileData.MailCC[0]
+        }
+        If ($csvFileData.SendMail -eq 'YES' -and $Global:ErrorResult) {
 
-    ## Remove SCCM PSH Module
-    Remove-Module 'ConfigurationManager' -Force -ErrorAction 'Continue'
+            #  Write to log
+            Write-Log 'CSV Data Processing - Failed!'
+
+            #  Write to log
+            Write-Log -Message "Sending Error Mail Report..."
+
+            #  Sending mail
+            Send-Mail -Subject 'Warning: Setting Maintenance Window - Failed!' -Body "Errors: `n $Global:ErrorResult"  -From $csvFileData.MailFrom[0] -To $csvFileData.MailTo[0] -CC $csvFileData.MailCC[0]
+        }
+    }
 }
 
 #endregion
@@ -503,11 +569,11 @@ Function Test-FileChangeEvent {
     Param (
         [Parameter(Mandatory=$true)]
         [Alias('ReadTime')]
-        [datetime]$FileLastReadTime
+        [DateTime]$FileLastReadTime
     )
 
     ## Get CSV file last write time
-    [datetime]$csvFileLastWriteTime = (Get-ItemProperty -Path $csvFilePath).LastWriteTime
+    [DateTime]$csvFileLastWriteTime = (Get-ItemProperty -Path $csvFilePath).LastWriteTime
 
     ## Test if the file change event is valid by comparing the CSV last write time and parameter apecified time
     If (($csvFileLastWriteTime - $FileLastReadTime).Seconds -ge 1) {
@@ -536,7 +602,7 @@ Function Test-FileChangeEvent {
 ##*=============================================
 #region ScriptBody
 
-    ## Initialize file qatcher and wait for file changes
+    ## Initialize file watcher and wait for file changes
     $FileWatcher = New-Object System.IO.FileSystemWatcher
     $FileWatcher.Path = $ScriptPath
     $FileWatcher.Filter = $csvFileNameWithExtension
@@ -553,6 +619,8 @@ Function Test-FileChangeEvent {
         #  Reinitialize DateTime variable to be used on next file change event
         $csvFileReadTime = (Get-Date)
     }
+
+#endregion
 
 #endregion
 ##*=============================================
