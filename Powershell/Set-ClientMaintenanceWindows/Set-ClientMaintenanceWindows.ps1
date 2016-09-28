@@ -16,8 +16,9 @@
 * Ioan Popovici                 | 2016-09-12 | v3.3     | Improved logging and variable Naming          *
 * Ioan Popovici                 | 2016-09-12 | v3.4     | Overall improvements                          *
 * Ioan Popovici                 | 2016-09-21 | v3.4     | Fixed locale PS Bug, logging                  *
-* Ioan Popovici                 | 2016-09-21 | v3.5     | Added email options to csv                    *
+* Ioan Popovici                 | 2016-09-21 | v3.5     | Added email options to CSV                    *
 * Ioan Popovici                 | 2016-09-22 | v3.6     | Fixed email and error handling                *
+* Ioan Popovici                 | 2016-09-27 | v3.6     | Test-FileChangeEvent modified to be general   *
 *-------------------------------------------------------------------------------------------------------*
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoExit -NoProfile -File      *
 * Set-ClientMaintenanceWindows.ps1                                                                      *
@@ -34,28 +35,31 @@
 ##*=============================================
 #region VariableDeclaration
 
-    ## Get script path and name
-    [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-    [String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+## Get script path and name
+[String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
 
-    ## CSV and log file initialization
-    #  Set the CSV file name
-    [String]$csvFileName = $ScriptName
+## CSV and log files initialization
+#  Set the CSV Settings and Data file name
+[String]$csvDataFileName = $ScriptName
+[String]$csvSettingsFileName = $ScriptName+'Settings'
 
-    #  Get CSV file name with extension
-    [String]$csvFileNameWithExtension = $ScriptName+'.csv'
+#  Get CSV Settings and Data file name with extension
+[String]$csvDataFileNameWithExtension = $csvDataFileName+'.csv'
+[String]$csvSettingsFileNameWithExtension = $csvSettingsFileName+'.csv'
 
-    #  Assemble CSV file path
-    [String]$csvFilePath = (Join-Path -Path $ScriptPath -ChildPath $csvFileName)+'.csv'
+#  Assemble CSV Settings and Data file path
+[String]$csvDataFilePath = (Join-Path -Path $ScriptPath -ChildPath $csvDataFileName)+'.csv'
+[String]$csvSettingsFilePath = (Join-Path -Path $ScriptPath -ChildPath $csvSettingsFileName)+'.csv'
 
-    #  Assemble log file Path
-    [String]$LogFilePath = (Join-Path -Path $ScriptPath -ChildPath $ScriptName)+'.log'
+#  Assemble log file Path
+[String]$LogFilePath = (Join-Path -Path $ScriptPath -ChildPath $ScriptName)+'.log'
 
-    ## Initialize CSV file read time with current time
-	[DateTime]$csvFileReadTime = (Get-Date)
+## Initialize last write reference time with current time
+[DateTime]$LastWriteTimeReference = (Get-Date)
 
-    ## Global error result array list
-    [System.Collections.ArrayList]$Global:ErrorResult = @()
+## Global error result array list
+[System.Collections.ArrayList]$Global:ErrorResult = @()
 
 #endregion
 ##*=============================================
@@ -97,22 +101,22 @@ Function Write-Log {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory=$False,Position=0)]
         [Alias('Message')]
         [String]$EventLogEntryMessage,
-        [Parameter(Mandatory=$false,Position=1)]
+        [Parameter(Mandatory=$False,Position=1)]
         [Alias('EName')]
         [String]$EventLogName = 'Configuration Manager',
-        [Parameter(Mandatory=$false,Position=2)]
+        [Parameter(Mandatory=$False,Position=2)]
         [Alias('Source')]
         [String]$EventLogEntrySource = $ScriptName,
-        [Parameter(Mandatory=$false,Position=3)]
+        [Parameter(Mandatory=$False,Position=3)]
         [Alias('ID')]
         [int32]$EventLogEntryID = 1,
-        [Parameter(Mandatory=$false,Position=4)]
+        [Parameter(Mandatory=$False,Position=4)]
         [Alias('Type')]
         [String]$EventLogEntryType = 'Information',
-        [Parameter(Mandatory=$false,Position=5)]
+        [Parameter(Mandatory=$False,Position=5)]
         [Alias('SkipEL')]
         [switch]$SkipEventLog
     )
@@ -199,7 +203,7 @@ Function Get-MaintenanceWindows {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$True,Position=0)]
         [Alias('Collection')]
         [String]$CollectionName
     )
@@ -244,7 +248,7 @@ Function Remove-MaintenanceWindows {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$True,Position=0)]
         [Alias('Collection')]
         [String]$CollectionName
     )
@@ -298,19 +302,19 @@ Function Set-MaintenanceWindows {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$True,Position=0)]
         [Alias('Collection')]
         [String]$CollectionName,
-        [Parameter(Mandatory=$true,Position=1)]
+        [Parameter(Mandatory=$True,Position=1)]
         [Alias('Da')]
         [String]$Date,
-        [Parameter(Mandatory=$true,Position=2)]
+        [Parameter(Mandatory=$True,Position=2)]
         [Alias('SartT')]
         [String]$StartTime,
-        [Parameter(Mandatory=$true,Position=3)]
+        [Parameter(Mandatory=$True,Position=3)]
         [Alias('StopT')]
         [String]$StopTime,
-        [Parameter(Mandatory=$true,Position=4)]
+        [Parameter(Mandatory=$True,Position=4)]
         [Alias('Apply')]
         [String]$ApplyTo
     )
@@ -398,22 +402,22 @@ Function Send-Mail {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$True,Position=0)]
         [String]$From,
-        [Parameter(Mandatory=$true,Position=1)]
+        [Parameter(Mandatory=$True,Position=1)]
         [String]$To,
-        [Parameter(Mandatory=$false,Position=2)]
+        [Parameter(Mandatory=$False,Position=2)]
         [String]$CC,
-        [Parameter(Mandatory=$true,Position=3)]
+        [Parameter(Mandatory=$True,Position=3)]
         [String]$Subject,
-        [Parameter(Mandatory=$true,Position=4)]
+        [Parameter(Mandatory=$True,Position=4)]
         [String]$Body,
-        [Parameter(Mandatory=$false,Position=5)]
+        [Parameter(Mandatory=$False,Position=5)]
         [String]$Attachments = $LogFilePath,
-        [Parameter(Mandatory=$false,Position=6)]
-        [String]$SMTPServer = 'mail.test.com',
-        [Parameter(Mandatory=$false,Position=7)]
-        [String]$SMTPPort = "25"
+        [Parameter(Mandatory=$True,Position=6)]
+        [String]$SMTPServer,
+        [Parameter(Mandatory=$True,Position=7)]
+        [String]$SMTPPort
     )
 
     ## Send mail with error handling
@@ -463,21 +467,30 @@ Function Start-DataProcessing {
     #  Change the connection context
     Set-Location "$($SiteCode.Name):\"
 
-    ## Import the CSV file
+    ## Import the Settings CSV file
     Try {
-        $csvFileData = Import-Csv -Path $csvFilePath -Encoding 'UTF8' -ErrorAction 'Stop'
+        $csvSettingsData = Import-Csv -Path $csvSettingsFilePath -Encoding 'UTF8' -ErrorAction 'Stop'
     }
     Catch {
 
-        #  Write to log
-        Write-Log -Message 'Importing CSV Data - Failed!'
+        #  write to log
+        Write-Log -Message 'Importing Settings CSV Data - Failed!'
     }
 
+    ## Import the Collection CSV file
+    Try {
+        $csvCollectionData = Import-Csv -Path $csvDataFilePath -Encoding 'UTF8' -ErrorAction 'Stop'
+    }
+    Catch {
+
+        #  write to log
+        Write-Log -Message 'Importing Collection CSV Data - Failed!'
+    }
     ## Process imported CSV file data
     Try {
 
         #  Process imported CSV file data
-        $csvFileData | ForEach-Object {
+        $csvCollectionData | ForEach-Object {
 
             #  Check if we need to remove existing maintenance windows
             If ($_.RemoveExisting -eq 'YES' ) {
@@ -497,7 +510,7 @@ Function Start-DataProcessing {
         [array]$Result =@()
 
         #  Parsing CSV unique collection names
-        $csvFileData.CollectionName | Select-Object -Unique | ForEach-Object {
+        $csvCollectionData.CollectionName | Select-Object -Unique | ForEach-Object {
 
             #  Getting maintenance windows for collection (split to new line)
             $MaintenanceWindows = Get-MaintenanceWindows -CollectionName $_ | ForEach-Object { $_.Name+"`n" }
@@ -523,15 +536,18 @@ Function Start-DataProcessing {
     Finally {
 
         #  Send Mail Report if needed
-        If ($csvFileData.SendMail -eq 'YES' -and -not $Global:ErrorResult) {
+        If ($csvSettingsData.SendMail -eq 'YES' -and -not $Global:ErrorResult) {
 
             #  Write to log
             Write-Log -Message "Sending Mail Report..."
 
             #  Sending mail
-            Send-Mail -Subject 'Info: Setting Maintenance Window - Success!' -Body $ResultString -From $csvFileData.MailFrom[0] -To $csvFileData.MailTo[0] -CC $csvFileData.MailCC[0]
+            Send-Mail -Subject 'Info: Setting Maintenance Window - Success!' -Body $ResultString -From $csvSettingsData.From -To $csvSettingsData.To -CC $csvSettingsData.CC -SMTPServer $csvSettingsData.SMTPServer -SMTPPort $csvSettingsData.SMTPPort
+
+
+            Send-Mail -Subject 'Info: Setting Maintenance Window - Success!' -Body 'caca' -From $csvSettingsData.From -To $csvSettingsData.To -CC $csvSettingsData.CC -SMTPServer $csvSettingsData.SMTPServer -SMTPPort $csvSettingsData.SMTPPort -Attachments 'c:\temp\scripts\robo.log'
         }
-        If ($csvFileData.SendMail -eq 'YES' -and $Global:ErrorResult) {
+        If ($csvSettingsData.SendMail -eq 'YES' -and $Global:ErrorResult) {
 
             #  Write to log
             Write-Log 'CSV Data Processing - Failed!'
@@ -540,7 +556,7 @@ Function Start-DataProcessing {
             Write-Log -Message "Sending Error Mail Report..."
 
             #  Sending mail
-            Send-Mail -Subject 'Warning: Setting Maintenance Window - Failed!' -Body "Errors: `n $Global:ErrorResult"  -From $csvFileData.MailFrom[0] -To $csvFileData.MailTo[0] -CC $csvFileData.MailCC[0]
+            Send-Mail -Subject 'Warning: Setting Maintenance Window - Failed!' -Body "Errors: `n $Global:ErrorResult"  -From $csvSettingsData.From -To $csvSettingsData.To -CC $csvSettingsData.CC -SMTPServer $csvSettingsData.SMTPServer -SMTPPort $csvSettingsData.SMTPPort
         }
     }
 }
@@ -556,10 +572,12 @@ Function Test-FileChangeEvent {
     FileSystemWatcher may fire multiple events on a write operation.
     It's a known problem but it's not a bug in FileSystemWatcher.
     This function is discarding events fired more than once a second.
-.PARAMETER $FileLastReadTime
-    Specify file last read time, used to avoid global parameter.
+.PARAMETER $WatchFilePath
+    Specify file path to be watched.
+.PARAMETER $LastWriteTimeReference
+    Specify file last read time for reference.
 .EXAMPLE
-    Test-FileChangeEvent -FileLastReadTime $FileLastReadTime
+    Test-FileChangeEvent -WatchFilePath $WatchFilePath -LastWriteTimeReference $LastWriteTimeReference
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
@@ -567,19 +585,29 @@ Function Test-FileChangeEvent {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true)]
-        [Alias('ReadTime')]
-        [DateTime]$FileLastReadTime
+        [Parameter(Mandatory=$True,Position=0)]
+        [Alias('WatchPath')]
+        [String]$WatchFilePath,
+        [Parameter(Mandatory=$True,Position=1)]
+        [Alias('WriteTimeReference')]
+        [DateTime]$LastWriteTimeReference
     )
 
-    ## Get CSV file last write time
-    [DateTime]$csvFileLastWriteTime = (Get-ItemProperty -Path $csvFilePath).LastWriteTime
+    ## Get file last write time
+    Try {
+        [DateTime]$FileLastWriteTime = (Get-ItemProperty -Path $WatchFilePath).LastWriteTime
+    }
+    Catch {
 
-    ## Test if the file change event is valid by comparing the CSV last write time and parameter apecified time
-    If (($csvFileLastWriteTime - $FileLastReadTime).Seconds -ge 1) {
+        #   write to log
+        Write-Log -Message "Reading Last Write Time from $WatchFilePath - Failed!"
+    }
+
+    ## Test if the file change event is valid by comparing the file last write time and reference parameter specified time
+    If (($FileLastWriteTime - $LastWriteTimeReference).Seconds -ge 1) {
 
         ## Write to log
-        Write-Log -Message "`nCSV file change - Detected!" -SkipEventLog
+        Write-Log -Message "`nFile change - Detected!" -SkipEventLog
 
         ## Start main data processing and wait for it to finish
         Start-DataProcessing | Out-Null
@@ -605,19 +633,19 @@ Function Test-FileChangeEvent {
     ## Initialize file watcher and wait for file changes
     $FileWatcher = New-Object System.IO.FileSystemWatcher
     $FileWatcher.Path = $ScriptPath
-    $FileWatcher.Filter = $csvFileNameWithExtension
-    $FileWatcher.IncludeSubdirectories = $false
+    $FileWatcher.Filter = $csvDataFileNameWithExtension
+    $FileWatcher.IncludeSubdirectories = $False
     $FileWatcher.NotifyFilter = [System.IO.NotifyFilters]::'LastWrite'
-    $FileWatcher.EnableRaisingEvents = $true
+    $FileWatcher.EnableRaisingEvents = $True
 
     #  Register file watcher event
     Register-ObjectEvent -InputObject $FileWatcher -EventName 'Changed' -Action {
 
         # Test if we really need to start processing
-        Test-FileChangeEvent -FileLastReadTime $csvFileReadTime
+        Test-FileChangeEvent -LastWriteTimeReference $LastWriteTimeReference -WatchFilePath $csvDataFilePath
 
         #  Reinitialize DateTime variable to be used on next file change event
-        $csvFileReadTime = (Get-Date)
+        $LastWriteTimeReference = (Get-Date)
     }
 
 #endregion

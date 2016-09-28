@@ -1,0 +1,2 @@
+SendMail,From,To,CC,SMTPServer,SMTPPort,
+Yes,SCCM <noreply@test.com>,sccm-team@test.com,test@visma.com,mail.test.com,25,
