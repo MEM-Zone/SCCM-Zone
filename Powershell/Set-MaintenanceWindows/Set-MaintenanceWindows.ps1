@@ -15,6 +15,7 @@
 * Ioan Popovici                 | 11/01/2016 | v2.3     | Added logging and error detection, cleanup    *
 * Ioan Popovici                 | 12/09/2016 | v2.4     | Added MW type                                 *
 * Ioan Popovici                 | 12/09/2016 | v2.5     | Improved logging and variable naming          *
+* Ioan Popovici                 | 2016-10-13 | v2.6     | Visibility MW name improvements               *
 *-------------------------------------------------------------------------------------------------------*
 *                                                                                                       *
 *********************************************************************************************************
@@ -391,7 +392,7 @@ Function Set-MaintenanceWindows {
     ElseIf ($ApplyTo -match 'Task') { $MWType = 'MWT' }
 
     # Set maintenance window name
-    $MWName =  $MWType+'.NR.'+(Get-Date -Uformat %Y.%B.%d $MWStartTime)+'.'+$StartTime+'-'+$StopTime
+    $MWName =  $MWType+'.NR.'+(Get-Date -Uformat %Y-%B-%d $MWStartTime)+'_'+$StartTime+'-'+$StopTime
 
     ## Set maintenance window on collection
     Try {

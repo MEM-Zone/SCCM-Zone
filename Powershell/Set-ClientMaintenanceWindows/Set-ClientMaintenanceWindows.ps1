@@ -15,10 +15,11 @@
 * Ioan Popovici                 | 2016-09-12 | v3.2     | Added MW type                                 *
 * Ioan Popovici                 | 2016-09-12 | v3.3     | Improved logging and variable Naming          *
 * Ioan Popovici                 | 2016-09-12 | v3.4     | Overall improvements                          *
-* Ioan Popovici                 | 2016-09-21 | v3.4     | Fixed locale PS Bug, logging                  *
-* Ioan Popovici                 | 2016-09-21 | v3.5     | Added email options to CSV                    *
-* Ioan Popovici                 | 2016-09-22 | v3.6     | Fixed email and error handling                *
-* Ioan Popovici                 | 2016-09-27 | v3.6     | Test-FileChangeEvent modified to be general   *
+* Ioan Popovici                 | 2016-09-21 | v3.5     | Fixed locale PS Bug, logging                  *
+* Ioan Popovici                 | 2016-09-21 | v3.6     | Added email options to CSV                    *
+* Ioan Popovici                 | 2016-09-22 | v3.7     | Fixed email and error handling                *
+* Ioan Popovici                 | 2016-09-27 | v3.8     | Test-FileChangeEvent modified to be general   *
+* Ioan Popovici                 | 2016-10-13 | v3.9     | Visibility MW name improvements               *
 *-------------------------------------------------------------------------------------------------------*
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoExit -NoProfile -File      *
 * Set-ClientMaintenanceWindows.ps1                                                                      *
@@ -356,7 +357,7 @@ Function Set-MaintenanceWindows {
     ElseIf ($ApplyTo -match 'Task') { $MWType = 'MWT' }
 
     # Set maintenance window name
-    $MWName =  $MWType+'.NR.'+(Get-Date -Uformat %Y-%B-%d $MWStartTime -ErrorAction 'Continue')+'.'+$StartTime+'-'+$StopTime
+    $MWName =  $MWType+'.NR.'+(Get-Date -Uformat %Y-%B-%d $MWStartTime -ErrorAction 'Continue')+'_'+$StartTime+'-'+$StopTime
     ## Set maintenance window on collection
     Try {
         $SetNewMW = New-CMMaintenanceWindow -CollectionID $CollectionID -Schedule $MWSchedule -Name $MWName -ApplyTo $ApplyTo -ErrorAction 'Stop'
@@ -544,8 +545,6 @@ Function Start-DataProcessing {
             #  Sending mail
             Send-Mail -Subject 'Info: Setting Maintenance Window - Success!' -Body $ResultString -From $csvSettingsData.From -To $csvSettingsData.To -CC $csvSettingsData.CC -SMTPServer $csvSettingsData.SMTPServer -SMTPPort $csvSettingsData.SMTPPort
 
-
-            Send-Mail -Subject 'Info: Setting Maintenance Window - Success!' -Body 'caca' -From $csvSettingsData.From -To $csvSettingsData.To -CC $csvSettingsData.CC -SMTPServer $csvSettingsData.SMTPServer -SMTPPort $csvSettingsData.SMTPPort -Attachments 'c:\temp\scripts\robo.log'
         }
         If ($csvSettingsData.SendMail -eq 'YES' -and $Global:ErrorResult) {
 
