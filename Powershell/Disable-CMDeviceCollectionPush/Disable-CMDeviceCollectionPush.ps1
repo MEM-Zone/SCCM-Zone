@@ -1,30 +1,30 @@
 <#
 *********************************************************************************************************
 *                                                                                                       *
-*** This powershell script is used to disable SCCM push install for a specified collection, using CIM ***
+*** This PowerShell script is used to disable SCCM push install for a specified collection, using CIM ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 2016-10-26  | Requirements: Powershell 3.0, SCCM Server                     *
+* Created by Ioan Popovici, 2016-10-26  | Requirements: PowerShell 3.0, SCCM Server                     *
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
 * Ioan Popovici                 | 2016-10-26 | v1.0     | First version                                 *
 *-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -File              *
+* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -File              *
 * Disable-CMDeviceCollectionPush.ps1 -CMSiteServer SiteServerName -CMCollection CollectionName          *
 *********************************************************************************************************
 
     .SYNOPSIS
-        This powershell script is used to disable SCCM push install for a specified collection.
+        This PowerShell script is used to disable SCCM push install for a specified collection.
     .DESCRIPTION
-        This powershell script is used to disable SCCM push install for a specified collection using the
+        This PowerShell script is used to disable SCCM push install for a specified collection using the
         ExcludeServers registry key. This script is using CIM instead of SCCM commandlets.
     .PARAMETER CMSiteServer
-        The netbios name of the SCCM Site Server.
+        The NetBIOS name of the SCCM Site Server.
     .PARAMETER CMCollection
         The Collection Name to exclude from Push Install.
     .PARAMETER DeleteAllCollectionMembers
-        Switch for delletion all device memebers and their discovery data from the specified collections.
+        Optional switch used to Delete all Collection Device Members  and their discovery data using CIM (blazing fast :P).
     .EXAMPLE
         Disable-CMPushDeviceCollection -CMSiteServer 'SiteServerName' -CMCollection 'Exclude from Push Collection' -DeleteAllCollectionMembers
     .NOTES
@@ -263,7 +263,7 @@ Function Send-Mail {
         }
 
         #  Without CC
-        Elseif ($CC -eq [String]::Empty -or $CC -eq 'NO') {
+        ElseIf ($CC -eq [String]::Empty -or $CC -eq 'NO') {
             Send-MailMessage -From $From -To $To -Subject $Subject -Body $Body -Attachments $Attachments -SmtpServer $SMTPServer -Port $SMTPPort -ErrorAction 'Stop'
         }
     }
@@ -323,7 +323,7 @@ Function Get-CimCollectionMembers {
 .SYNOPSIS
     Get device collection members.
 .DESCRIPTION
-    Get device collection members netbios name.
+    Get device collection members NetBIOS name.
 .PARAMETER CollectionName
     Set the collection name for which to get device collection members.
 .EXAMPLE
@@ -349,7 +349,7 @@ Function Get-CimCollectionMembers {
     }
     #  Write to log in case of failure
     Catch {
-        Write-Log -Message "Getting CollectionClasName for $CollectionName - Failed!"
+        Write-Log -Message "Getting CollectionClassName for $CollectionName - Failed!"
     }
 
     ## Getting servers from collection and sort them by name
@@ -436,7 +436,7 @@ Try {
 
     #  Write to log in case of failure
     Catch {
-        Write-Log -Message "Getting Devices from Regsitry - Failed!"
+        Write-Log -Message "Getting Devices from Registry - Failed!"
     }
 
     ## Getting devices from collection
@@ -445,18 +445,18 @@ Try {
     ## If collection is not empty start comparison
     If ($DevicesCollection) {
 
-        #  Get differences between registry and collection
-        $DeviceDifference = (Compare-Object -ReferenceObject $DevicesRegistry -DifferenceObject $DevicesCollection | Sort-Object InputObject).InputObject
-
-        #  Merging servers from registry and collection, eliminate duplicates
-        $DevicesMerge = (Compare-Object -ReferenceObject $DevicesRegistry -DifferenceObject $DevicesCollection -IncludeEqual | Sort-Object InputObject –Unique).InputObject
+        #  Check if there are devices in collection but not in registry
+        $DeviceDifference = (Compare-Object -ReferenceObject $DevicesRegistry -DifferenceObject $DevicesCollection | Where-Object { $_.SideIndicator -eq '=>' } | Sort-Object InputObject).InputObject
 
         #  If there are differences between registry and collection write the merged list to registry
         If ($DeviceDifference) {
 
+            #  Merging servers from registry and collection, eliminate duplicates
+                $DevicesMerged = (Compare-Object -ReferenceObject $DevicesRegistry -DifferenceObject $DevicesCollection -IncludeEqual | Sort-Object InputObject –Unique).InputObject
+
             #  Write merged list to registry
             Try {
-                Set-ItemProperty -Value $DevicesMerge @RegProps
+                Set-ItemProperty -Value $DevicesMerged @RegProps
             }
 
             #  Write to log in case of failure
@@ -466,16 +466,22 @@ Try {
 
             #  Write merged list to csv and log
             Try {
-                $DevicesMerge | ConvertFrom-Csv -Header 'Devices Excluded from Push Install' | Export-Csv -Path $csvDataFilePath -Delimiter ',' -Encoding 'UTF8' -NoTypeInformation -Force
+                $DevicesMerged | ConvertFrom-Csv -Header 'Devices Excluded from Push Install' | Export-Csv -Path $csvDataFilePath -Delimiter ',' -Encoding 'UTF8' -NoTypeInformation -Force
 
-                #  Inintialize result array
+                #  Initialize result array
                 [Array]$Result = @()
 
-                #  Adding result header
-                $Result+= "`nListing Devices Excluded from Push Install:`n"
+                #  Adding differences device list result header
+                $Result+= "`nListing New Devices to be Added:`n"
 
-                #  Parsing device names and add formatting
-                $DevicesMerge | ForEach-Object { $Result+= " "+$_ }
+                #  Parsing differences device list and add formatting
+                $DeviceDifference | ForEach-Object { $Result+= " "+$_ }
+
+                #  Adding merged device list result header
+                $Result+= "`nListing All Devices Excluded from Push Install:`n"
+
+                #  Parsing merged device list and add formatting
+                $DevicesMerged | ForEach-Object { $Result+= " "+$_ }
 
                 #  Convert the result to string and write it to log
                 [String]$ResultString = Out-String -InputObject $Result
@@ -484,12 +490,15 @@ Try {
 
             #  Write to log in case of failure
             Catch {
-                Write-Log -Message "Writting Merged Device List to $csvDataFilePath - Failed!"
+                Write-Log -Message "Write Merged Device List to $csvDataFilePath - Failed!"
             }
 
-            ## Remove all collection member devices from SCCM (optional switch)
+            #  Remove all collection member devices from SCCM (optional switch)
             If ($DeleteAllCollectionMembers) { Remove-CimCollectionMembers -CollectionName $CMCollectionName }
         }
+
+        #  Write to log
+        Else { Write-Log 'Devices already Excluded!' }
     }
 }
 Catch {
