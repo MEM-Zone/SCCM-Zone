@@ -1,10 +1,10 @@
 <#
 *********************************************************************************************************
 *                                                                                                       *
-*** This powershell script is used to set maintenance windows based on PatchTuesday on SU collections ***
+*** This PowerShell script is used to set maintenance windows based on PatchTuesday on SU collections ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 30/03/2015       | Requirements Powershell 2.0                              *
+* Created by Ioan Popovici, 30/03/2015       | Requirements PowerShell 2.0                              *
 * ======================================================================================================*
 * Modified by                   |    Date    | Revision | Comments                                      *
 *_______________________________________________________________________________________________________*
@@ -21,9 +21,9 @@
 *********************************************************************************************************
 
     .SYNOPSIS
-        This Powershell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
+        This PowerShell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
     .DESCRIPTION
-        This Powershell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
+        This PowerShell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
 #>
 
 ##*=============================================
@@ -167,9 +167,9 @@ Function Write-Log {
 Function Get-PatchTuesday {
 <#
 .SYNOPSIS
-    Get microsoft patch tuesday.
+    Get Microsoft patch Tuesday.
 .DESCRIPTION
-    Get microsoft patch tuesday for a specific month and return it to the pipeline.
+    Get Microsoft patch Tuesday for a specific month and return it to the pipeline.
 .PARAMETER Year
     Set the year for which to calculate Patch Tuesday.
 .PARAMETER Month
@@ -314,9 +314,9 @@ Function Set-MaintenanceWindows {
 .PARAMETER Month
     The maintenance window month.
 .PARAMETER OffsetWeeks
-    The maintenance window offset number of weeks after patch tuesday.
+    The maintenance window offset number of weeks after patch Tuesday.
 .PARAMETER OffsetDays
-    The maintenance window offset number of days after path tuesday.
+    The maintenance window offset number of days after path Tuesday.
 .PARAMETER StartTime
     The maintenance window start time.
 .PARAMETER StopTime

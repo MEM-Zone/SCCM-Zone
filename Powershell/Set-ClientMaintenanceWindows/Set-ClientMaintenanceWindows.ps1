@@ -1,10 +1,10 @@
 <#
 *********************************************************************************************************
 *                                                                                                       *
-*** This powershell script is used to set maintenance windows based on CSV file                       ***
+*** This PowerShell script is used to set maintenance windows based on CSV file                       ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 2016-07-03  | Requirements: Powershell 3.0, SCCM client SDK, local FS only  *
+* Created by Ioan Popovici, 2016-07-03  | Requirements: PowerShell 3.0, SCCM client SDK, local FS only  *
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
@@ -21,14 +21,14 @@
 * Ioan Popovici                 | 2016-09-27 | v3.8     | Test-FileChangeEvent modified to be general   *
 * Ioan Popovici                 | 2016-10-13 | v3.9     | Visibility MW name improvements               *
 *-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoExit -NoProfile -File      *
+* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
 * Set-ClientMaintenanceWindows.ps1                                                                      *
 *********************************************************************************************************
 
     .SYNOPSIS
-        This powershell script is used to set maintenance windows based on CSV file.
+        This PowerShell script is used to set maintenance windows based on CSV file.
     .DESCRIPTION
-        This powershell script is used to set maintenance windows, triggered when the settings CSV file is saved.
+        This PowerShell script is used to set maintenance windows, triggered when the settings CSV file is saved.
 #>
 
 ##*=============================================
