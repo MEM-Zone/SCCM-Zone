@@ -10,7 +10,7 @@
 *_______________________________________________________________________________________________________*
 * Ioan Popovici                 | 02/09/2016 | v1.0     | First version                                 *
 *-------------------------------------------------------------------------------------------------------*
-# The Detection also Fails if SQL Native is installed - To Fix                                         *
+# The Detection also Fails if SQL Native is installed - To Fix                                          *
 * SQL Versioning Reference: http://sqlserverbuilds.blogspot.ro/                                         *
 *********************************************************************************************************
 
