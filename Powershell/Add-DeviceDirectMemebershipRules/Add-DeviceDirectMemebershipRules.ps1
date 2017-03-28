@@ -1,24 +1,27 @@
 <#
 *********************************************************************************************************
 *                                                                                                       *
-*** This powershell script is used to add computers from a txt file to a SCCM device collection       ***
+*** This PowerShell script is used to add computers from a txt file to a SCCM device collection       ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 2016-09-23  | Requirements: Powershell 3.0, SCCM client SDK, local FS only  *
+* Created by Ioan Popovici, 2016-09-23  | Requirements: PowerShell 3.0, SCCM client SDK, local FS only  *
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
 * Ioan Popovici                 | 2016-09-23 | v1.0     | First version                                 *
 * Ioan Popovici                 | 2016-09-27 | v1.1     | Bugfixes, error handling                      *
 *-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoExit -NoProfile -File      *
+* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
 * Add-DeviceDirectMemebershipRules.ps1                                                                  *
+* To do:                                                                                                *
+* Remove direct membership rules using CIM.                                                             *
+* Add option to add new computers without removing all direct membership rules first.                   *
 *********************************************************************************************************
 
     .SYNOPSIS
-        This powershell script is used to add computers from a txt file to a SCCM device collection.
+        This PowerShell script is used to add computers from a txt file to a SCCM device collection.
     .DESCRIPTION
-        This powershell script is used to add computers from a txt file to a SCCM device collection, triggered when the txt file is saved.
+        This PowerShell script is used to add computers from a txt file to a SCCM device collection, triggered when the txt file is saved.
 #>
 
 ##*=============================================
@@ -47,7 +50,7 @@
     [String]$LogFilePath = (Join-Path -Path $ScriptPath -ChildPath $ScriptName)+'.log'
 
     ## Initialize last write reference time with current time
-	[DateTime]$LastWriteTimeReference = (Get-Date)
+    [DateTime]$LastWriteTimeReference = (Get-Date)
 
     ## Global error result array list
     [System.Collections.ArrayList]$Global:ErrorResult = @()
@@ -585,8 +588,6 @@ Function Test-FileChangeEvent {
         #  Reinitialize DateTime variable to be used on next file change event
         $LastWriteTimeReference = (Get-Date)
     }
-
-#endregion
 
 #endregion
 ##*=============================================
