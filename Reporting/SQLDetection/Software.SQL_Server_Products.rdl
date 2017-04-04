@@ -67,6 +67,67 @@ SELECT Distinct
 
 FROM
 (
+-- SQL 2016
+                     SELECT [vrs].[resourceID] [ResourceID],
+                            [VRS].[Netbios_name0] [ComputerName],
+                            ISNULL([vrs].[company0], '<Unknown>') AS
+                            'Company',
+                            --vrs.company0 as 'Company',
+                            MAX(CASE [sql2016].[PropertyName0]
+                                    WHEN 'SKUName'
+                                    THEN [sql2016].[PropertySTRValue0]
+                                END) AS [SQL TYPE],
+                            MAX(CASE [sql2016].[PropertyName0]
+                                    WHEN 'SPLEVEL'
+                                    THEN [sql2016].[PropertyNUMValue0]
+                                END) AS [SQL Service Pack],
+                            MAX(CASE [sql2016].[PropertyName0]
+                                    WHEN 'VERSION'
+                                    THEN [sql2016].[PropertySTRValue0]
+                                END) AS [SQL Version],
+                            MAX(CASE [sql2016].[PropertyName0]
+                                    WHEN 'FILEVERSION'
+                                    THEN [sql2016].[PropertySTRValue0]
+                                END) AS [SQL CU Version],
+                            MAX(CASE [sql2016].[PropertyName0]
+                                    WHEN 'FILEVERSION'
+                                    THEN CASE LEFT([sql2016].
+                                    [PropertySTRValue0], 4)
+                                             WHEN '2016'
+                                             THEN '2016'
+                                             WHEN '2014'
+                                             THEN '2014'
+                                             WHEN '2011'
+                                             THEN '2012'
+                                             WHEN '2009'
+                                             THEN '2008 R2'
+                                             WHEN '2007'
+                                             THEN '2008'
+                                             WHEN '2005'
+                                             THEN '2005'
+                                             WHEN '2000'
+                                             THEN '2000'
+                                             ELSE '2016'
+                                         END
+                                END) AS [Version]
+                            FROM [dbo].[v_R_System] [VRS]
+                                 LEFT JOIN 
+                                 [v_GS_CUSTOM_SQL_2016_Property_2_00]
+                                 [sql2016] ON [sql2016].[ResourceID] =
+                                 [VRS].[ResourceID]
+                                 LEFT OUTER JOIN
+                                 [v_ClientCollectionMembers] [c] ON [c].
+                                 [ResourceID] = [vrs].[ResourceID]
+                            WHERE [sql2016].[PropertyName0] IN('SKUNAME',
+                            'SPLevel', 'version', 'fileversion'
+                                                              )
+                            AND [c].[CollectionID] = @CollID
+                            AND ISNULL([sql2016].[ServiceName0], 0) NOT
+                            LIKE '%EXPRESS%'
+                            GROUP BY [VRS].[Netbios_name0],
+                                     [sql2016].[ServiceName0],
+                                     [vrs].[company0],
+                                     [vrs].[resourceID]
 	-- SQL 2014
 	SELECT
 		VRS.Netbios_name0 [ComputerName], vrs.company0 as 'Company',
