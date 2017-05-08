@@ -11,7 +11,7 @@
 * Ioan Popovici                 | 2016-07-03 | v1.0     | First version                                 *
 * Ioan Popovici                 | 2016-07-04 | v2.0     | Vastly improved                               *
 * Ioan Popovici                 | 2016-07-07 | v3.0     | Added FileSystemWatcher and workaround        *
-* Ioan Popovici                 | 2016-07-07 | v3.1     | Cleanup and run from shell optimisations      *
+* Ioan Popovici                 | 2016-07-07 | v3.1     | Cleanup and run from shell optimizations      *
 * Ioan Popovici                 | 2016-09-12 | v3.2     | Added MW type                                 *
 * Ioan Popovici                 | 2016-09-12 | v3.3     | Improved logging and variable Naming          *
 * Ioan Popovici                 | 2016-09-12 | v3.4     | Overall improvements                          *
