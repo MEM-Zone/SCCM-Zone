@@ -17,11 +17,12 @@
             <Value>=Parameters!AuthListID.Value</Value>
           </QueryParameter>
         </QueryParameters>
-        <CommandText>DECLARE @UserSIDs VARCHAR(16) = 'disabled';
-DECLARE @CollID VARCHAR(8)= 'CollID for Testing';
+        <CommandText>
+--DECLARE @UserSIDs VARCHAR(16) = 'disabled';
+--DECLARE @CollID VARCHAR(8)= 'CollID for Testing';
 
 declare @AuthListLocalID as int
-select @AuthListLocalID=CI_ID from v_AuthListInfo 
+select @AuthListLocalID=CI_ID from v_AuthListInfo
 where CI_UniqueID=@AuthListID
 
 SELECT DISTINCT
@@ -127,10 +128,10 @@ WHERE  [cir].[RelationType] = 1
     <DataSet Name="CollectionList">
       <Query>
         <DataSourceName>CentralSite</DataSourceName>
-        <CommandText>Select 
-CollectionID, 
-Name 
-from 
+        <CommandText>Select
+CollectionID,
+Name
+from
 v_Collection
 ORDER BY Name</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
@@ -149,10 +150,10 @@ ORDER BY Name</CommandText>
     <DataSet Name="UpdateLists">
       <Query>
         <DataSourceName>CentralSite</DataSourceName>
-        <CommandText>SELECT 
-CI_UniqueID, 
+        <CommandText>SELECT
+CI_UniqueID,
 Title
-FROM 
+FROM
 v_AuthListInfo
 ORDER BY Title</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
@@ -177,7 +178,7 @@ ORDER BY Title</CommandText>
           </QueryParameter>
         </QueryParameters>
         <CommandText>declare @AuthListLocalID as int
-select @AuthListLocalID=CI_ID from v_AuthListInfo 
+select @AuthListLocalID=CI_ID from v_AuthListInfo
 where CI_UniqueID=@AuthListID
 SELECT distinct
 ui.BulletinID,
@@ -186,9 +187,9 @@ ui.Title,
 ui.Description,
 ui.DateRevised,
 CASE ui.Severity
-  WHEN 10 THEN 'Critical' 
-  WHEN 8 THEN 'Important' 
-  WHEN 6 THEN 'Moderate' 
+  WHEN 10 THEN 'Critical'
+  WHEN 8 THEN 'Important'
+  WHEN 6 THEN 'Moderate'
   WHEN 2 THEN 'Low'
   ELSE '(Unknown)'
 END AS [Severity]
@@ -197,7 +198,7 @@ FROM v_UpdateComplianceStatus ucsa
 INNER JOIN v_CIRelation cir ON ucsa.CI_ID = cir.ToCIID
 INNER JOIN v_UpdateInfo ui ON ucsa.CI_ID = ui.CI_ID
 WHERE
-cir.FromCIID=@AuthListLocalID 
+cir.FromCIID=@AuthListLocalID
 AND
 cir.RelationType=1
 AND
