@@ -1,10 +1,10 @@
 <#
 *********************************************************************************************************
 *                                                                                                       *
-*** This PowerShell script is used to add computers from a txt file to a SCCM device collection       ***
+*** This PowerShell script is used to add computers from a txt file to a SCCM device collection.      ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 2016-09-23  | Requirements: PowerShell 3.0, SCCM client SDK, local FS only  *
+* Created by Ioan Popovici, 2016-09-23  | Requirements: PowerShell 3.0, SCCM client SDK, local FS only. *
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
@@ -288,7 +288,6 @@ Function Get-DeviceDirectMembershipRules {
     }
 }
 #endregion
-
 
 #region Function Remove-DeviceDirectMembershipRule
 Function Remove-DeviceDirectMembershipRule {
