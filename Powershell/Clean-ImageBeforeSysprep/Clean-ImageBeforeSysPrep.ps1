@@ -10,7 +10,9 @@
 *_______________________________________________________________________________________________________*
 * Ioan Popovici                 | 2017-7-10 | v1.0     | First version                                  *
 * Ioan Popovici                 | 2017-7-10 | v2.0     | Vastly improved                                *
+* Ioan Popovici                 | 2017-7-14 | v2.1     | Bug fixes and improvements                     *
 *-------------------------------------------------------------------------------------------------------*
+* Credit for the original VBScript to: @mikael_nystrom https://deploymentbunny.com                      *
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
 * Clean-ImageBeforeSysPrep.ps1                                                                          *
 * To do:                                                                                                *
@@ -29,12 +31,14 @@
 ##*=============================================
 #region VariableDeclaration
 
-[String]$mName = "."
-[String]$regExPattern =  '(Windows\ (?:7|8\.1|8|Server\ (?:2008\ R2|2008|2012\ R2|2012|2016)))'
-[String]$mOS = (Get-WmiObject -class Win32_OperatingSystem -ComputerName $mName | Select-Object Caption | `
-    Select-String -AllMatches -Pattern $regExPattern | Select-Object -ExpandProperty Matches).Value
-[String]$regRootPath = 'HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches'
-[Array]$regPaths = Get-ChildItem -Path $regRootPath | Select-Object -ExpandProperty Name
+## Variables: Get Machine Operating System
+[String]$RegExPattern =  '(Windows\ (?:7|8\.1|8|Server\ (?:2008\ R2|2012\ R2|2012|2016)))'
+[String]$MachineOS = (Get-WmiObject -Class Win32_OperatingSystem -ComputerName $Env:ComputerName | Select-Object Caption | `
+    Select-String -AllMatches -Pattern $RegExPattern | Select-Object -ExpandProperty Matches).Value
+## Variables: Get Volume Caches registry paths
+[String]$regVolumeCachesRootPath = 'HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches'
+[Array]$regVolumeCachesPaths = Get-ChildItem -Path $regVolumeCachesRootPath | Select-Object -ExpandProperty Name
+## Variables: CleanMgr cleanup settings
 [String]$regSageSet = '5432'
 [String]$regName = 'StateFlags'+$regSageSet
 [String]$regValue = '00000002'
@@ -60,7 +64,7 @@ Function Start-Cleanup {
     .PARAMETER CleanupOptions
         The CleanupOptions depending of what type of cleanup to perform.
     .EXAMPLE
-        Start-Cleanup -CleanupOptions ('cCacheCleanup','uCacheCleanup','vCacheCleanup')
+        Start-Cleanup -CleanupOptions ('comCacheRepair','comCacheCleanup','updCacheCleanup','volCacheCleanup')
     .NOTES
         This is an internal script function and should typically not be called directly.
     .LINK
@@ -71,28 +75,53 @@ Function Start-Cleanup {
         [Alias('cOptions')]
         [Array]$CleanupOptions
     )
+
+    Write-Host "$MachineOS Detected. Starting Cleanup... `n" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+    ## Perform Cleanup Actions
     Switch ($CleanupOptions) {
-        'cCacheCleanup' {
-            Start-Process -FilePath DISM.exe /Online /Cleanup-Image /RestoreHealth -Wait
-            Start-Process -FilePath DISM.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase -Wait
+        'comCacheRepair' {
+
+            #  Start Component Cache Repair
+            Write-Host 'Performing Component Cache Repair...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+            Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /RestoreHealth' -Wait
         }
-        'vCacheCleanup' {
-            If ($regPaths) {
-                Write-Host "Adding $regName to Registry Following Paths:" -BackgroundColor 'DarkGreen'
-                $regPaths | ForEach-Object {
+        'comCacheCleanup' {
+
+            #  Start Component Cache Cleanup
+            Write-Host 'Performing Component Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+            Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /StartComponentCleanup /ResetBase' -Wait
+        }
+        'volCacheCleanup' {
+
+            #  If Volume Cache Paths exist add registry entries required by CleanMgr
+            If ($regVolumeCachesPaths) {
+                Write-Host "Adding $regName to the following Registry Paths:" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+                $regVolumeCachesPaths | ForEach-Object {
                     Write-Host "$_"
                     New-ItemProperty -Path Registry::$_ -Name $regName -Value $regValue -PropertyType $regType -Force | Out-Null
                 }
-                Start-Process -FilePath CleanMgr.exe /sagerun:$regSageSet -Wait
+
+                #  If machine is Windows Server 2008 R2, copy files required by CleanMgr and wait for action to complete
+                If ($MachineOS -eq 'Windows Server 2008 R2') {
+                    Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr_31bf3856ad364e35_6.1.7600.16385_none_c9392808773cd7da\cleanmgr.exe' -Destination 'C:\Windows\System32\' -Force | Out-Null
+                    Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr.resources_31bf3856ad364e35_6.1.7600.16385_en-us_b9cb6194b257cc63\cleanmgr.exe.mui' -Destination 'C:\Windows\System32\en-US\' - Force | Out-Null
+                }
+
+                #  Start Volume Cache Cleanup
+                Write-Host 'Performing Volume Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+                Start-Process -FilePath 'CleanMgr.exe' -ArgumentList "/sagerun:$regSageSet" -Wait
             }
             Else {
-                Write-Host 'Path Not Found! Skipping...' -BackgroundColor 'Red'
+                Write-Host 'Path Not Found! Skipping...' -ForegroundColor 'Red' -BackgroundColor 'Black'
             }
         }
-        'uCacheCleanup' {
-            Stop-Service -Name wuauserv -Verbose | Out-Null
-            Remove-Item -Path C:\Windows\SoftwareDistribution\ -Recurse -Force | Out-Null
-            Start-Service -Name wuauserv -Verbose
+        'updCacheCleanup' {
+
+            #  Start Update Cache Cleanup
+            Write-Host 'Performing Update Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+            Stop-Service -Name 'wuauserv' | Out-Null
+            Remove-Item -Path 'C:\Windows\SoftwareDistribution\' -Recurse -Force | Out-Null
+            Start-Service -Name 'wuauserv'
         }
     }
 }
@@ -109,54 +138,40 @@ Function Start-Cleanup {
 ##*=============================================
 #region ScriptBody
 
-If ($mOS) {
-    Switch ($mOS) {
+## Perform different cleanup actions depending on the detected Operating System, the action order is intentional
+If ($MachineOS) {
+    Switch ($MachineOS) {
         'Windows 7' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-            Start-Cleanup ('vCacheCleanup','uCacheCleanup')
+            Start-Cleanup ('volCacheCleanup','updCacheCleanup')
         }
         'Windows 8' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-            Start-Cleanup ('vCachesCleanup','uCacheCleanup')
+            Start-Cleanup ('comCacheRepair','comCacheCleanup','volCacheCleanup','updCacheCleanup')
         }
         'Windows 8.1' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-            Start-Cleanup ('cCacheCleanup','vCachesCleanup','uCacheCleanup')
+            Start-Cleanup ('comCacheRepair','comCacheCleanup','volCacheCleanup','updCacheCleanup')
         }
         'Windows 10' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-            Start-Cleanup ('cCacheCleanup','vCachesCleanup','uCacheCleanup')
-        }
-        'Windows Server 2008' {
-            Write-Host "$_ Detected. Unsupported Operating System, Skipping Cleanup! `n" -BackgroundColor 'Red'
+            Start-Cleanup ('comCacheRepair','volCacheCleanup','updCacheCleanup','comCacheCleanup')
         }
         'Windows Server 2008 R2' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-
-            Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr_31bf3856ad364e35_6.1.7600.16385_none_c9392808773cd7da\cleanmgr.exe' -Destination 'C:\Windows\System32\' | Out-Null
-            Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr.resources_31bf3856ad364e35_6.1.7600.16385_en-us_b9cb6194b257cc63\cleanmgr.exe.mui' -Destination 'C:\Windows\System32\en-US\' | Out-Null
-
-            Start-Cleanup ('vCachesCleanup','uCacheCleanup')
+            Start-Cleanup ('volCacheCleanup','updCacheCleanup')
         }
         'Windows Server 2012' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-            Start-Cleanup ('cCacheCleanup','uCacheCleanup')
+            Start-Cleanup ('comCacheRepair','comCacheCleanup','updCacheCleanup')
         }
         'Windows Server 2012 R2' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-            Start-Cleanup ('cCacheCleanup','uCacheCleanup')
+            Start-Cleanup ('comCacheRepair','comCacheCleanup','updCacheCleanup')
         }
         'Windows Server 2016' {
-            Write-Host "$_ Detected. Starting Cleanup... `n" -BackgroundColor 'Blue'
-            Start-Cleanup ('cCacheCleanup','uCacheCleanup')
+            Start-Cleanup ('updCacheCleanup','comCacheCleanup')
         }
         Default {
-            Write-Host "$_ Detected. Unknown Operating System, Skipping Cleanup! `n" -BackgroundColor 'Red'
+            Write-Host "Unknown Operating System, Skipping Cleanup! `n" -ForegroundColor 'Red' -BackgroundColor 'Black'
         }
     }
 }
 Else {
-    Write-Host "Unknown Operating System, Skipping Cleanup! `n" -BackgroundColor 'Red'
+    Write-Host "Unknown Operating System, Skipping Cleanup! `n" -ForegroundColor 'Red' -BackgroundColor 'Black'
 }
 
 #endregion
