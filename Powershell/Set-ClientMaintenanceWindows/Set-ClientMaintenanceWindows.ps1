@@ -15,7 +15,7 @@
 * Ioan Popovici                 | 2016-09-12 | v3.2     | Added MW type                                 *
 * Ioan Popovici                 | 2016-09-12 | v3.3     | Improved logging and variable Naming          *
 * Ioan Popovici                 | 2016-09-12 | v3.4     | Overall improvements                          *
-* Ioan Popovici                 | 2016-09-21 | v3.5     | Fixed locale PS Bug, logging                  *
+* Ioan Popovici                 | 2016-09-21 | v3.5     | Fixed locale by changing to ISO 8601 format   *
 * Ioan Popovici                 | 2016-09-21 | v3.6     | Added email options to CSV                    *
 * Ioan Popovici                 | 2016-09-22 | v3.7     | Fixed email and error handling                *
 * Ioan Popovici                 | 2016-09-27 | v3.8     | Test-FileChangeEvent modified to be general   *
