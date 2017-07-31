@@ -4,18 +4,19 @@
 *** This PowerShell script is used to set maintenance windows based on PatchTuesday on SU collections ***
 *                                                                                                       *
 *********************************************************************************************************
-* Created by Ioan Popovici, 30/03/2015       | Requirements PowerShell 2.0                              *
+* Created by Ioan Popovici, 2015-03-30       | Requirements PowerShell 2.0                              *
 * ======================================================================================================*
 * Modified by                   |    Date    | Revision | Comments                                      *
 *_______________________________________________________________________________________________________*
-* Ioan Popovici/Octavian Cordos | 30/03/2015 | v1.0     | First version                                 *
-* Ioan Popovici/Octavian Cordos | 31/03/2015 | v2.0     | Vastly improved                               *
-* Ioan Popovici                 | 08/01/2016 | v2.1     | Fixed locale                                  *
-* Octavian Cordos               | 11/01/2016 | v2.2     | Improved MW naming                            *
-* Ioan Popovici                 | 11/01/2016 | v2.3     | Added logging and error detection, cleanup    *
-* Ioan Popovici                 | 12/09/2016 | v2.4     | Added MW type                                 *
-* Ioan Popovici                 | 12/09/2016 | v2.5     | Improved logging and variable naming          *
+* Ioan Popovici/Octavian Cordos | 2015-03-30 | v1.0     | First version                                 *
+* Ioan Popovici/Octavian Cordos | 2015-03-31 | v2.0     | Vastly improved                               *
+* Ioan Popovici                 | 2016-01-08 | v2.1     | Fixed locale                                  *
+* Octavian Cordos               | 2016-01-11 | v2.2     | Improved MW naming                            *
+* Ioan Popovici                 | 2016-01-11 | v2.3     | Added logging and error detection, cleanup    *
+* Ioan Popovici                 | 2016-01-12 | v2.4     | Added MW type                                 *
+* Ioan Popovici                 | 2016-01-12 | v2.5     | Improved logging and variable naming          *
 * Ioan Popovici                 | 2016-10-13 | v2.6     | Visibility MW name improvements               *
+* Ioan Popovici                 | 2017-07-31 | v2.7     | Fixed locale by changing to ISO 8601 format   *
 *-------------------------------------------------------------------------------------------------------*
 *                                                                                                       *
 *********************************************************************************************************
@@ -75,7 +76,7 @@ Function Write-Log {
 .PARAMETER FileLogName
     The file log name to write to.
 .PARAMETER EventLogEntrySource
-    The event log entry source.
+    The event log entry source
 .PARAMETER EventLogEntryID
     The event log entry ID.
 .PARAMETER EventLogEntryType
@@ -113,7 +114,7 @@ Function Write-Log {
 
     ## Initialization
     #  Getting the date and time
-    [string]$LogTime = (Get-Date -Format 'dd-MM-yyyy HH:mm:ss').ToString()
+    [string]$LogTime = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss').ToString()
 
     #  Archive log file if it exists and it's larger than 50 KB
     If ((Test-Path $LogFilePath) -and (Get-Item $LogFilePath).Length -gt 50KB) {
@@ -371,7 +372,7 @@ Function Set-MaintenanceWindows {
     [DateTime]$PatchTuesday = Get-PatchTuesday -Year $Year -Month $Month
 
     ## Setting Patch Day, adding offset days and weeks, reformatting date
-    $PatchDay = $PatchTuesday.AddDays($OffsetDays+($OffsetWeeks*7)) | Get-Date -Format 'dd/MM/yyyy'
+    $PatchDay = $PatchTuesday.AddDays($OffsetDays+($OffsetWeeks*7)) | Get-Date -Format 'yyyy-MM-dd'
 
     ## Check if we got ourselves in the next year and return to the main script if true
     If ($PatchDay.Year -gt $Year) {
@@ -380,8 +381,8 @@ Function Set-MaintenanceWindows {
     }
 
     ## Setting maintenance window start and stop times
-    $MWStartTime = Get-Date -Format 'dd/MM/yyyy HH:mm' -Date ($PatchDay+' '+$StartTime)
-    $MWStopTime = Get-Date -Format 'dd/MM/yyyy HH:mm' -Date ($PatchDay+' '+$StopTime)
+    $MWStartTime = Get-Date -Format 'yyyy-MM-dd HH:mm' -Date ($PatchDay+' '+$StartTime)
+    $MWStopTime = Get-Date -Format 'yyyy-MM-dd HH:mm' -Date ($PatchDay+' '+$StopTime)
 
     ## Create the schedule token
     $MWSchedule = New-CMSchedule -Start $MWStartTime -End $MWStopTime -NonRecurring
