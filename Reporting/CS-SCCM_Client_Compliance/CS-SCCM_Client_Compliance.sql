@@ -41,8 +41,8 @@ SELECT DISTINCT
     END AS OUName
 INTO #TEMP
 FROM [dbo].[fn_rbac_R_System](@UserSIDs) [s]
-    LEFT JOIN [v_RA_System_SystemOUName] [ou] ON [s].[ResourceID] = [ou].[ResourceID]
-    LEFT JOIN fn_rbac_GS_SYSTEM (@UserSIDs) [sys] ON [s].[ResourceID] = [sys].[ResourceID]
+    LEFT JOIN [v_RA_System_SystemOUName] AS [ou] ON [s].[ResourceID] = [ou].[ResourceID]
+    LEFT JOIN fn_rbac_GS_SYSTEM (@UserSIDs) AS [sys] ON [s].[ResourceID] = [sys].[ResourceID]
     LEFT JOIN [v_RA_System_ResourceNames] [r] ON [s].[ResourceID] = [r].[ResourceID]
     LEFT OUTER JOIN dbo.v_GS_OPERATING_SYSTEM AS os ON os.ResourceID = [s].[ResourceID]
     LEFT OUTER JOIN dbo.v_CH_ClientSummary AS chcs ON chcs.ResourceID = [s].[ResourceID]

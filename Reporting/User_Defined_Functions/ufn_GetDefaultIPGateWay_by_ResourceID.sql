@@ -1,13 +1,13 @@
 USE [CM_Tools]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fnGetDefaultIPGateWay_by_ResourceID]    Script Date: 07/20/2017 17:20:25 ******/
+/****** Object:  UserDefinedFunction [dbo].[ufn_GetDefaultIPGateWay_by_ResourceID]    Script Date: 07/20/2017 17:20:25 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER OFF
 GO
 
 
-CREATE FUNCTION [dbo].[fnGetDefaultIPGateWay_by_ResourceID](@pResourceID INT)
+CREATE FUNCTION [dbo].[ufn_GetDefaultIPGateWay_by_ResourceID](@pResourceID INT)
 RETURNS VARCHAR(200)
 AS
     BEGIN

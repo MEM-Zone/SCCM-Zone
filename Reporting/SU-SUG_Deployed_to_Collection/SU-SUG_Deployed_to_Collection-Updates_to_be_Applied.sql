@@ -1,4 +1,4 @@
-DECLARE @AuthListLocalID AS int
+\DECLARE @AuthListLocalID AS int
 SELECT @AuthListLocalID=CI_ID
 FROM v_AuthListInfo
 WHERE CI_UniqueID=@AuthListID
