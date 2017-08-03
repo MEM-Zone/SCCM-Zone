@@ -1,7 +1,7 @@
 <#
 *********************************************************************************************************
 *                                                                                                       *
-*** This Powershell Script is used to get the Bitlocker protection status                             ***
+*** This Powershell Script is used to get the Bitlocker  status                                       ***
 *                                                                                                       *
 *********************************************************************************************************
 * Created by Ioan Popovici, 13/11/2015  | Requirements Powershell 3.0                                   *

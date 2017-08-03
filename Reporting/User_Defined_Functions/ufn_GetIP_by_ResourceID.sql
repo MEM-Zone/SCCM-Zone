@@ -1,13 +1,13 @@
 USE [CM_Tools]
 GO
-/****** Object:  UserDefinedFunction [dbo].[fnGetIP_by_ResourceID]    Script Date: 07/20/2017 17:21:38 ******/
+/****** Object:  UserDefinedFunction [dbo].[ufn_GetIP_by_ResourceID]    Script Date: 07/20/2017 17:21:38 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER OFF
 GO
 
 
-CREATE FUNCTION [dbo].[fnGetIP_by_ResourceID](@pResourceID INT)
+CREATE FUNCTION [dbo].[ufn_GetIP_by_ResourceID](@pResourceID INT)
 RETURNS VARCHAR(200)
 AS
     BEGIN
