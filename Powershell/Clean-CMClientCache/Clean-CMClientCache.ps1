@@ -14,6 +14,7 @@
 * Ioan Popovici | 2017-04-26 | v2.4     | Basic error management, formatting cleanup                    *
 * Ioan Popovici | 2017-04-26 | v2.5     | Orphaned cache cleanup, null CacheID fix, improved logging    *
 * Ioan Popovici | 2017-05-02 | v2.5     | Basic error Management                                        *
+* Walker        | 2017-08-08 | v2.6     | Fixed first time run logging bug                              *
 *-------------------------------------------------------------------------------------------------------*
 * To Do: Not happy, this needs a re-write changing the logic. Now it parses all apps/packages/updates   *
 * and then looks in the cache for it. This search is expensive and optimized, will have to go the       *
@@ -131,21 +132,20 @@ Function Write-Log {
 
     ## Write to log and console
     }
-    Else {
 
-        #  Convert the Result to string and Write it to the EventLog
-        $ResultString = Out-String -InputObject $Result -Width 1000
-        Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $ResultString
+    #  Convert the Result to string and Write it to the EventLog
+    $ResultString = Out-String -InputObject $Result -Width 1000
+    Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $ResultString
 
-        #  Write Result Object to csv file (append)
-        $EventLogEntryMessage | Export-Csv -Path $ResultCSV -Delimiter ';' -Encoding UTF8 -NoTypeInformation -Append -Force
+    #  Write Result Object to csv file (append)
+    $EventLogEntryMessage | Export-Csv -Path $ResultCSV -Delimiter ';' -Encoding UTF8 -NoTypeInformation -Append -Force
 
-        #  Write Result to console
-        $EventLogEntryMessage | Format-Table Name,TotalDeleted`(MB`)
+    #  Write Result to console
+    $EventLogEntryMessage | Format-Table Name,TotalDeleted`(MB`)
 
-    }
 }
 #endregion
+
 
 #region Function Remove-CacheItem
 Function Remove-CacheItem {
