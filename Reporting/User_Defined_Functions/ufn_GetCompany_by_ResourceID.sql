@@ -1,11 +1,16 @@
 USE [CM_Tools]
 GO
-/****** Object:  UserDefinedFunction [dbo].[ufn_GetCompany_by_ResourceID]    Script Date: 2017-08-03 ******/
+/****** Object:  UserDefinedFunction [dbo].[ufn_GetCompany_by_ResourceID]    Script Date: 08/10/2017 19:58:10 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER OFF
 GO
 
+IF EXISTS ( SELECT  [OBJECT_ID]
+            FROM    SYS.OBJECTS
+            WHERE   NAME = 'ufn_GetCompany_by_ResourceID' )
+    DROP FUNCTION dbo.ufn_GetCompany_by_ResourceID;
+GO
 
 CREATE FUNCTION [dbo].[ufn_GetCompany_by_ResourceID](@pResourceID INT)
 RETURNS VARCHAR(200)
@@ -29,5 +34,6 @@ AS
             WHERE [ou].[System_OU_Name0] IS NOT NULL
                 AND [ou].[ResourceID] = @pResourceID
         )
+        IF @RET IS NULL SET @RET = '0-UNKNOWN'
         RETURN @RET;
     END;
