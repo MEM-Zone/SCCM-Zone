@@ -16,7 +16,6 @@ AS
             SELECT
                 CASE
                     WHEN [cs].Roles0 LIKE '%Domain_Controller%' THEN 'DC'
-                    WHEN [cs].Roles0 LIKE '%Domain_Controller%' THEN 'DC'
                     WHEN [cs].Roles0 LIKE '%Workstation%' THEN 'Workstation'
                     WHEN [cs].Roles0 LIKE '%Server%' THEN 'Server'
                     ELSE '0-UNKNOWN'
