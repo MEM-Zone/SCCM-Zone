@@ -1,17 +1,39 @@
+/*
+*********************************************************************************************************
+* Created by Ioan Popovici, 2015-08-18       | Requirements: CM_Tools Database                          *
+* ======================================================================================================*
+* Modified by                   |    Date    | Revision | Comments                                      *
+*_______________________________________________________________________________________________________*
+* Ioan Popovici                 | 2015-08-18 | v1.0     | First version                                 *
+*-------------------------------------------------------------------------------------------------------*
+* Credit to: Michelle Ufford http://sqlfool.com.                                                        *
+*********************************************************************************************************
+
+    .SYNOPSIS
+        This SQL Function is used to parse a CSV string.
+    .DESCRIPTION
+        This SQL Function is used to parse a CSV string and return individual substrings.
+*/
+
+/*##=============================================*/
+/*## QUERY BODY
+/*##=============================================*/
+/* #region QueryBody */
+
 USE [CM_Tools]
 GO
-/******
-* Object:  UserDefinedFunction [dbo].[ufn_csv_String_Parser]
-* Credit to: Michelle Ufford http://sqlfool.com.
-******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER OFF
 GO
 
-IF EXISTS ( SELECT  [OBJECT_ID]
-            FROM    SYS.OBJECTS
-            WHERE   NAME = 'ufn_csv_String_Parser' )
+IF EXISTS
+(
+    SELECT  [OBJECT_ID]
+    FROM    SYS.OBJECTS
+    WHERE   NAME = 'ufn_csv_String_Parser'
+)
     DROP FUNCTION dbo.ufn_csv_String_Parser;
 GO
 
@@ -42,6 +64,7 @@ AS
             FROM ParseCTE
             WHERE CHARINDEX(@pDelimiter, @pTrimmedInputString + @pDelimiter, EndPos + 1) <> 0
         )
+
         /* Insert results into a table */
         INSERT INTO @tRET
         SELECT SUBSTRING(@pTrimmedInputString, StartPos, EndPos - StartPos)
@@ -51,3 +74,8 @@ AS
 
         RETURN;
     END;
+
+/* #endregion */
+/*##=============================================*/
+/*## END QUERY BODY                              */
+/*##=============================================*/
