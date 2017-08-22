@@ -1,14 +1,38 @@
+/*
+*********************************************************************************************************
+* Created by Ioan Popovici, 2015-08-18       | Requirements: CM_Tools Database                          *
+* ======================================================================================================*
+* Modified by                   |    Date    | Revision | Comments                                      *
+*_______________________________________________________________________________________________________*
+* Ioan Popovici                 | 2015-08-18 | v1.0     | First version                                 *
+*-------------------------------------------------------------------------------------------------------*
+* Credit to: Michelle Ufford http://sqlfool.com.                                                        *
+*********************************************************************************************************
+
+    .SYNOPSIS
+        This SQL Function is used to get the Machine Company by ResourceID.
+    .DESCRIPTION
+        This SQL Function is used to get the Machine Company by ResourceID using Machine FQDN or OU.
+*/
+
+/*##=============================================*/
+/*## QUERY BODY
+/*##=============================================*/
+/* #region QueryBody */
+
 USE [CM_Tools]
 GO
-/****** Object:  UserDefinedFunction [dbo].[ufn_GetCompany_by_ResourceID]    Script Date: 08/10/2017 19:58:10 ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER OFF
 GO
 
-IF EXISTS ( SELECT  [OBJECT_ID]
-            FROM    SYS.OBJECTS
-            WHERE   NAME = 'ufn_GetCompany_by_ResourceID' )
+IF EXISTS (
+    SELECT  [OBJECT_ID]
+    FROM    SYS.OBJECTS
+    WHERE   NAME = 'ufn_GetCompany_by_ResourceID'
+    )
     DROP FUNCTION dbo.ufn_GetCompany_by_ResourceID;
 GO
 
@@ -17,7 +41,8 @@ RETURNS VARCHAR(200)
 AS
     BEGIN
         DECLARE @RET VARCHAR(200);
-        SELECT @RET = (
+        SELECT @RET =
+        (
             SELECT TOP 1
                 CASE
                     WHEN ([ou].[System_OU_Name0] LIKE '%WTO%' OR [rn].[Resource_Names0] LIKE '%WTO%') THEN 'WTO'
@@ -37,3 +62,8 @@ AS
         IF @RET IS NULL SET @RET = '0-UNKNOWN'
         RETURN @RET;
     END;
+
+/* #endregion */
+/*##=============================================*/
+/*## END QUERY BODY                              */
+/*##=============================================*/

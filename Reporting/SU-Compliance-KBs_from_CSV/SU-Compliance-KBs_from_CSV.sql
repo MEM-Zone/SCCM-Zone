@@ -1,16 +1,53 @@
+/*
+*********************************************************************************************************
+* Created by Ioan Popovici, 2015-08-18       | Requirements: HWI - Win32_QuickfixEngineering WMI Class. *
+* ======================================================================================================*
+* Modified by                   |    Date    | Revision | Comments                                      *
+*_______________________________________________________________________________________________________*
+* Ioan Popovici/Octavian Cordos | 2015-08-18 | v1.0     | First version                                 *
+*-------------------------------------------------------------------------------------------------------*
+*                                                                                                       *
+*********************************************************************************************************
 
---DECLARE @UserSIDs VARCHAR(16);
---SELECT @UserSIDs = 'disabled';
---DECLARE @CollID VARCHAR(8);
---SET @CollID = 'SMS00001';
---DECLARE @UpdateList Varchar(MAX);
---SET @UpdateList = 'KB4015553,KB4019215,KB4015549,KB4015552,KB4012598,KB4019264,KB4012215,KB4012213,KB4012212,KB4012217,KB4015551,KB4019216,KB4012216,KB4015550,KB4013429,KB4019472,KB4015217,KB4015438,KB4016635,KB4019473,KB4015219,KB4013198,KB4012606,KB4015221,KB4019474,KB4012214,KB4019265,KB4019263,KB4015546,KB4022727,KB4022714,KB4022715,KB4022168,KB4022719,KB4022720,KB4022726,KB4025335,KB4025336,KB4025341,KB4034664,KB4034681,KB4022727,KB4022714,KB4022715,KB4022725,KB4025338,KB4025344,KB4025339,KB4025342,KB4032188,KB4034668,KB4034660,KB4034658,KB4034674'
---=Join(Parameters!UpdateList.Value,",")
+    .SYNOPSIS
+        This SQL query is used to get the Compliance for Multiple KBs.
+    .DESCRIPTION
+        This SQL query is used to get the Compliance for Multiple KBs for a Machine Collection.
+*/
 
+/*##=============================================*/
+/*## VARIABLE DECLARATION                        */
+/*##=============================================*/
+/* #region VariableDeclaration */
+
+/*
+## Used for Testing Only
+DECLARE @UserSIDs VARCHAR(16);
+SELECT @UserSIDs = 'disabled';
+DECLARE @CollID VARCHAR(8);
+SET @CollID = 'SMS00001';
+DECLARE @UpdateList Varchar(MAX);
+SET @UpdateList = 'KB4015553,KB4019215,KB4015549,KB4015552,KB4012598,KB4019264,KB4012215,KB4012213,KB4012212,KB4012217,KB4015551,KB4019216,KB4012216,KB4015550,KB4013429,KB4019472,KB4015217,KB4015438,KB4016635,KB4019473,KB4015219,KB4013198,KB4012606,KB4015221,KB4019474,KB4012214,KB4019265,KB4019263,KB4015546,KB4022727,KB4022714,KB4022715,KB4022168,KB4022719,KB4022720,KB4022726,KB4025335,KB4025336,KB4025341,KB4034664,KB4034681,KB4022727,KB4022714,KB4022715,KB4022725,KB4025338,KB4025344,KB4025339,KB4025342,KB4032188,KB4034668,KB4034660,KB4034658,KB4034674'
+
+=Join(Parameters!UpdateList.Value,",")
+*/
+
+/* #endregion */
+/*##=============================================*/
+/*## END VARIABLE DECLARATION                    */
+/*##=============================================*/
+
+/*##=============================================*/
+/*## QUERY BODY
+/*##=============================================*/
+/* #region QueryBody */
+
+/* Parsing CSV String using a user defined function */
 SELECT *
 INTO [#TMP_KB]
     FROM [CM_Tools].[dbo].[ufn_csv_String_Parser](@UpdateList, ',');
 
+/* Getting Raw Compliance list Tagging Installed as 'FALSE' or 'TRUE' */
 SELECT [SYS].[Name0],
     CASE
         WHEN [HE].[HotfixID0] IN ( SELECT * FROM [#TMP_KB] ) THEN 'TRUE'
@@ -26,6 +63,7 @@ WHERE [fcm].[CollectionID] = @CollID
     AND [HE].[HotFixID0] IN ( SELECT * FROM [#TMP_KB] )
 ORDER BY [sys].[Name0];
 
+/* Getting Machine Collection data and doing Crosscheck with Raw Compliance */
 SELECT DISTINCT
     [s].[ResourceID] AS [MachineID],
     ( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([s].[ResourceID]) ) AS [Company],
@@ -98,3 +136,8 @@ SELECT DISTINCT
 
     DROP TABLE [#TMP_RawCompliance];
     DROP TABLE [#TMP_KB];
+
+/* #endregion */
+/*##=============================================*/
+/*## END QUERY BODY                              */
+/*##=============================================*/
