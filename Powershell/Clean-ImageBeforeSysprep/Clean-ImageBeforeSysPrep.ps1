@@ -1,9 +1,5 @@
 <#
 *********************************************************************************************************
-*                                                                                                       *
-*** This PowerShell script is used shrink the image before SysPrep.                                   ***
-*                                                                                                       *
-*********************************************************************************************************
 * Created by Ioan Popovici, 2017-7-10  | Requirements: PowerShell 3.0                                   *
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
@@ -11,19 +7,23 @@
 * Ioan Popovici                 | 2017-7-10 | v1.0     | First version                                  *
 * Ioan Popovici                 | 2017-7-10 | v2.0     | Vastly improved                                *
 * Ioan Popovici                 | 2017-7-14 | v2.1     | Bug fixes and improvements                     *
+* Andrew Reiter                 | 2017-9-07 | v2.2     | Fix Copy-Item Bug                              *
 *-------------------------------------------------------------------------------------------------------*
-* Credit for the original VBScript to: @mikael_nystrom https://deploymentbunny.com                      *
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
-* Clean-ImageBeforeSysPrep.ps1                                                                          *
 * To do:                                                                                                *
 * Add error handling.                                                                                   *
 * Add better logging.                                                                                   *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This PowerShell script is used shrink the image before SysPrep.
-    .DESCRIPTION
-        This PowerShell script is used shrink the image before SysPrep by removing volume caches, update backups and update caches.
+.SYNOPSIS
+    This PowerShell script is used shrink the image before SysPrep.
+.DESCRIPTION
+    This PowerShell script is used shrink the image before SysPrep by removing volume caches, update backups and update caches.
+.EXAMPLE
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Clean-ImageBeforeSysPrep.ps1
+.NOTES
+    Credit for the original VBScript to: @mikael_nystrom https://deploymentbunny.com
+.LINK
+    http://sccm-zone.com
 #>
 
 ##*=============================================
@@ -56,20 +56,20 @@
 
 #region Function Start-Cleanup
 Function Start-Cleanup {
-    <#
-    .SYNOPSIS
-        Cleans volume caches, update backups and update caches.
-    .DESCRIPTION
-        Cleans volume caches, update backups and update caches depending on the selected options.
-    .PARAMETER CleanupOptions
-        The CleanupOptions depending of what type of cleanup to perform.
-    .EXAMPLE
-        Start-Cleanup -CleanupOptions ('comCacheRepair','comCacheCleanup','updCacheCleanup','volCacheCleanup')
-    .NOTES
-        This is an internal script function and should typically not be called directly.
-    .LINK
-        http://sccm-zone.com
-    #>
+<#
+.SYNOPSIS
+    Cleans volume caches, update backups and update caches.
+.DESCRIPTION
+    Cleans volume caches, update backups and update caches depending on the selected options.
+.PARAMETER CleanupOptions
+    The CleanupOptions depending of what type of cleanup to perform.
+.EXAMPLE
+    Start-Cleanup -CleanupOptions ('comCacheRepair','comCacheCleanup','updCacheCleanup','volCacheCleanup')
+.NOTES
+    This is an internal script function and should typically not be called directly.
+.LINK
+    http://sccm-zone.com
+#>
     Param (
         [Parameter(Mandatory=$true,Position=0)]
         [Alias('cOptions')]
@@ -104,7 +104,7 @@ Function Start-Cleanup {
                 #  If machine is Windows Server 2008 R2, copy files required by CleanMgr and wait for action to complete
                 If ($MachineOS -eq 'Windows Server 2008 R2') {
                     Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr_31bf3856ad364e35_6.1.7600.16385_none_c9392808773cd7da\cleanmgr.exe' -Destination 'C:\Windows\System32\' -Force | Out-Null
-                    Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr.resources_31bf3856ad364e35_6.1.7600.16385_en-us_b9cb6194b257cc63\cleanmgr.exe.mui' -Destination 'C:\Windows\System32\en-US\' - Force | Out-Null
+                    Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr.resources_31bf3856ad364e35_6.1.7600.16385_en-us_b9cb6194b257cc63\cleanmgr.exe.mui' -Destination 'C:\Windows\System32\en-US\' -Force | Out-Null
                 }
 
                 #  Start Volume Cache Cleanup
