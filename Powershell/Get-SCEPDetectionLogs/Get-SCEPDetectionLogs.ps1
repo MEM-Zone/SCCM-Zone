@@ -10,6 +10,7 @@
 *_______________________________________________________________________________________________________*
 * Octavian Cordos               | 2017-03-28 | v1.0     | First version                                 *
 * Ioan Popovici                 | 2017-03-28 | v1.1     | Minor modifications, cleanup                  *
+* Ioan Popovici                 | 2017-09-11 | v1.2     | Fixed $ScriptName variable                      *
 *-------------------------------------------------------------------------------------------------------*
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -File              *
 * Get-SCEPDetectionLogs.ps1 -CMSQLServer "SCCM_SQL_Server_Name" -CMDatabase "CM_Database_Name"          *
@@ -38,7 +39,7 @@
 
     ## Get script path and name
     [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-    [String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+    [String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
 
     ## CSV file initialization
     #  Set the CSV Data file name

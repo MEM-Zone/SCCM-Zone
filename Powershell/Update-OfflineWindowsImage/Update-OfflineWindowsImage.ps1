@@ -9,11 +9,12 @@
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2017-8-25 | v1.0     | First version                                  *
-* Ioan Popovici                 | 2017-8-27 | v1.1     | Fixed incorrect DISM version selection         *
-* Ioan Popovici                 | 2017-8-28 | v1.2     | Improved data input and console output         *
-* Ioan Popovici                 | 2017-8-29 | v1.3     | Added C:\Windows\System32 path to $Env:Path    *
-* Ioan Popovici                 | 2017-8-31 | v1.4     | Fixed multiple selection prevention bug        *
+* Ioan Popovici                 | 2017-08-25 | v1.0     | First version                                 *
+* Ioan Popovici                 | 2017-08-27 | v1.1     | Fixed incorrect DISM version selection        *
+* Ioan Popovici                 | 2017-08-28 | v1.2     | Improved data input and console output        *
+* Ioan Popovici                 | 2017-08-29 | v1.3     | Added C:\Windows\System32 path to $Env:Path   *
+* Ioan Popovici                 | 2017-08-31 | v1.4     | Fixed multiple selection prevention bug       *
+* Ioan Popovici                 | 2017-09-11 | v1.5     | Fixed $ScriptName variable                      *
 *-------------------------------------------------------------------------------------------------------*
 * Credit for the original VBScript to:                                                                  *
 * http://www.catonrug.net/2014/08/slipstream-internet-explorer-11-into-windows-7-sp1-x64-source.html    *
@@ -37,7 +38,7 @@
 
 ## Get script path and name
 [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
 ## Set Paths and Image Index
 [String]$MountPath = (Join-Path -Path $ScriptPath -ChildPath '\Mount')
 [String]$ScratchPath = (Join-Path -Path $ScriptPath -ChildPath '\Scratch')

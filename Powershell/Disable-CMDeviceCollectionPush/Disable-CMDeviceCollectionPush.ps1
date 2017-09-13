@@ -9,6 +9,7 @@
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
 * Ioan Popovici                 | 2016-10-26 | v1.0     | First version                                 *
+* Ioan Popovici                 | 2017-09-11 | v1.1     | Fixed $ScriptName variable                      *
 *-------------------------------------------------------------------------------------------------------*
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -File              *
 * Disable-CMDeviceCollectionPush.ps1 -CMSiteServer SiteServerName -CMCollection CollectionName          *
@@ -54,7 +55,7 @@ Param (
 
 ## Get script path and name
 [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
 
 ## CSV and log files initialization
 #  Set the CSV Settings and Data file name

@@ -46,6 +46,9 @@ CLS
 $Global:Result  =@()
 $Global:ExclusionList  =@()
 
+## Final Result variable
+$Result  =@()
+
 ## Initialize progress Counter
 $ProgressCounter = 0
 

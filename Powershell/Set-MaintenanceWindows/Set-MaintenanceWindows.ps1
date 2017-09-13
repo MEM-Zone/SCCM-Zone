@@ -17,6 +17,7 @@
 * Ioan Popovici                 | 2016-01-12 | v2.5     | Improved logging and variable naming          *
 * Ioan Popovici                 | 2016-10-13 | v2.6     | Visibility MW name improvements               *
 * Ioan Popovici                 | 2017-07-31 | v2.7     | Fixed locale by changing to ISO 8601 format   *
+* Ioan Popovici                 | 2017-09-11 | v2.8     | Fixed $ScriptName variable                      *
 *-------------------------------------------------------------------------------------------------------*
 *                                                                                                       *
 *********************************************************************************************************
@@ -37,7 +38,7 @@ CLS
 
 ## Get script path and name
 [string]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-[string]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+[string]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
 
 ## CSV and log file initialization
 #  Set the CSV file name

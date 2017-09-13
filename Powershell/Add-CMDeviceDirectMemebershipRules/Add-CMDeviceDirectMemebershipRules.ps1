@@ -10,9 +10,10 @@
 *_______________________________________________________________________________________________________*
 * Ioan Popovici                 | 2016-09-23 | v1.0     | First version                                 *
 * Ioan Popovici                 | 2016-09-27 | v1.1     | Bugfixes, error handling                      *
+* Ioan Popovici                 | 2017-09-11 | v1.2     | Fixed $ScriptName variable                      *
 *-------------------------------------------------------------------------------------------------------*
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
-* Add-DeviceDirectMemebershipRules.ps1                                                                  *
+* Add-CMDeviceDirectMemebershipRules.ps1                                                                *
 * To do:                                                                                                *
 * Remove direct membership rules using CIM.                                                             *
 * Add option to add new computers without removing all direct membership rules first.                   *
@@ -31,7 +32,7 @@
 
     ## Get script path and name
     [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-    [String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+    [String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
 
     ## CSV and log files initialization
     #  Set the CSV Settings and Data file name

@@ -20,6 +20,7 @@
 * Ioan Popovici                 | 2016-09-22 | v3.7     | Fixed email and error handling                *
 * Ioan Popovici                 | 2016-09-27 | v3.8     | Test-FileChangeEvent modified to be general   *
 * Ioan Popovici                 | 2016-10-13 | v3.9     | Visibility MW name improvements               *
+* Ioan Popovici                 | 2017-09-11 | v4.0     | Fixed $ScriptName variable                      *
 *-------------------------------------------------------------------------------------------------------*
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
 * Set-ClientMaintenanceWindows.ps1                                                                      *
@@ -38,7 +39,7 @@
 
 ## Get script path and name
 [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
 
 ## CSV and log files initialization
 #  Set the CSV Settings and Data file name
