@@ -9,7 +9,8 @@
 * ======================================================================================================*
 * Modified by                   | Date       | Version  | Comments                                      *
 *_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2017-8-31 | v1.0     | First version                                  *
+* Ioan Popovici                 | 2017-08-31 | v1.0     | First version                                 *
+* Ioan Popovici                 | 2017-09-11 | v1.1     | Fixed $ScriptName variable                      *
 *-------------------------------------------------------------------------------------------------------*
 * Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
 * Repair-ServicingError_800f082f.ps1                                                                    *
@@ -33,7 +34,7 @@
 
 ## Get script path and name
 [String]$ScriptPath = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
+[String]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
 ## Set Paths and Image Index
 [String]$MountPath = (Join-Path -Path $ScriptPath -ChildPath '\Mount')
 [String]$MountHivePath =  (Join-Path -Path $MountPath -ChildPath '\Windows\System32\Config\Software')
