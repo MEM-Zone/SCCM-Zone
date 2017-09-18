@@ -1,30 +1,30 @@
 <#
 *********************************************************************************************************
+* Created by Ioan Popovici   | 3.0, ADK Windows 10, Windows 8 or higher. Tested on Windows 2012 R2.     *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2017-08-31 | v1.0     | First version                                                 *
+* Ioan Popovici | 2017-09-11 | v1.1     | Fixed $ScriptName variable                                    *
+* ===================================================================================================== *
 *                                                                                                       *
-*** This PowerShell script is used to fix the 0x800f082f~ error encountered during offline servicing  ***
-*                                                                                                       *
-*********************************************************************************************************
-* Created by Ioan Popovici, 2017-8-25  | Requirements: PowerShell 3.0, ADK Windows 10, Windows 8 or     *
-* higher. Tested on Windows 2012 R2.                                                                    *
-* ======================================================================================================*
-* Modified by                   | Date       | Version  | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2017-08-31 | v1.0     | First version                                 *
-* Ioan Popovici                 | 2017-09-11 | v1.1     | Fixed $ScriptName variable                      *
-*-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
-* Repair-ServicingError_800f082f.ps1                                                                    *
-* To do:                                                                                                *
-* Better error handling.                                                                                *
-* Better logging.                                                                                       *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This PowerShell script is used to fix the 0x800f082f~ error encountered during offline servicing.
-    .DESCRIPTION
-        This PowerShell script is used to fix the 0x800f082f~ error encountered during offline servicing by
-        setting the HKLM:\Microsoft\Windows\CurrentVersion\Component Based Servicing\SessionsPending\Exclusive
-        value to 0.
+.SYNOPSIS
+    This PowerShell script is used to fix the 0x800f082f~ error encountered during offline servicing.
+.DESCRIPTION
+    This PowerShell script is used to fix the 0x800f082f~ error encountered during offline servicing by
+    setting the HKLM:\Microsoft\Windows\CurrentVersion\Component Based Servicing\SessionsPending\Exclusive
+    value to 0.
+.EXAMPLE
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Repair-ServicingError_800f082f.ps1
+.NOTES
+    To do:
+    * Better error handling.
+    * Better logging.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================
@@ -85,45 +85,49 @@ Param (
     [Alias('Pr')]
     [Array]$Privilege
 )
-$Definition = @'
-    using System;
-    using System.Runtime.InteropServices;
-    public class AdjPriv {
-        [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
-        internal static extern bool AdjustTokenPrivileges(IntPtr htok, bool disall,
-        ref TokPriv1Luid newst, int len, IntPtr prev, IntPtr rele);
-        [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
-        internal static extern bool OpenProcessToken(IntPtr h, int acc, ref IntPtr phtok);
-        [DllImport("advapi32.dll", SetLastError = true)]
-        internal static extern bool LookupPrivilegeValue(string host, string name,
-        ref long pluid);
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        internal struct TokPriv1Luid {
-            public int Count;
-            public long Luid;
-            public int Attr;
+    $Definition = @'
+        using System;
+        using System.Runtime.InteropServices;
+        public class AdjPriv {
+            [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
+            internal static extern bool AdjustTokenPrivileges(IntPtr htok, bool disall,
+            ref TokPriv1Luid newst, int len, IntPtr prev, IntPtr rele);
+            [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
+            internal static extern bool OpenProcessToken(IntPtr h, int acc, ref IntPtr phtok);
+            [DllImport("advapi32.dll", SetLastError = true)]
+            internal static extern bool LookupPrivilegeValue(string host, string name,
+            ref long pluid);
+            [StructLayout(LayoutKind.Sequential, Pack = 1)]
+            internal struct TokPriv1Luid {
+                public int Count;
+                public long Luid;
+                public int Attr;
+            }
+            internal const int SE_PRIVILEGE_ENABLED = 0x00000002;
+            internal const int TOKEN_QUERY = 0x00000008;
+            internal const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
+            public static bool EnablePrivilege(long processHandle, string privilege) {
+                bool retVal;
+                TokPriv1Luid tp;
+                IntPtr hproc = new IntPtr(processHandle);
+                IntPtr htok = IntPtr.Zero;
+                retVal = OpenProcessToken(hproc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref htok);
+                tp.Count = 1;
+                tp.Luid = 0;
+                tp.Attr = SE_PRIVILEGE_ENABLED;
+                retVal = LookupPrivilegeValue(null, privilege, ref tp.Luid);
+                retVal = AdjustTokenPrivileges(htok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
+                return retVal;
+            }
         }
-        internal const int SE_PRIVILEGE_ENABLED = 0x00000002;
-        internal const int TOKEN_QUERY = 0x00000008;
-        internal const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
-        public static bool EnablePrivilege(long processHandle, string privilege) {
-            bool retVal;
-            TokPriv1Luid tp;
-            IntPtr hproc = new IntPtr(processHandle);
-            IntPtr htok = IntPtr.Zero;
-            retVal = OpenProcessToken(hproc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref htok);
-            tp.Count = 1;
-            tp.Luid = 0;
-            tp.Attr = SE_PRIVILEGE_ENABLED;
-            retVal = LookupPrivilegeValue(null, privilege, ref tp.Luid);
-            retVal = AdjustTokenPrivileges(htok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
-            return retVal;
-        }
-    }
-'@
-$ProcessHandle = (Get-Process -id $pid).Handle
-$type = Add-Type $definition -PassThru
-$type[0]::EnablePrivilege($processHandle, $Privilege)
+    '@
+
+    ## Get process pandle
+    $ProcessHandle = (Get-Process -id $pid).Handle
+    $type = Add-Type $Definition -PassThru
+
+    ## Inject token
+    $type[0]::EnablePrivilege($processHandle, $Privilege)
 }
 
 #endregion

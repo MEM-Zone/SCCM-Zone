@@ -1,35 +1,37 @@
 <#
 *********************************************************************************************************
+* Created by Ioan Popovici   | Requires PowerShell 3.0, SCCM client SDK, local FS only                  *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2016-07-03 | v1.0     | First version                                                 *
+* Ioan Popovici | 2016-07-04 | v2.0     | Vastly improved                                               *
+* Ioan Popovici | 2016-07-07 | v3.0     | Added FileSystemWatcher and workaround                        *
+* Ioan Popovici | 2016-07-07 | v3.1     | Cleanup and run from shell optimizations                      *
+* Ioan Popovici | 2016-09-12 | v3.2     | Added MW type                                                 *
+* Ioan Popovici | 2016-09-12 | v3.3     | Improved logging and variable Naming                          *
+* Ioan Popovici | 2016-09-12 | v3.4     | Overall improvements                                          *
+* Ioan Popovici | 2016-09-21 | v3.5     | Fixed locale by changing to ISO 8601 format                   *
+* Ioan Popovici | 2016-09-21 | v3.6     | Added email options to CSV                                    *
+* Ioan Popovici | 2016-09-22 | v3.7     | Fixed email and error handling                                *
+* Ioan Popovici | 2016-09-27 | v3.8     | Test-FileChangeEvent modified to be general                   *
+* Ioan Popovici | 2016-10-13 | v3.9     | Visibility MW name improvements                               *
+* Ioan Popovici | 2017-09-11 | v4.0     | Fixed $ScriptName variable                                    *
+* ===================================================================================================== *
 *                                                                                                       *
-*** This PowerShell script is used to set maintenance windows based on CSV file                       ***
-*                                                                                                       *
-*********************************************************************************************************
-* Created by Ioan Popovici, 2016-07-03  | Requirements: PowerShell 3.0, SCCM client SDK, local FS only  *
-* ======================================================================================================*
-* Modified by                   | Date       | Version  | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2016-07-03 | v1.0     | First version                                 *
-* Ioan Popovici                 | 2016-07-04 | v2.0     | Vastly improved                               *
-* Ioan Popovici                 | 2016-07-07 | v3.0     | Added FileSystemWatcher and workaround        *
-* Ioan Popovici                 | 2016-07-07 | v3.1     | Cleanup and run from shell optimizations      *
-* Ioan Popovici                 | 2016-09-12 | v3.2     | Added MW type                                 *
-* Ioan Popovici                 | 2016-09-12 | v3.3     | Improved logging and variable Naming          *
-* Ioan Popovici                 | 2016-09-12 | v3.4     | Overall improvements                          *
-* Ioan Popovici                 | 2016-09-21 | v3.5     | Fixed locale by changing to ISO 8601 format   *
-* Ioan Popovici                 | 2016-09-21 | v3.6     | Added email options to CSV                    *
-* Ioan Popovici                 | 2016-09-22 | v3.7     | Fixed email and error handling                *
-* Ioan Popovici                 | 2016-09-27 | v3.8     | Test-FileChangeEvent modified to be general   *
-* Ioan Popovici                 | 2016-10-13 | v3.9     | Visibility MW name improvements               *
-* Ioan Popovici                 | 2017-09-11 | v4.0     | Fixed $ScriptName variable                      *
-*-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
-* Set-ClientMaintenanceWindows.ps1                                                                      *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This PowerShell script is used to set maintenance windows based on CSV file.
-    .DESCRIPTION
-        This PowerShell script is used to set maintenance windows, triggered when the settings CSV file is saved.
+.SYNOPSIS
+    This PowerShell script is used to set maintenance windows based on CSV file.
+.DESCRIPTION
+    This PowerShell script is used to set maintenance windows, triggered when the settings CSV file is saved.
+.EXAMPLE
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Set-ClientMaintenanceWindows.ps1
+.NOTES
+    Uses FileSystemWatcher to see when the CSV file is changed.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================
@@ -99,7 +101,8 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -201,7 +204,8 @@ Function Get-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -246,7 +250,8 @@ Function Remove-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -300,7 +305,8 @@ Function Set-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -400,7 +406,8 @@ Function Send-Mail {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -453,7 +460,8 @@ Function Start-DataProcessing {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     ## Import SCCM PSH module and changing context
     Try {
@@ -581,7 +589,8 @@ Function Test-FileChangeEvent {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (

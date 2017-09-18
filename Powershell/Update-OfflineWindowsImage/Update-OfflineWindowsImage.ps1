@@ -1,34 +1,35 @@
 <#
 *********************************************************************************************************
+* Created by Ioan Popovici   | 3.0, ADK Windows 10, Windows 8 or higher. Tested on Windows 2012 R2.     *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2017-08-25 | v1.0     | First version                                                 *
+* Ioan Popovici | 2017-08-27 | v1.1     | Fixed incorrect DISM version selection                        *
+* Ioan Popovici | 2017-08-28 | v1.2     | Improved data input and console output                        *
+* Ioan Popovici | 2017-08-29 | v1.3     | Added C:\Windows\System32 path to $Env:Path                   *
+* Ioan Popovici | 2017-08-31 | v1.4     | Fixed multiple selection prevention bug                       *
+* Ioan Popovici | 2017-09-11 | v1.5     | Fixed $ScriptName variable                                    *
+* ===================================================================================================== *
 *                                                                                                       *
-*** This PowerShell script is used inject packages in a WIM.                                          ***
-*                                                                                                       *
-*********************************************************************************************************
-* Created by Ioan Popovici, 2017-8-25  | Requirements: PowerShell 3.0, ADK Windows 10, Windows 8 or     *
-* higher. Tested on Windows 2012 R2.                                                                    *
-* ======================================================================================================*
-* Modified by                   | Date       | Version  | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2017-08-25 | v1.0     | First version                                 *
-* Ioan Popovici                 | 2017-08-27 | v1.1     | Fixed incorrect DISM version selection        *
-* Ioan Popovici                 | 2017-08-28 | v1.2     | Improved data input and console output        *
-* Ioan Popovici                 | 2017-08-29 | v1.3     | Added C:\Windows\System32 path to $Env:Path   *
-* Ioan Popovici                 | 2017-08-31 | v1.4     | Fixed multiple selection prevention bug       *
-* Ioan Popovici                 | 2017-09-11 | v1.5     | Fixed $ScriptName variable                      *
-*-------------------------------------------------------------------------------------------------------*
-* Credit for the original VBScript to:                                                                  *
-* http://www.catonrug.net/2014/08/slipstream-internet-explorer-11-into-windows-7-sp1-x64-source.html    *
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File      *
-* Update-OfflineWindowsImage.ps1                                                                        *
-* To do:                                                                                                *
-* Better error handling.                                                                                *
-* Better logging.                                                                                       *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This PowerShell script is used inject packages in a WIM.
-    .DESCRIPTION
-        This PowerShell script is used inject packages in a Windows Image image using PowerShell DISM Commandlets.
+.SYNOPSIS
+    This PowerShell script is used inject packages in a WIM.
+.DESCRIPTION
+    This PowerShell script is used inject packages in a Windows Image image using PowerShell DISM CommandLets.
+.EXAMPLE
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Update-OfflineWindowsImage.ps1
+.NOTES
+    Credit for the original VBScript to:
+    http://www.catonrug.net/2014/08/slipstream-internet-explorer-11-into-windows-7-sp1-x64-source.html
+.NOTES
+    To do:
+    * Better error handling.
+    * Better logging.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM.
 #>
 
 ##*=============================================
@@ -146,7 +147,6 @@ $Operation = Export-WindowsImage -SourceImagePath $ImagePath -SourceIndex $Image
 ## Wait for keypress
 Write-Host "Press any key to continue ..."
 $WaitforKeyPress = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-
 
 #endregion
 ##*=============================================

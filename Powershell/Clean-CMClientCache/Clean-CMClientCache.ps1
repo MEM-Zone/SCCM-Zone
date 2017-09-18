@@ -1,9 +1,9 @@
 <#
 *********************************************************************************************************
-* Created by Ioan Popovici, 2015-11-13  | Requirements PowerShell 3.0                                   *
-* ======================================================================================================*
+* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
+* ===================================================================================================== *
 * Modified by   |    Date    | Revision | Comments                                                      *
-*_______________________________________________________________________________________________________*
+* _____________________________________________________________________________________________________ *
 * Ioan Popovici | 2015-11-13 | v1.0     | First version                                                 *
 * Ioan Popovici | 2015-11-16 | v1.1     | Improved logging                                              *
 * Ioan Popovici | 2015-11-17 | v1.2     | Vastly improved                                               *
@@ -15,10 +15,8 @@
 * Ioan Popovici | 2017-04-26 | v2.5     | Orphaned cache cleanup, null CacheID fix, improved logging    *
 * Ioan Popovici | 2017-05-02 | v2.5     | Basic error Management                                        *
 * Walker        | 2017-08-08 | v2.6     | Fixed first time run logging bug                              *
-*-------------------------------------------------------------------------------------------------------*
-* To Do: Not happy, this needs a re-write changing the logic. Now it parses all apps/packages/updates   *
-* and then looks in the cache for it. This search is expensive and optimized, will have to go the       *
-* other way around if possible. Also logging and error handling are crap                                *
+* ===================================================================================================== *
+*                                                                                                       *
 *********************************************************************************************************
 
 .SYNOPSIS
@@ -30,8 +28,14 @@
 .NOTES
     It only cleans packages, applications and updates that have a "installed" status, are not persisted, or
     are not needed anymore (Some other checks are performed). Other cache items will NOT be cleaned.
+.NOTES
+    To Do:
+    Not happy, this needs a re-write changing the logic. Now it parses all apps/packages/updates and then looks
+    in the cache for it. This search is expensive and optimized, will have to go the other way around if possible.
+    Also logging and error handling are crap
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================
@@ -106,7 +110,8 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -166,7 +171,8 @@ Function Remove-CacheItem {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -231,7 +237,8 @@ Function Remove-CachedApplications {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
     ## Get list of applications
@@ -287,7 +294,8 @@ Function Remove-CachedPackages {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
     ## Get list of packages
@@ -353,7 +361,8 @@ Function Remove-CachedUpdates {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
     ## Get list of updates
@@ -400,7 +409,8 @@ Function Remove-OrphanedCacheItems {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
     ## Check if cached updates are not needed and delete them

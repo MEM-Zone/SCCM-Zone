@@ -1,18 +1,23 @@
 /*
 *********************************************************************************************************
-* Created by Ioan Popovici, 2015-08-18       | Requirements: CM_Tools Database                          *
-* ======================================================================================================*
-* Modified by                   |    Date    | Revision | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2015-09-05 | v1.0     | First version                                 *
-*-------------------------------------------------------------------------------------------------------*
+* Created by Ioan Popovici   | Requirements: CM_Tools Database                                          *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2015-08-18 | v1.0     | First version                                                 *
+* ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This SQL Function is used to get the Computer IP by ResourceID.
-    .DESCRIPTION
-        This SQL Function is used to get the Computer IP by ResourceID.
+.SYNOPSIS
+    This SQL Function is used to get the Computer IP by ResourceID.
+.DESCRIPTION
+    This SQL Function is used to get the Computer IP by ResourceID.
+.EXAMPLE
+    Run the code in SQL Server Management Studio.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 */
 
 /*##=============================================*/

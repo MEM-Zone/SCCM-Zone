@@ -1,31 +1,36 @@
 <#
 *********************************************************************************************************
-*                                                                                                       *
-*** This PowerShell script is used to set maintenance windows based on PatchTuesday on SU collections ***
-*                                                                                                       *
-*********************************************************************************************************
-* Created by Ioan Popovici, 2015-03-30       | Requirements PowerShell 2.0                              *
-* ======================================================================================================*
-* Modified by                   |    Date    | Revision | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici/Octavian Cordos | 2015-03-30 | v1.0     | First version                                 *
-* Ioan Popovici/Octavian Cordos | 2015-03-31 | v2.0     | Vastly improved                               *
-* Ioan Popovici                 | 2016-01-08 | v2.1     | Fixed locale                                  *
-* Octavian Cordos               | 2016-01-11 | v2.2     | Improved MW naming                            *
-* Ioan Popovici                 | 2016-01-11 | v2.3     | Added logging and error detection, cleanup    *
-* Ioan Popovici                 | 2016-01-12 | v2.4     | Added MW type                                 *
-* Ioan Popovici                 | 2016-01-12 | v2.5     | Improved logging and variable naming          *
-* Ioan Popovici                 | 2016-10-13 | v2.6     | Visibility MW name improvements               *
-* Ioan Popovici                 | 2017-07-31 | v2.7     | Fixed locale by changing to ISO 8601 format   *
-* Ioan Popovici                 | 2017-09-11 | v2.8     | Fixed $ScriptName variable                      *
-*-------------------------------------------------------------------------------------------------------*
+* Created by Ioan Popovici     | Requires PowerShell 3.0                                                *
+* ===================================================================================================== *
+* Modified by     |    Date    | Revision | Comments                                                    *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici   | 2015-03-30 | v1.0     | First version                                               *
+* Octavian Cordos | 2015-03-30 | v1.0     | First version                                               *
+* Ioan Popovici   | 2015-03-31 | v2.0     | Vastly improved                                             *
+* Octavian Cordos | 2015-03-31 | v2.0     | Vastly improved                                             *
+* Ioan Popovici   | 2016-01-08 | v2.1     | Fixed locale                                                *
+* Octavian Cordos | 2016-01-11 | v2.2     | Improved MW naming                                          *
+* Ioan Popovici   | 2016-01-11 | v2.3     | Added logging and error detection, cleanup                  *
+* Ioan Popovici   | 2016-01-12 | v2.4     | Added MW type                                               *
+* Ioan Popovici   | 2016-01-12 | v2.5     | Improved logging and variable naming                        *
+* Ioan Popovici   | 2016-10-13 | v2.6     | Visibility MW name improvements                             *
+* Ioan Popovici   | 2017-07-31 | v2.7     | Fixed locale by changing to ISO 8601 format                 *
+* Ioan Popovici   | 2017-09-11 | v2.8     | Fixed $ScriptName variable                                  *
+* ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This PowerShell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
-    .DESCRIPTION
-        This PowerShell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
+.SYNOPSIS
+    This PowerShell Script is used to set Maintenance Windows on SU Collections.
+.DESCRIPTION
+    This PowerShell Script is used to set Maintenance Windows based on PatchTuesday on SU Collections.
+.EXAMPLE
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Set-MaintenanceWindows.ps1
+.NOTES
+    Written in collaboration with my good friend Octavian Cordos.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================
@@ -47,10 +52,8 @@ CLS
 #  Get CSV file name with extension
 [string]$csvFileNameWithExtension = $ScriptName+'.csv'
 
-#  Assemble CSV file path
+#  Assemble CSV and log file path
 [string]$csvFilePath = (Join-Path -Path $ScriptPath -ChildPath $csvFileName)+'.csv'
-
-#  Assemble log file path
 [string]$LogFilePath = (Join-Path -Path $ScriptPath -ChildPath $ScriptName)+'.log'
 
 #endregion
@@ -89,7 +92,8 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -181,7 +185,8 @@ Function Get-PatchTuesday {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -223,7 +228,8 @@ Function Get-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -268,7 +274,8 @@ Function Remove-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -330,7 +337,8 @@ Function Set-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     Param (
         [Parameter(Mandatory=$true,Position=0)]
@@ -435,7 +443,8 @@ Function Send-Mail {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (

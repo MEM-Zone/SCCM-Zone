@@ -1,3 +1,15 @@
+<#
+*********************************************************************************************************
+* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2015-09-06 | v1.0     | First version                                                 *
+* ===================================================================================================== *
+*                                                                                                       *
+*********************************************************************************************************
+#>
+
 Function Set-PageFile
 {
 <#
@@ -20,7 +32,7 @@ Function Set-PageFile
     .PARAMETER  <AutoConfigure>
         Automatically configure the initial size and maximumsize.
     .EXAMPLE
-        C:\PS> .\Set-PageFile.ps1 -InitialSize 1024 -MaximumSize 2048 -DriveLetter "C", "D"
+        C:\PS> .\Set-PageFile.ps1 -InitialSize 1024 -MaximumSize 2048 -DriveLetter 'C', 'D'
 
         Setting the page file size on "C:" - Successful.
         Setting the page file size on "D:" - Successful.
@@ -33,6 +45,9 @@ Function Set-PageFile
     .LINK
         Get-WmiObject
         http://technet.microsoft.com/library/hh849824.aspx
+    .LINK
+        https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     Param
     (
