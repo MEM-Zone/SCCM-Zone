@@ -2,6 +2,6 @@
 
 This is a repository of scripts, reports, tools and documentation for System Center Configuration Manager.
 
-# JhonnyTerminus/SCCM Github repository
+## JhonnyTerminus/SCCM Github repository
 
 You've found the GitHub repository that houses the source for content published to [https://sccm-zone.com](https://sccm-zone.com/).
