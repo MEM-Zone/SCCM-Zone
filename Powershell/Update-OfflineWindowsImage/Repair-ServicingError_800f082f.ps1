@@ -77,7 +77,7 @@ Function Enable-Privilege {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    Credtit to Pasquale Lantella:
+    Credit to Pasquale Lantella:
     https://gallery.technet.microsoft.com/Adjusting-Token-Privileges-9b6724fc
 #>
 Param (

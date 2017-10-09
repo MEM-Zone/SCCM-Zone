@@ -92,9 +92,9 @@ $Date = Get-Date
 Function Write-Log {
 <#
 .SYNOPSIS
-    Writes an event to EventLog.
+    Writes an event to EventLog, Log and Console.
 .DESCRIPTION
-    Writes an event to EventLog with a specified source.
+    Writes an event to EventLog, Log and Console with a specified source.
 .PARAMETER EventLogName
     The EventLog to write to.
 .PARAMETER EventLogEntrySource
@@ -105,6 +105,10 @@ Function Write-Log {
     The EventLog Entry Type. (Error | Warning | Information | SuccessAudit | FailureAudit)
 .PARAMETER EventLogEntryMessage
     The EventLog Entry Message.
+.PARAMETER NoLog
+    Skip EventLog and log Entry.
+.PARAMETER NoLog
+    Skip Console output.
 .EXAMPLE
     Write-Log -EventLogName 'Configuration Manager' -EventLogEntrySource 'Script' -EventLogEntryID '1' -EventLogEntryType 'Information' -EventLogEntryMessage 'Clean-CMClientCache was successful'
 .NOTES
@@ -129,7 +133,10 @@ Function Write-Log {
         [string]$EventLogEntryType = 'Information',
         [Parameter(Mandatory=$true,Position=4)]
         [Alias('Message')]
-        $EventLogEntryMessage
+        $EventLogEntryMessage,
+        [Parameter(Mandatory=$false,Position=5)]
+        [Alias('nL')]
+        [switch]$NoLog=$false
     )
 
     ## Initialize log
@@ -137,23 +144,29 @@ Function Write-Log {
 
         #  Create new log and/or source
         New-EventLog -LogName $EventLogName -Source $EventLogEntrySource
-
-    ## Write to log and console
     }
 
-    #  Convert the Result to string and Write it to the EventLog
-    $ResultString = Out-String -InputObject $Result -Width 1000
-    Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $ResultString
+    ## Write to Log and EventLog if $NoLog switch is not specified
+    If (-not $NoLog) {
 
-    #  Write Result Object to csv file (append)
-    $EventLogEntryMessage | Export-Csv -Path $ResultCSV -Delimiter ';' -Encoding UTF8 -NoTypeInformation -Append -Force
+        #  Convert the Result to string and Write it to the EventLog
+        $ResultString = Out-String -InputObject $Result -Width 1000
+        Write-EventLog -LogName $EventLogName -Source $EventLogEntrySource -EventId $EventLogEntryID -EntryType $EventLogEntryType -Message $ResultString
 
-    #  Write Result to console
-    $EventLogEntryMessage | Format-Table Name,TotalDeleted`(MB`)
+        #  Write Result Object to csv file (append)
+        $EventLogEntryMessage | Export-Csv -Path $ResultCSV -Delimiter ';' -Encoding UTF8 -NoTypeInformation -Append -Force
+    }
 
+    ## Write to Log and EventLog if $NoConsole switch is not specified
+    If (-not $NoConsole) {
+        Switch ($LogEntryType) {
+            'Information' { Write-Host $($EventLogEntryMessage | Out-String)  -ForegroundColor 'Green' -BackgroundColor 'Black' }
+            'Warning' { Write-Host $($EventLogEntryMessage | Out-String)  -ForegroundColor 'Yellow' -BackgroundColor 'Black' }
+            'Error' { Write-Host $($EventLogEntryMessage | Out-String)  -ForegroundColor 'Red' -BackgroundColor 'Black' }
+        }
+    }
 }
 #endregion
-
 
 #region Function Remove-CacheItem
 Function Remove-CacheItem {
@@ -201,10 +214,10 @@ Function Remove-CacheItem {
             $CMCacheObjects = $CMObject.GetCacheInfo()
 
             #  Delete Cache item
-            $CMCacheObjects.GetCacheElements() | Where-Object {$_.ContentID -eq $CacheItemToDelete} |
+            $CMCacheObjects.GetCacheElements() | Where-Object { $_.ContentID -eq $CacheItemToDelete } |
                 ForEach-Object {
                     $CMCacheObjects.DeleteCacheElement($_.CacheElementID)
-                    Write-Host 'Deleted: '$CacheItemName -BackgroundColor Red
+                    Write-Log 'Deleted: '+$CacheItemName -NoLog
                 }
             #  Build result object
             $ResultProps = [ordered]@{
@@ -220,7 +233,7 @@ Function Remove-CacheItem {
         }
     }
     Else {
-        Write-Host 'Already Deleted:'$CacheItemName '|| ID:'$CacheItemToDelete -BackgroundColor Green
+        Write-Log 'Already Deleted:'+$CacheItemName+'|| ID:'+$CacheItemToDelete -NoLog
     }
 }
 #endregion
@@ -300,11 +313,11 @@ Function Remove-CachedPackages {
 
     ## Get list of packages
     Try {
-        $CM_Packages = Get-WmiObject -Namespace root\ccm\ClientSDK -Query 'SELECT PackageID,PackageName,LastRunStatus,RepeatRunBehavior FROM CCM_Program' -ErrorAction Stop
+        $CM_Packages = Get-WmiObject -Namespace 'root\ccm\ClientSDK' -Query 'SELECT PackageID,PackageName,LastRunStatus,RepeatRunBehavior FROM CCM_Program' -ErrorAction 'Stop'
     }
     #  Write to log in case of failure
     Catch {
-        Write-Host 'Get SCCM Package List from WMI - Failed!'
+        Write-Log 'Get SCCM Package List from WMI - Failed!' -Type 'Error'
     }
 
     ## Check if any deployed programs in the package need the cached package and add deletion or exemption list for comparison
@@ -367,11 +380,11 @@ Function Remove-CachedUpdates {
 
     ## Get list of updates
     Try {
-        $CM_Updates = Get-WmiObject -Namespace root\ccm\SoftwareUpdates\UpdatesStore -Query 'SELECT UniqueID,Title,Status FROM CCM_UpdateStatus' -ErrorAction Stop
+        $CM_Updates = Get-WmiObject -Namespace 'root\ccm\SoftwareUpdates\UpdatesStore' -Query 'SELECT UniqueID,Title,Status FROM CCM_UpdateStatus' -ErrorAction 'Stop'
     }
     #  Write to log in case of failure
     Catch {
-        Write-Host 'Get SCCM Software Update List from WMI - Failed!'
+        Write-Log 'Get SCCM Software Update List from WMI - Failed!' -Type 'Error'
     }
 
     ## Check if cached updates are not needed and delete them
@@ -430,6 +443,90 @@ Function Remove-OrphanedCacheItems {
         }
     }
 }
+#endregion
+
+#region Function Start-Cleanup
+Function Start-Cleanup {
+<#
+.SYNOPSIS
+    Cleans CCM caches.
+.DESCRIPTION
+    Cleans CCM caches, depending on the selected options.
+.PARAMETER CleanupOptions
+    The CleanupOptions depending of what type of cleanup to perform.
+    Cleanup Options:
+        appCacheCleanup - Cleans Cached Applications.
+        pkgCacheCleanup - Cleans Cached Packages.
+        updCacheCleanup - Cleans Cached Updates.
+        orpCacheCleanup - Cleans Orphaned Cache Items.
+.PARAMETER NoConsoleOutput
+    Disables console output. Useful if the script is used in a Configuration Item.
+.EXAMPLE
+    Start-Cleanup -CleanupOptions ('appCacheCleanup','pkgCacheCleanup','updCacheCleanup','orpCacheCleanup ') -NoConsoleOutput
+.NOTES
+    This is an internal script function and should typically not be called directly.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
+#>
+    Param (
+        [Parameter(Mandatory=$true,Position=0)]
+        [Alias('cOptions')]
+        [Array]$CleanupOptions,
+        [Parameter(Mandatory=$false,Position=0)]
+        [Alias('noConsole')]
+        [switch]$NoConsoleOutput = $false
+    )
+
+    ## Perform Cleanup Actions
+    Switch ($CleanupOptions) {
+        'comCacheRepair' {
+
+            #  Start Component Cache Repair
+            Write-Host 'Performing Component Cache Repair...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+            Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /RestoreHealth' -Wait
+        }
+        'comCacheCleanup' {
+
+            #  Start Component Cache Cleanup
+            Write-Host 'Performing Component Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+            Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /StartComponentCleanup /ResetBase' -Wait
+        }
+        'volCacheCleanup' {
+
+            #  If Volume Cache Paths exist add registry entries required by CleanMgr
+            If ($regVolumeCachesPaths) {
+                Write-Host "Adding $regName to the following Registry Paths:" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+                $regVolumeCachesPaths | ForEach-Object {
+                    Write-Host "$_"
+                    New-ItemProperty -Path Registry::$_ -Name $regName -Value $regValue -PropertyType $regType -Force | Out-Null
+                }
+
+                #  If machine is Windows Server 2008 R2, copy files required by CleanMgr and wait for action to complete
+                If ($MachineOS -eq 'Windows Server 2008 R2') {
+                    Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr_31bf3856ad364e35_6.1.7600.16385_none_c9392808773cd7da\cleanmgr.exe' -Destination 'C:\Windows\System32\' -Force | Out-Null
+                    Copy-Item -Path 'C:\Windows\winsxs\amd64_microsoft-windows-cleanmgr.resources_31bf3856ad364e35_6.1.7600.16385_en-us_b9cb6194b257cc63\cleanmgr.exe.mui' -Destination 'C:\Windows\System32\en-US\' -Force | Out-Null
+                }
+
+                #  Start Volume Cache Cleanup
+                Write-Host 'Performing Volume Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+                Start-Process -FilePath 'CleanMgr.exe' -ArgumentList "/sagerun:$regSageSet" -Wait
+            }
+            Else {
+                Write-Host 'Path Not Found! Skipping...' -ForegroundColor 'Red' -BackgroundColor 'Black'
+            }
+        }
+        'updCacheCleanup' {
+
+            #  Start Update Cache Cleanup
+            Write-Host 'Performing Update Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+            Stop-Service -Name 'wuauserv' | Out-Null
+            Remove-Item -Path 'C:\Windows\SoftwareDistribution\' -Recurse -Force | Out-Null
+            Start-Service -Name 'wuauserv'
+        }
+    }
+}
+
 #endregion
 
 #endregion
