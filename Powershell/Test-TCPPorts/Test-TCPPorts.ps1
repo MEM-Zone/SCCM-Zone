@@ -1,16 +1,16 @@
 <#
 *********************************************************************************************************
-* Created by Ioan Popovici, 2017-09-06  | Requirements PowerShell 3.0                                   *
-* ======================================================================================================*
-* Modified by                   |    Date    | Revision | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2017-09-06 | v1.0     | First version                                 *
-* Ioan Popovici                 | 2017-09-06 | v1.1     | Vastly improved                               *
-* Ioan Popovici                 | 2017-09-11 | v1.2     | Fixed $ScriptName variable                    *
-* Ioan Popovici                 | 2017-09-12 | v1.3     | Show result on one line, handle error output  *
-* Ioan Popovici                 | 2017-09-12 | v1.4     | Fixed output to console                       *
-* Ioan Popovici                 | 2017-09-13 | v1.5     | Cleanup and error reporting                   *
-*-------------------------------------------------------------------------------------------------------*
+* Created by Ioan Popovici   | Requires PowerShell 4.0                                                  *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2017-09-06 | v1.0     | First version                                                 *
+* Ioan Popovici | 2017-09-06 | v1.1     | Vastly improved                                               *
+* Ioan Popovici | 2017-09-11 | v1.2     | Fixed $ScriptName variable                                    *
+* Ioan Popovici | 2017-09-12 | v1.3     | Show result on one line, handle error output                  *
+* Ioan Popovici | 2017-09-12 | v1.4     | Fixed output to console                                       *
+* Ioan Popovici | 2017-09-13 | v1.5     | Cleanup and error reporting                                   *
+* ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
 
@@ -24,7 +24,8 @@
     The script will use name resolution lookup to find all DCs in the specified domain an will perform the
     tests on all of them.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================
@@ -88,7 +89,8 @@ Function Remove-InvalidCharacters {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -405,7 +407,7 @@ If ($GetPorts -eq 'Cancel') {
 }
 
 ## Aligning output to console
-Write-Host "`n`n`n"
+Write-Host "`n`n`n`n"
 
 ## Start processing input
 ForEach ($Domain in $Domains) {

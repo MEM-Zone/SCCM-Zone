@@ -1,25 +1,29 @@
 <#
 *********************************************************************************************************
+* Created by Octavian Cordos   | Requires PowerShell 3.0, SQL PS CommandLets                            *
+* ===================================================================================================== *
+* Modified by     |    Date    | Revision | Comments                                                    *
+* _____________________________________________________________________________________________________ *
+* Octavian Cordos | 2017-03-28 | v1.0     | First version                                               *
+* Ioan Popovici   | 2017-03-28 | v1.1     | Minor modifications, cleanup                                *
+* Ioan Popovici   | 2017-09-11 | v1.2     | Fixed $ScriptName variable                                  *
+* ===================================================================================================== *
 *                                                                                                       *
-*** This PowerShell script is Get the SCEP Logs from SCCM DB and export them to a CSV file            ***
-*                                                                                                       *
-*********************************************************************************************************
-* Created by Octavian Cordos, 2017-03-28   | Requirements: PowerShell 3.0, SQL PS commandlets           *
-* ======================================================================================================*
-* Modified by                   | Date       | Version  | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Octavian Cordos               | 2017-03-28 | v1.0     | First version                                 *
-* Ioan Popovici                 | 2017-03-28 | v1.1     | Minor modifications, cleanup                  *
-* Ioan Popovici                 | 2017-09-11 | v1.2     | Fixed $ScriptName variable                      *
-*-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -File              *
-* Get-SCEPDetectionLogs.ps1 -CMSQLServer "SCCM_SQL_Server_Name" -CMDatabase "CM_Database_Name"          *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This PowerShell script is Get the SCEP Logs from SCCM DB and export them to a CSV file
-    .DESCRIPTION
-        This PowerShell script is Get the SCEP Logs from SCCM Database and export them to a CSV file.
+.SYNOPSIS
+    This PowerShell script is Get the SCEP Logs from SCCM DB and export them to a CSV file
+.DESCRIPTION
+    This PowerShell script is Get the SCEP Logs from SCCM Database and export them to a CSV file.
+.PARAMETER CMSQLServer
+    SCCM SQL Database Server name.
+.PARAMETER CMDatabase
+    SCCM SQL Database name.
+.EXAMPLE
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Get-SCEPDetectionLogs.ps1 -CMSQLServer 'SCCM_SQL_Server_Name' -CMDatabase 'CM_Database_Name'
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================

@@ -1,17 +1,15 @@
 <#
 *********************************************************************************************************
-* Created by Ioan Popovici, 2017-7-10  | Requirements: PowerShell 3.0                                   *
-* ======================================================================================================*
-* Modified by                   | Date       | Version  | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2017-7-10 | v1.0     | First version                                  *
-* Ioan Popovici                 | 2017-7-10 | v2.0     | Vastly improved                                *
-* Ioan Popovici                 | 2017-7-14 | v2.1     | Bug fixes and improvements                     *
-* Andrew Reiter                 | 2017-9-07 | v2.2     | Fix Copy-Item Bug                              *
-*-------------------------------------------------------------------------------------------------------*
-* To do:                                                                                                *
-* Add error handling.                                                                                   *
-* Add better logging.                                                                                   *
+* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2017-07-10 | v1.0     | First version                                                 *
+* Ioan Popovici | 2017-07-10 | v2.0     | Vastly improved                                               *
+* Ioan Popovici | 2017-07-14 | v2.1     | Bug fixes and improvements                                    *
+* Andrew Reiter | 2017-09-07 | v2.2     | Fix Copy-Item Bug                                             *
+* ===================================================================================================== *
+*                                                                                                       *
 *********************************************************************************************************
 
 .SYNOPSIS
@@ -22,8 +20,13 @@
     C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Clean-ImageBeforeSysPrep.ps1
 .NOTES
     Credit for the original VBScript to: @mikael_nystrom https://deploymentbunny.com
+.NOTES
+    To do:
+    * Add error handling.
+    * Add better logging.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================
@@ -68,7 +71,8 @@ Function Start-Cleanup {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     Param (
         [Parameter(Mandatory=$true,Position=0)]

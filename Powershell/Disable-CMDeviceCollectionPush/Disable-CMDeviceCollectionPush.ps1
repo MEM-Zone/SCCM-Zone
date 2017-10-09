@@ -1,38 +1,34 @@
 <#
 *********************************************************************************************************
+* Created by Ioan Popovici   | Requires PowerShell 3.0, SCCM Server                                     *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2016-10-26 | v1.0     | First version                                                 *
+* Ioan Popovici | 2017-09-11 | v1.1     | Fixed $ScriptName variable                                    *
+* ===================================================================================================== *
 *                                                                                                       *
-*** This PowerShell script is used to disable SCCM push install for a specified collection, using CIM ***
-*                                                                                                       *
-*********************************************************************************************************
-* Created by Ioan Popovici, 2016-10-26  | Requirements: PowerShell 3.0, SCCM Server                     *
-* ======================================================================================================*
-* Modified by                   | Date       | Version  | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2016-10-26 | v1.0     | First version                                 *
-* Ioan Popovici                 | 2017-09-11 | v1.1     | Fixed $ScriptName variable                      *
-*-------------------------------------------------------------------------------------------------------*
-* Execute with: C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -File              *
-* Disable-CMDeviceCollectionPush.ps1 -CMSiteServer SiteServerName -CMCollection CollectionName          *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This PowerShell script is used to disable SCCM push install for a specified collection.
-    .DESCRIPTION
-        This PowerShell script is used to disable SCCM push install for a specified collection using the
-        ExcludeServers registry key. This script is using CIM instead of SCCM commandlets.
-    .PARAMETER CMSiteServer
-        The NetBIOS name of the SCCM Site Server.
-    .PARAMETER CMCollection
-        The Collection Name to exclude from Push Install.
-    .PARAMETER DeleteAllCollectionMembers
-        Optional switch used to Delete all Collection Device Members  and their discovery data using CIM (blazing fast :P).
-    .EXAMPLE
-        Disable-CMPushDeviceCollection -CMSiteServer 'SiteServerName' -CMCollection 'Exclude from Push Collection' -DeleteAllCollectionMembers
-    .NOTES
-        This script can be run using SCCM status filter rules, on collection membership change.
-        DeleteAllCollectionMembers switch does not remove collection queries.
-    .LINK
-        http://sccm-zone.com
+.SYNOPSIS
+    This PowerShell script is used to disable SCCM push install for a specified collection.
+.DESCRIPTION
+    This PowerShell script is used to disable SCCM push install for a specified collection using the
+    ExcludeServers registry key. This script is using CIM instead of SCCM CommandLets.
+.PARAMETER CMSiteServer
+    The NetBIOS name of the SCCM Site Server.
+.PARAMETER CMCollection
+    The Collection Name to exclude from Push Install.
+.PARAMETER DeleteAllCollectionMembers
+    Optional switch used to Delete all Collection Device Members  and their discovery data using CIM (blazing fast :P).
+.EXAMPLE
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -File Disable-CMPushDeviceCollection.ps1 -CMSiteServer 'SiteServerName' -CMCollection 'Exclude from Push Collection' -DeleteAllCollectionMembers
+.NOTES
+    This script can be run using SCCM status filter rules, on collection membership change.
+    DeleteAllCollectionMembers switch does not remove collection queries.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================
@@ -119,7 +115,8 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -233,7 +230,8 @@ Function Send-Mail {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -288,7 +286,8 @@ Function Get-SMSProviderLocation {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -332,7 +331,8 @@ Function Get-CimCollectionMembers {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (
@@ -382,7 +382,8 @@ Function Remove-CimCollectionMembers {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    http://sccm-zone.com
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
     Param (

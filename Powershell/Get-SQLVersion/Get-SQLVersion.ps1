@@ -1,23 +1,26 @@
 <#
 *********************************************************************************************************
+* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 02/09/2016 | v1.0     | First version                                                 *
+* ===================================================================================================== *
 *                                                                                                       *
-*** This Powershell Script is used to Get the SQL Version                                             ***
-*                                                                                                       *
-*********************************************************************************************************
-* Created by Ioan Popovici, 02/09/2016       | Requirements Powershell 3.0                              *
-* ======================================================================================================*
-* Modified by                   |    Date    | Revision | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 02/09/2016 | v1.0     | First version                                 *
-*-------------------------------------------------------------------------------------------------------*
-# The Detection also Fails if SQL Native is installed - To Fix                                          *
-* SQL Versioning Reference: http://sqlserverbuilds.blogspot.ro/                                         *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This Powershell Script is used to Get the SQL Version.
-    .DESCRIPTION
-        This Powershell Script is used to Get the SQL Version, in use for SCCM Application Discovery and Configuration Items.
+.SYNOPSIS
+    This PowerShell Script is used to Get the SQL Version.
+.DESCRIPTION
+    This PowerShell Script is used to Get the SQL Version, in use for SCCM Application Discovery and Configuration Items.
+.NOTES
+    To Fix:
+    The Detection also Fails if SQL Native is installed
+.NOTES
+    SQL Versioning Reference: http://sqlserverbuilds.blogspot.ro/
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 #>
 
 ##*=============================================

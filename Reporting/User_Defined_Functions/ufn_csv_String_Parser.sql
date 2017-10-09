@@ -1,18 +1,26 @@
 /*
 *********************************************************************************************************
-* Created by Ioan Popovici, 2015-08-18       | Requirements: CM_Tools Database                          *
-* ======================================================================================================*
-* Modified by                   |    Date    | Revision | Comments                                      *
-*_______________________________________________________________________________________________________*
-* Ioan Popovici                 | 2015-08-18 | v1.0     | First version                                 *
-*-------------------------------------------------------------------------------------------------------*
-* Credit to: Michelle Ufford http://sqlfool.com.                                                        *
+* Created by Ioan Popovici   | Requirements: CM_Tools Database                                          *
+* ===================================================================================================== *
+* Modified by   |    Date    | Revision | Comments                                                      *
+* _____________________________________________________________________________________________________ *
+* Ioan Popovici | 2015-08-18 | v1.0     | First version                                                 *
+* ===================================================================================================== *
+*                                                                                                       *
 *********************************************************************************************************
 
-    .SYNOPSIS
-        This SQL Function is used to parse a CSV string.
-    .DESCRIPTION
-        This SQL Function is used to parse a CSV string and return individual substrings.
+.SYNOPSIS
+    This SQL Function is used to parse a CSV string.
+.DESCRIPTION
+    This SQL Function is used to parse a CSV string and return individual substrings.
+.EXAMPLE
+    Run the code in SQL Server Management Studio
+.NOTES
+    Credit to:
+    Michelle Ufford http://sqlfool.com.
+.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
 */
 
 /*##=============================================*/
