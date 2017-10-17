@@ -5,6 +5,8 @@
 * Modified by   |    Date    | Revision | Comments                                                      *
 * _____________________________________________________________________________________________________ *
 * Ioan Popovici | 2017-09-26 | v1.0     | First version                                                 *
+* Ioan Popovici | 2017-10-11 | v1.1     | Removed result table headers, fixed result object output      *
+* Ioan Popovici | 2017-10-11 | v1.2     | Added Error Handling                                          *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -129,7 +131,7 @@ Function Add-Certificate {
     )
 
     ## Create certificate store object
-    $cerStore = New-Object System.Security.Cryptography.X509Certificates.X509Store $cerStoreName, $cerStoreLocation
+    $cerStore = New-Object System.Security.Cryptography.X509Certificates.X509Store $cerStoreName, $cerStoreLocation -ErrorAction 'Stop'
 
     ## Open the certificate store as Read/Write
     $cerStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
@@ -138,7 +140,7 @@ Function Add-Certificate {
     $certByteArray = [System.Convert]::FromBase64String($cerStringBase64)
 
     ## Create new certificate object
-    $Certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+    $Certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ErrorAction 'Stop'
 
     ## Add certificate to the store
     $Certificate.Import($certByteArray)
@@ -160,14 +162,13 @@ Function Add-Certificate {
 #region ScriptBody
 
 ## Cycle specified certificate stores and add the specified certificate
-$cerStores | ForEach-Object {
+ForEach ($cerStore in $cerStores) {
     Try {
-        $AddCertificate = Add-Certificate -cerStringBase64 $cerStringBase64 -cerStoreName $_ -ErrorAction 'Stop'
+        Add-Certificate -cerStringBase64 $cerStringBase64 -cerStoreName $cerStore -ErrorAction 'Stop'
 
         #  Create the Result Props
         $ResultProps = [ordered]@{
-            'Store' = $_
-            'Certificate' = $cerStringBase64
+            'Store' = $cerStore
             'Status'  = 'Add Certificate - Success!'
         }
 
@@ -178,9 +179,9 @@ $cerStores | ForEach-Object {
 
         #  Create the Result Props
         $ResultProps = [ordered]@{
-            'Store' = $_
-            'Certificate' = $cerStringBase64
+            'Store' = $cerStore
             'Status'  = 'Add Certificate - Failed!'
+            'Error' = $_
         }
 
         #  Adding ResultProps hash table to result object
@@ -188,8 +189,18 @@ $cerStores | ForEach-Object {
     }
 }
 
-## Return result object
-Write-Output -InputObject $Result
+## Error handling. If we don't write a stdError when the script fails SCCM will return 'Compliant' because the
+## Discovery script does not run again after the Remediation script
+If ($Error.Count -ne 0) {
+
+    #  Return result object as an error removing table header for cleaner reporting
+     $host.ui.WriteErrorLine($($Result | Format-Table -HideTableHeaders | Out-String))
+}
+Else {
+
+    #  Return result object removing table header for cleaner reporting
+    Write-Output -InputObject $($Result | Format-Table -HideTableHeaders | Out-String)
+}
 
 #endregion
 ##*=============================================

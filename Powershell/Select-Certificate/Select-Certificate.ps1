@@ -6,6 +6,8 @@
 * _____________________________________________________________________________________________________ *
 * Ioan Popovici | 2017-09-26 | v1.0     | First version                                                 *
 * Ioan Popovici | 2017-09-26 | v1.1     | Fixed compliance output                                       *
+* Ioan Popovici | 2017-10-11 | v1.2     | Removed result table headers                                  *
+* Ioan Popovici | 2017-10-11 | v1.3     | Added automatic space removal for cerSerialNumber             *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -34,6 +36,8 @@
 ## Certificate variables
 [array]$cerStores =@('Root','TrustedPublisher')
 [string]$cerSerialNumber = '6xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7'
+#  Remove spaces from certificate serial number
+$cerSerialNumber = $cerSerialNumber -replace '\s',''
 
 #endregion
 ##*=============================================
@@ -113,7 +117,7 @@ Function Select-Certificate {
     )
 
     ## Create certificate store object
-    $cerStore = New-Object System.Security.Cryptography.X509Certificates.X509Store $cerStoreName, $cerStoreLocation
+    $cerStore = New-Object System.Security.Cryptography.X509Certificates.X509Store $cerStoreName, $cerStoreLocation -ErrorAction 'Stop'
 
     ## Open the certificate store as ReadOnly
     $cerStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadOnly)
@@ -124,11 +128,13 @@ Function Select-Certificate {
     ## Close the certificate Store
     $cerStore.Close()
 
-    ## Return certificate details or a 'Certificate - Not Found!' string if the certificate does not exist
+    ## Return certificate details or a 'Certificate Selection - Failed!' string if the certificate does not exist
     If ($Result) {
         Write-Output -InputObject $Result
     }
-    Else {Write-Output -InputObject '0 - Found!'}
+    Else {
+        Write-Output -InputObject 'Certificate Selection - Failed!'
+    }
 }
 #endregion
 
@@ -162,15 +168,15 @@ $cerStores | ForEach-Object {
 }
 
 ## Workaround for SCCM Compliance Rule limitation. The remediation checkbox shows up only if 'Equals' rule is specified.
-If ($($Result.Certificate | Out-String) -notmatch '0') {
+If ($($Result.Certificate | Out-String) -notmatch 'Failed') {
 
     #  Return 'Compliant'
     Write-Output -InputObject 'Compliant'
 }
 Else {
 
-#  Return result object
-Write-Output -InputObject $($Result | Format-Table | Out-String)
+#  Return result object removing table header for cleaner reporting
+Write-Output -InputObject $($Result | Format-Table -HideTableHeaders | Out-String)
 }
 
 #endregion
