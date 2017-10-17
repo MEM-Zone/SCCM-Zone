@@ -174,6 +174,9 @@ ForEach ($cerStore in $cerStores) {
 
         #  Adding ResultProps hash table to result object
         $Result += New-Object 'PSObject' -Property $ResultProps
+
+        #  Setting Exit Code
+        $LastExitCode = 0
     }
     Catch {
 
