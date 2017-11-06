@@ -5,6 +5,7 @@
 * Modified by   |    Date    | Revision | Comments                                                      *
 * _____________________________________________________________________________________________________ *
 * Ioan Popovici | 2017-09-06 | v1.0     | First version                                                 *
+* Ioan Popovici | 2017-11-06 | v1.1     | Added Random Password Generator                               *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -23,26 +24,83 @@
 #>
 
 ##*=============================================
-##* SCRIPT BODY
+##* VARIABLE DECLARATION
 ##*=============================================
-#region ScriptBody
+#region VariableDeclaration
 
 ## Read variables from console
 [string]$Identity = Read-Host -Prompt 'Provide Account'
 [string]$OldPassword = Read-Host -Prompt 'Provide Current Password'
 [string]$NewPassword = Read-Host -Prompt 'Provide New Password'
 
-## Change password 23 times
-For ($i=1; $i -lt 23; $i++) {
-    [string]$TmpPassword = $OldPassword + $i
-    Try {
+#endregion
+##*=============================================##* END VARIABLE DECLARATION
+##*=============================================
 
-        Set-ADAccountPassword -Identity $Identity -OldPassword (ConvertTo-SecureString -AsPlainText $OldPassword -Force) -NewPassword (ConvertTo-SecureString -AsPlainText $TmpPassword -Force) -ErrorAction 'Stop'
-        Write-Host "Setting Temporary Password - Success. `n Current Password: $TmpPassword" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
-        $OldPassword = $TmpPassword
+##*=============================================
+##* FUNCTION LISTINGS
+##*=============================================
+#region FunctionListings
+
+#region Function Get-RandomPassword
+Function Get-RandomPassword() {<#.SYNOPSIS
+    This function is used to add a certificate to the certificate store.
+.DESCRIPTION
+    This function is used to add a certificate to the certificate store using the certificate base64 key.
+.PARAMETER passLength
+    The generated password length.
+.PARAMETER passSource
+    The character source used for passowrd generation.
+.EXAMPLE    Get-RandomPassword -passLength '20'
+.NOTES
+    This is an internal script function and should typically not be called directly.
+.LINK
+    Credit to:
+    https://blogs.technet.microsoft.com/heyscriptingguy/2013/06/03/generating-a-new-password-with-windows-powershell/.LINK
+    https://sccm-zone.com
+    https://github.com/JhonnyTerminus/SCCM
+#>
+    Param(        [Parameter(Mandatory=$false,Position=0)]
+        [Alias('pLength')]
+        [int]$passLength=30,
+        [Parameter(Mandatory=$false,Position=1)]
+        [Alias('pSource')]
+        [string[]]$passSource=$(
+            $ascii=$NULL
+            For ($a=33; $a –le 126; $a++) {$ascii+=,[char][byte]$a}
+            Write-Output $ascii
+        )
+    )
+    ## Generate random password using password source
+    For ($loop=1; $loop –le $passLength; $loop++) {
+        $Result+=($passSource | Get-Random)
+    }
+    
+    ## Return result to pipeline
+    Write-Output $Result
+}
+#endregion
+
+#endregion
+##*=============================================
+##* END FUNCTION LISTINGS
+##*=============================================
+
+##*=============================================
+##* SCRIPT BODY
+##*=============================================
+#region ScriptBody
+
+## Change password 30 times
+1..31 | ForEach {
+    [string]$RandomPassword = Get-RandomPassword
+    Try {
+        Set-ADAccountPassword -Identity $Identity -OldPassword (ConvertTo-SecureString -AsPlainText $OldPassword -Force) -NewPassword (ConvertTo-SecureString -AsPlainText $RandomPassword -Force) -ErrorAction 'Stop'
+        Write-Host "Setting Temporary Password - Success. `n Current Password: $RandomPassword" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+        $OldPassword = $RandomPassword
     }
     Catch {
-        Write-Host "Setting Temporary Password - Failed! `n Current Password: $OldPassword" -ForegroundColor 'Red' -BackgroundColor 'Black'
+        Write-Host "Setting Temporary Password - Failed! `n Current Password: $OldPassword" -ForegroundColor 'Red' -BackgroundColor 'Black'        
     }
 }
 
