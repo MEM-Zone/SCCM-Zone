@@ -4,15 +4,16 @@
 * ===================================================================================================== *
 * Modified by     |    Date    | Revision | Comments                                                    *
 * _____________________________________________________________________________________________________ *
-* Octavian Cordos | 2017-11-09 | v0.1     | First version                                               *
-* Ioan Popovici   | 2017-11-09 | v0.2     | Created functions                                           *
-* Ioan Popovici   | 2017-11-27 | v0.3     | All planned functions added                                 *
-* Ioan Popovici   | 2017-11-27 | v0.4     | Fully functional and tested, copy and rename do not work    *
-* Ioan Popovici   | 2017-12-17 | v0.5     | Complete re-write, to convoluted and overdesigned           *
-* Ioan Popovici   | 2017-12-20 | v0.6     | Scrapped about 60% should be readable now                   *
-* Ioan Popovici   | 2017-12-22 | v0.7     | Implemented default PS cmdlet ErrorHandling                 *
-* Ioan Popovici   | 2017-12-23 | v0.8     | Fixed/Simplified input/output where possible                *
-* Ioan Popovici   | 2017-12-27 | v0.9     | Get/Set/New except Set-WmiInstance, functioning and tested  *
+* Octavian Cordos | 2017-11-09 | v0.0.1     | First version                                             *
+* Ioan Popovici   | 2017-11-09 | v0.0.2     | Created functions                                         *
+* Ioan Popovici   | 2017-11-27 | v0.0.3     | All planned functions added                               *
+* Ioan Popovici   | 2017-11-27 | v0.0.4     | Fully functional and tested, copy and rename do not work  *
+* Ioan Popovici   | 2017-12-17 | v0.0.5     | Complete re-write, to convoluted and overdesigned         *
+* Ioan Popovici   | 2017-12-20 | v0.0.6     | Scrapped about 60% should be readable now                 *
+* Ioan Popovici   | 2017-12-22 | v0.0.7     | Implemented default PS cmdlet ErrorHandling               *
+* Ioan Popovici   | 2017-12-23 | v0.0.8     | Fixed/Simplified input/output where possible              *
+* Ioan Popovici   | 2017-12-27 | v0.0.9     | Get/Set/New except Set-WmiInstance, working and tested    *
+* Ioan Popovici   | 2017-12-27 | v0.1.0     | Remove-WmiInstance re-written and working                 *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -1862,8 +1863,8 @@ Function New-WmiInstance {
             ## Check if class exists
             $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop'
 
-             ## If input qualifier is not a hashtable convert string input to hashtable
-             If ($Property -isnot [hashtable]) {
+            ## If input qualifier is not a hashtable convert string input to hashtable
+            If ($Property -isnot [hashtable]) {
                 $Property = $Property | ConvertFrom-StringData
             }
 
@@ -1875,7 +1876,7 @@ Function New-WmiInstance {
                 $NewInstance = New-CimInstance -Namespace $Namespace -ClassName $ClassName -Property $Property
             }
 
-            #  On instance creation failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
+            ## On instance creation failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
             If (-not $NewInstance) {
                 Write-Log -Message "Failed to create instance in class [$Namespace`:$ClassName]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName} -DebugMessage
             }
@@ -2288,20 +2289,18 @@ Function Remove-WmiInstance {
 .PARAMETER ClassName
     Specifies the class name from which to remove the instances.
 .PARAMETER Property
-    The Class Instance Properties and Values to find.
-.PARAMETER RemoveAllMatching
-    Remove all matching instances. Default is: $false.
-.PARAMETER RemoveALL
-    Remove all instances. Default is: $false.
+    The class instance property to match. If there is more than one matching instance and the RemoveAll switch is not specified, an error will be thrown. 
+.PARAMETER RemoveAll
+    Removes all matching or existing instances.
 .EXAMPLE
     [hashtable]$Property = @{
         'ServerPort' = '80'
         'ServerIP' = '10.10.10.11'
     }
-    Remove-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone' -Property $Property
+    Remove-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone' -Property $Property -RemoveAll
 .NOTES
     This is a module function and can typically be called directly.
-    v0.1 - Beta
+    v1.0
 .LINK
     https://sccm-zone.com
     https://github.com/JhonnyTerminus/SCCM
@@ -2318,58 +2317,55 @@ Function Remove-WmiInstance {
         [ValidateNotNullorEmpty()]
         [hashtable]$Property,
         [Parameter(Mandatory=$false,Position=3)]
-        [ValidateNotNullorEmpty()]
-        [switch]$RemoveAll = $false
+        [switch]$RemoveAll
     )
 
     Begin {
     ## Get the name of this function and write header
     [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
-
-        ## Set Connection Props
-        [hashtable]$ConnectionProps = @{ NameSpace = $Namespace; ClassName = $ClassName }
     }
     Process {
         Try {
 
-            ## Get class instances
-            $ClassInstances = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
+            ## Get all class instances. If the class has no instances an error will be thrown
+            $WmiInstances = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
 
-            If ($RemoveAll) {
-                $ClassInstancesToDelete = $ClassInstances
-            }
-            ElseIf ($Property) {
-                $ClassInstancesToDelete = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -Property $Property -ErrorAction 'SilentlyContinue'
-
-##### where property -eq $instances to delete ?
-
-
-
+            ## If Property was specified check for matching instances, otherwise if -RemoveAll switch is specified tag all instances for deletion
+            If ($Property) {
+                $RemoveInstances = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -Property $Property -ErrorAction 'SilentlyContinue'
             }
             Else {
-                $ClassInstances = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'SilentlyContinue'
+                $RemoveInstances = $WmiInstances
             }
 
-            ## If any matching instances found start removal
-            If (0 -ne $ClassInstances.Count) {
-                If ($RemoveAll -or (1 -eq $ClassInstances.Count)) {
-
-                    #  Remove instances
-                    $ClassInstances | ForEach-Object { Remove-CimInstance -InputObject $_ -ErrorAction 'Stop' }
-                }
-                Else {
-                    Write-Log -Message "Failed to remove instance. ($ClassInstances.Count) matching instances found in class [$Namespace`:$ClassName]." -Severity 2 -Source ${CmdletName}
-                }
+            ## Remove according to specified options. If multiple instances are found check for the -RemoveAll switch
+            If (($RemoveInstances.Count -eq 1) -or (($RemoveInstances.Count -gt 1) -and $RemoveAll)) {
+                #  Remove instances one by one
+                $RemoveInstances | ForEach-Object { Remove-CimInstance -InputObject $_ -ErrorAction 'Stop' }
             }
-            Else {
-                Write-Log -Message "Failed to remove instances. No instances found in class [$Namespace`:$ClassName]." -Severity 2 -Source ${CmdletName} -Debug
+            
+            ## Otherwise if more than one instance is detected, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
+            ElseIf ($RemoveInstances.Count -gt 1) {
+                $MultipleInstancesFoundErr  = "Failed to remove instance. Multiple instances [$($RemoveInstances.Count)] found in class [$Namespace`:$ClassName]."
+                Write-Log -Message $MultipleInstancesFoundErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $MultipleInstancesFoundErr -Category 'InvalidOperation'
+            }
+
+            ## On instance removal failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
+            ElseIf (-not $RemoveInstances) {
+                $InstanceNotFoundErr = "Failed to remove instances. No instances (or matching) found in class [$Namespace`:$ClassName]."
+                Write-Log -Message $InstanceNotFoundErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $MultipleInstancesFoundErr -Category 'ObjectNotFound'
             }
         }
         Catch {
             Write-Log -Message "Failed to remove instances in [$Namespace`:$ClassName]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
         }
-        Finally {}
+        Finally {
+            Write-Output -InputObject $RemoveInstances
+        }
     }
     End {
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -Footer
