@@ -24,11 +24,13 @@
     This PowerShell module contains functions for creating WMI Namespaces, Classes and Instances.
 .EXAMPLE
     Import-Module -Name 'C:\Temp\WmiToolkit.psm1' -Verbose
+.EXAMPLE
     Get-Command -Module 'WmiToolkit'
 .NOTES
     --
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
 
@@ -584,6 +586,7 @@ Function Remove-DisposableObject {
         Fix Remove-Varable.
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -659,6 +662,7 @@ Function Get-WmiNameSpace {
     V1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -737,6 +741,7 @@ Function Get-WmiClass {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -824,6 +829,7 @@ Function Get-WmiClassQualifier {
     V1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -928,6 +934,7 @@ Function Get-WmiProperty {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1033,6 +1040,7 @@ Function Get-WmiPropertyQualifier {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1148,6 +1156,7 @@ Function Get-WmiInstance {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1256,6 +1265,7 @@ Function New-WmiNameSpace {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1355,6 +1365,7 @@ Function New-WmiClass {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1477,6 +1488,7 @@ Function Set-WmiClassQualifier {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
 [CmdletBinding()]
@@ -1589,6 +1601,7 @@ Function New-WmiProperty {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1723,6 +1736,7 @@ Function Set-WmiPropertyQualifier {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1834,6 +1848,7 @@ Function New-WmiInstance {
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1918,6 +1933,7 @@ Function Remove-WmiNameSpace {
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -1990,6 +2006,7 @@ Function Remove-WmiClass {
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2090,6 +2107,7 @@ Function Remove-WmiProperty {
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2195,9 +2213,11 @@ Function Remove-WmiPropertyQualifier {
     This is a module function and can typically be called directly.
 .NOTES
     To do: Add Success and Debug messages.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2300,9 +2320,11 @@ Function Remove-WmiInstance {
     Remove-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone' -Property $Property -RemoveAll
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v1.0
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2393,9 +2415,11 @@ Function Copy-WmiClass {
     Copy-WmiClass -ClassName 'SCCMZone' -NamespaceSource 'ROOT' -NamespaceDestination 'ROOT\SCCMZone' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2485,9 +2509,11 @@ Function Copy-WmiInstance {
     Copy-WmiInstance -NamespaceSource 'ROOT' -ClassNameSource 'SCCMZone' -NamespaceDestination 'ROOT\TEST' -ClassNameDestination 'Test' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2592,9 +2618,11 @@ Function Copy-WmiClassQualifier {
     Copy-WmiClassQualifier-NamespaceSource 'ROOT' -ClassNameSource 'SCCMZone' -NamespaceDestination 'ROOT\TEST' -ClassNameDestination 'Test' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2700,9 +2728,11 @@ Function Copy-WmiProperty {
     Copy-WmiProperty -NamespaceSource 'ROOT' -ClassNameSource 'SCCMZone' -NamespaceDestination 'ROOT\TEST' -ClassNameDestination 'Test' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2814,9 +2844,11 @@ Function Copy-WmiNamespace {
     Copy-WmiNamespace -NamespaceSource 'ROOT\SCCMZone' -NamespaceDestination 'ROOT\cimv2'
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -2920,9 +2952,11 @@ Function Rename-WmiNamespace {
     Rename-WmiNamespace -Namespace 'ROOT\cimv2' -NamespaceName 'OldName' -NamespaceNewName 'NewName'
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -3011,9 +3045,11 @@ Function Rename-WmiClass {
     Rename-WmiClass -Namespace 'Root\cimv2' -ClassName 'OldName' -ClassNewName 'NewName'
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -3126,9 +3162,11 @@ Function Set-WmiInstance {
     Set-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone' -Property $Property -CreateInstance
 .NOTES
     This is a module function and can typically be called directly.
+.NOTES
     v0.1 - Beta
 .LINK
     https://sccm-zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCM
 #>
     [CmdletBinding()]
@@ -3152,30 +3190,30 @@ Function Set-WmiInstance {
 
                 #move to get instance?
 
-              #  Get Property Names from function input to be used for filtering
-              [string[]]$ClassPropertyNames =  $($Property.GetEnumerator().Name)
+                #  Get Property Names from function input to be used for filtering
+                [string[]]$ClassPropertyNames =  $($Property.GetEnumerator().Name)
 
-              #  Get all Instances for the specified Wmi Class, selecting only specified Property Names
-              [PSCustomObject]$ClassInstances = Get-CimInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Continue' | Select-Object $ClassPropertyNames
+                #  Get all Instances for the specified Wmi Class, selecting only specified Property Names
+                [PSCustomObject]$ClassInstances = Get-CimInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Continue' | Select-Object $ClassPropertyNames
 
-              #  Convert Property hashtable to PSCustomObject for comparison
-              [PSCustomObject]$InputProperty = [PSCustomObject]$Property
+                #  Convert Property hashtable to PSCustomObject for comparison
+                [PSCustomObject]$InputProperty = [PSCustomObject]$Property
 
-              #  -ErrorAction 'SilentlyContinue' does not seem to work correctly with the Compare-Object commandlet so it needs to be set globaly
-              $ErrorActionPreferenceOriginal = $ErrorActionPreference
-              $ErrorActionPreference = 'SilentlyContinue'
+                #  -ErrorAction 'SilentlyContinue' does not seem to work correctly with the Compare-Object commandlet so it needs to be set globaly
+                $ErrorActionPreferenceOriginal = $ErrorActionPreference
+                $ErrorActionPreference = 'SilentlyContinue'
 
-              #  Check if and instance with the same values exists. Since $InputProperty is a dinamically generated object Compare-Object has no hope of working correctly.
-              #  Luckily Compare-Object as a -Property parameter which allows us to look at specific parameters.
-              $InstanceSearch = Compare-Object -ReferenceObject $InputProperty -DifferenceObject $ClassInstances -Property $ClassPropertyNames -IncludeEqual -ExcludeDifferent
+                #  Check if and instance with the same values exists. Since $InputProperty is a dinamically generated object Compare-Object has no hope of working correctly.
+                #  Luckily Compare-Object as a -Property parameter which allows us to look at specific parameters.
+                $InstanceSearch = Compare-Object -ReferenceObject $InputProperty -DifferenceObject $ClassInstances -Property $ClassPropertyNames -IncludeEqual -ExcludeDifferent
 
-              #  Setting the ErrorActionPreference back to the previous value
-              $ErrorActionPreference = $ErrorActionPreferenceOriginal
+                #  Setting the ErrorActionPreference back to the previous value
+                $ErrorActionPreference = $ErrorActionPreferenceOriginal
 
-              #  If no matching instance is found, create a new instance, else write error
-              If (-not $InstanceSearch) {
-                  $NewInstance = & $NewInstanceScriptBlock
-              }
+                #  If no matching instance is found, create a new instance, else write error
+                If (-not $InstanceSearch) {
+                    $NewInstance = & $NewInstanceScriptBlock
+                }
 
 
 
