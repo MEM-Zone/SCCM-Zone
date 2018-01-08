@@ -14,6 +14,8 @@
 * Ioan Popovici   | 2017-12-23 | v0.0.8     | Fixed/Simplified input/output where possible              *
 * Ioan Popovici   | 2017-12-27 | v0.0.9     | Get/Set/New except Set-WmiInstance, working and tested    *
 * Ioan Popovici   | 2017-12-27 | v0.1.0     | Remove-WmiInstance re-written and working                 *
+* Ioan Popovici   | 2017-01-07 | v0.1.1     | Get-WmiClass output fix, Remove class, namespace working  *
+* Ioan Popovici   | 2017-01-08 | v0.1.2     | Remove class qualifiers working working                   *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -555,93 +557,6 @@ Function Resolve-Error {
 #endregion
 
 
-#region Function Remove-DisposableObject
-Function Remove-DisposableObject {
-<#
-.SYNOPSIS
-    Removes all disposable objects.
-.DESCRIPTION
-    Removes all disposable objects that are assigned to a variable.
-.PARAMETER Exclude
-    Specifies an array of items that this function excludes from the operation. Wildcards are permitted.
-.PARAMETER Include
-    Specifies an array of items that this function includes from the operation. Wildcards are permitted.
-.PARAMETER Name
-    Specifies the name of the variable name assigned to the object. Wildcards are permitted. You can also pipe a variable name to Dispose-Object.
-.PARAMETER Scope
-    Specifies the variables in the scope. Default is: Script.
-    The acceptable values for this parameter are:
-        Global
-        Local
-        Script
-.EXAMPLE
-    Remove-DisposableObject
-.EXAMPLE
-    Remove-DisposableObject -Name 'SCCMZone' -Include 'A*,B*' -Exclude 'X*,Y*' -Scope 'Global'
-.NOTES
-    This is an internal script function and should typically not be called directly.
-.NOTES
-    To do:
-        Add Success and Debug messages.
-        Fix Remove-Varable.
-.LINK
-    https://sccm-zone.com
-.LINK
-    https://github.com/JhonnyTerminus/SCCM
-#>
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory=$false,Position=0)]
-        [ValidateNotNullorEmpty()]
-        [string[]]$Exclude,
-        [Parameter(Mandatory=$false,Position=1)]
-        [ValidateNotNullorEmpty()]
-        [string[]]$Include,
-        [Parameter(Mandatory=$false,Position=2)]
-        [ValidateNotNullorEmpty()]
-        [string[]]$Name,
-        [Parameter(Mandatory=$false,Position=3)]
-        [ValidateNotNullorEmpty()]
-        [string]$Scope = 'Script'
-    )
-
-    Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
-    Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
-    }
-    Process {
-        Try {
-
-            ## Build the hashtable with the options that will be passed to Get-Variable using splatting
-            [hashtable]$GetDisposeObjectSplat = @{}
-            If ($Exclude) { $GetDisposeObjectSplat.Add( 'Exclude', $Exclude) }
-            If ($Include) { $GetDisposeObjectSplat.Add( 'Include', $Include) }
-            If ($Name) { $GetDisposeObjectSplat.Add( 'Name', $Name) }
-            If ($Scope) { $GetDisposeObjectSplat.Add( 'Scope', $Scope) }
-
-            ## Get disposable objects assigned to variables
-            $GetDisposableObjects = Get-Variable @GetDisposeObjectSplat | Where-Object { $_.Value -is [System.IDisposable] }
-
-            ## Dispose of objects
-            $GetDisposableObjects | Foreach-Object {
-                $null = $_.Value.Dispose()
-                $null = Remove-Variable -Name $_.Name -Force -ErrorAction 'SilentlyContinue'
-            }
-        }
-        Catch {
-            Write-Log -Message "Failed to dispose of object [$($GetDisposableObjects.Name)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
-            Break
-        }
-        Finally {}
-    }
-    End {
-        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -Footer
-    }
-}
-#endregion
-
-
 #region Function Get-WmiNameSpace
 Function Get-WmiNameSpace {
 <#
@@ -671,10 +586,11 @@ Function Get-WmiNameSpace {
         [ValidateNotNullorEmpty()]
         [string]$Namespace
     )
+
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
-    Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
@@ -725,9 +641,9 @@ Function Get-WmiClass {
 .PARAMETER ClassName
     Specifies the class name to search for. Supports wildcards. Default is: '*'.
 .PARAMETER QualifierName
-    Specifies the qualifier name to search for. Default is: 'Static'.
-.PARAMETER DontUseQualifierName
-    Specifies not use the qualifier name for search.
+    Specifies the qualifier name to search for.(Optional)
+.PARAMETER IncludeSpecialClasses
+    Specifies to include System, MSFT and CIM classes. Use this or Get operations only.
 .EXAMPLE
     Get-WmiClass -Namespace 'ROOT\SCCM' -ClassName 'SCCMZone'
 .EXAMPLE
@@ -754,16 +670,16 @@ Function Get-WmiClass {
         [string]$ClassName = '*',
         [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
-        [string]$QualifierName = 'Static',
+        [string]$QualifierName,
         [Parameter(Mandatory=$false,Position=3)]
         [ValidateNotNullorEmpty()]
-        [switch]$DontUseQualifierName
+        [switch]$IncludeSpecialClasses
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
-    Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
@@ -771,12 +687,20 @@ Function Get-WmiClass {
             ## Check if the namespace exists
             $null = Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'Stop'
 
-            ## Get all class or classes details based on specified parameter
-            If ($DontUseQualifierName) {
-                $GetClass = Get-CimClass -Namespace $Namespace -Class $ClassName
+            ## Get all class details 
+            If ($QualifierName) {
+                $WmiClass = Get-CimClass -Namespace $Namespace -Class $ClassName -QualifierName $QualifierName
             }
             Else {
-                $GetClass = Get-CimClass -Namespace $Namespace -Class $ClassName -QualifierName $QualifierName
+                $WmiClass = Get-CimClass -Namespace $Namespace -Class $ClassName
+            }
+
+            ## Filter class or classes details based on specified parameters
+            If ($IncludeSpecialClasses) {
+                $GetClass = $WmiClass
+            }
+            Else {
+                $GetClass = $WmiClass | Where-Object { ($_.CimClassName -notmatch '__') -and ($_.CimClassName -notmatch 'CIM_') -and ($_.CimClassName -notmatch 'MSFT_') }
             }
 
             ## If no class is found, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
@@ -847,6 +771,7 @@ Function Get-WmiClassQualifier {
         [ValidateNotNullorEmpty()]
         [string]$QualifierValue
     )
+
     Begin {
         ## Get the name of this function and write header
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
@@ -856,7 +781,7 @@ Function Get-WmiClassQualifier {
         Try {
 
             ## Get the all class qualifiers
-            $WmiClassQualifier = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop' | Select-Object *).CimClassQualifiers | Where-Object -Property Name -like $QualifierName
+            $WmiClassQualifier = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop' | Select-Object *).CimClassQualifiers | Where-Object -Property Name -like $QualifierName
 
             ## Filter class qualifiers accordinf to specifed parameters
             If ($QualifierValue) {
@@ -960,15 +885,15 @@ Function Get-WmiProperty {
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
 
             ## Get class properties
-            $WmiProperty = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop' | Select-Object *).CimClassProperties | Where-Object -Property Name -like $PropertyName
+            $WmiProperty = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop' | Select-Object *).CimClassProperties | Where-Object -Property Name -like $PropertyName
 
             ## Get class property based on specified parameters
             If ($Property) {
@@ -1066,15 +991,12 @@ Function Get-WmiPropertyQualifier {
         ## Get the name of this function and write header
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
-
-        ## Set Connection Props
-        [hashtable]$ConnectionProps = @{ 'Namespace' = $Namespace; 'ClassName' = $ClassName }
     }
     Process {
         Try {
 
             ## Get all details for the specified property name
-            $WmiPropertyQualifier = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop').CimClassProperties | Where-Object -Property Name -like $PropertyName
+            $WmiPropertyQualifier = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop').CimClassProperties | Where-Object -Property Name -like $PropertyName
 
             ## Get property qualifiers based on specified parameters
             If ($QualifierName -and $QualifierValue) {
@@ -1171,19 +1093,19 @@ Function Get-WmiInstance {
         [ValidateNotNullorEmpty()]
         [hashtable]$Property,
         [Parameter(Mandatory=$false,Position=3)]
-    [switch]$KeyOnly
+        [switch]$KeyOnly
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
 
             ## Check if the class exists
-            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop'
+            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
 
             ## Get all instance details or get only details where the key properties are filled in
             If ($KeyOnly) {
@@ -1279,9 +1201,9 @@ Function New-WmiNameSpace {
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
-    Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
@@ -1382,15 +1304,15 @@ Function New-WmiClass {
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
 
             ## Check if the class exists
-            $ClassTest = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'SilentlyContinue'
+            $ClassTest = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'SilentlyContinue'
 
             ## Create class if it does not exist
             If (-not $ClassTest) {
@@ -1513,7 +1435,7 @@ Param (
         Try {
 
             ## Check if the class exist
-            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop'
+            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
 
             ## If input qualifier is not a hashtable convert string input to hashtable
             If ($Qualifier -isnot [hashtable]) {
@@ -1614,8 +1536,11 @@ Function New-WmiProperty {
         [string]$ClassName,
         [Parameter(Mandatory=$true,Position=2)]
         [ValidateNotNullorEmpty()]
-        [string]$Property,
-        [Parameter(Mandatory=$false,ValueFromPipeline,Position=3)]
+        [string]$PropertyName,
+        [Parameter(Mandatory=$true,Position=3)]
+        [ValidateNotNullorEmpty()]
+        [string]$PropertyType,
+        [Parameter(Mandatory=$false,ValueFromPipeline,Position=4)]
         [ValidateNotNullorEmpty()]
         [PSCustomObject]$Qualifiers = @()
     )
@@ -1629,7 +1554,7 @@ Function New-WmiProperty {
         Try {
 
             ## Check if the class exists
-            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop'
+            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
 
             ## Check if the property exist
             $WmiPropertyTest = Get-WmiProperty -Namespace $Namespace -ClassName $ClassName -PropertyName $PropertyName -ErrorAction 'SilentlyContinue'
@@ -1868,15 +1793,15 @@ Function New-WmiInstance {
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
-    Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
 
             ## Check if class exists
-            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -DontUseQualifierName -ErrorAction 'Stop'
+            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
 
             ## If input qualifier is not a hashtable convert string input to hashtable
             If ($Property -isnot [hashtable]) {
@@ -1921,7 +1846,7 @@ Function Remove-WmiNameSpace {
 .PARAMETER Namespace
     Specifies the namespace to delete.
 .PARAMETER Force
-    Specifies if it should forcefully remove the namespace. This switch deletes all classes and instances. Default is: $false.
+    Specifies if it should forcefully remove the namespace. This switch deletes all existing classes. Default is: $false.
 .EXAMPLE
     Remove-WmiNameSpace -Namespace 'ROOT\TEST' -Force
 .NOTES
@@ -1930,7 +1855,7 @@ Function Remove-WmiNameSpace {
     To do:
     Add Success and Debug messages.
     Add Recurse for deleting namespace tree.
-    v0.1 - Beta
+    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1947,28 +1872,29 @@ Function Remove-WmiNameSpace {
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
-    Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
 
             ## Get the namespace name
-            $NamespaceName = (Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'Stop').Name
+            $WmiNamespaceName = (Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'Stop').Name
 
             ##  Remove all existing classes and instances if the -Force switch was specified
             If ($Force) {
-                Remove-WmiClass -Namespace $Namespace -RemoveAll -Force
+                Remove-WmiClass -Namespace $Namespace -RemoveAll
             }
 
             ## Remove Namespace
             #  Create the Namespace Object
             $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$Namespace`:__NAMESPACE").CreateInstance()
-            $NameSpaceObject.Name = $NamespaceName
+            $NameSpaceObject.Name = $WmiNamespaceName
 
             #  Remove the Namespace
             $null = $NameSpaceObject.Delete()
+            $NameSpaceObject.Dispose()
         }
         Catch {
             Write-Log -Message "Failed to remove namespace [$Namespace]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
@@ -1985,25 +1911,27 @@ Function Remove-WmiNameSpace {
 #region Function Remove-WmiClass
 Function Remove-WmiClass {
 <#
-.SYNOPSIS
+.SYNOPSISl
     This function is used to remove a WMI class.
 .DESCRIPTION
     This function is used to remove a WMI class by name.
 .PARAMETER Namespace
     Specifies the namespace where to search for the WMI class. Default is: 'ROOT\cimv2'.
 .PARAMETER ClassName
-    Specifies the class name to remove.
-.PARAMETER Force
-    This switch is used to remove all instances. The class must be empty in order to be able to delete it. Default is: $false.
+    Specifies the class name to remove. Can be piped.
+.PARAMETER RemoveAll
+    This switch is used to remove all namespace classes.
 .EXAMPLE
     Remove-WmiClass -Namespace 'ROOT' -ClassName 'SCCMZone','SCCMZoneBlog'
 .EXAMPLE
-    Remove-WmiClass -Namespace 'ROOT' -RemoveAll -Force
+    'SCCMZone','SCCMZoneBlog' | Remove-WmiClass -Namespace 'ROOT'
+.EXAMPLE
+    Remove-WmiClass -Namespace 'ROOT' -RemoveAll
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
     To do: Add Success and Debug messages.
-    v0.1 - Beta
+    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2014,63 +1942,143 @@ Function Remove-WmiClass {
         [Parameter(Mandatory=$false,Position=0)]
         [ValidateNotNullorEmpty()]
         [string]$Namespace = 'ROOT\cimv2',
-        [Parameter(Mandatory=$false,Position=1)]
+        [Parameter(Mandatory=$false,ValueFromPipeline,Position=1)]
         [ValidateNotNullorEmpty()]
         [string[]]$ClassName,
-        [Parameter(Mandatory=$false,Position=3)]
+        [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
-        [switch]$RemoveAll = $false,
-        [Parameter(Mandatory=$false,Position=3)]
-        [ValidateNotNullorEmpty()]
-        [switch]$Force = $false
+        [switch]$RemoveAll = $false
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
-
-        ## Set Connection Props
-        [hashtable]$ConnectionProps = @{ 'Namespace' = $Namespace; 'ClassName' = $ClassName }
     }
     Process {
         Try {
 
             ## Get classes names
-            [string[]]$ClassesNames = (Get-WmiClass -Namespace $Namespace -ErrorAction 'Stop').CimClassName
+            [string[]]$WmiClassNames = (Get-WmiClass -Namespace $Namespace -ErrorAction 'Stop').CimClassName
 
             ## Add classes to deletion string array depending on selected options
             If ($RemoveAll) {
-                $ClassNamesToDelete = $ClassesNames
+                $ClassNamesToDelete = $WmiClassNames
             }
             ElseIf ($ClassName) {
-                $ClassNamesToDelete = $ClassesNames | Where-Object { $_ -in $ClassName }
+                $ClassNamesToDelete = $WmiClassNames | Where-Object { $_ -in $ClassName }
             }
             Else {
-                Write-Log -Message "ClassName cannot be `$null if -RemoveAll is not specified." -Severity 3 -Source ${CmdletName}
-                Throw "ClassName cannot be `$null if -RemoveAll is not specified."
-            }
-
-            ## Remove all existing instances if the -Force switch was specified
-            If ($Force) {
-                Remove-WmiInstance -Namespace $Namespace -ClassName $ClassName -RemoveAll -ErrorAction 'Stop'
+                $ClassNameIsNullErr = "ClassName cannot be `$null if -RemoveAll is not specified."
+                Write-Log -Message $ClassNameIsNullErr -Severity 3 -Source ${CmdletName}
+                Write-Error -Message $ClassNameIsNullErr -Category 'InvalidArgument'
             }
 
             ## Remove classes
             If ($ClassNamesToDelete) {
                 $ClassNamesToDelete | Foreach-Object {
+
                     #  Create the class object
                     [wmiclass]$ClassObject = New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList @("\\.\$Namespace`:$_")
+                    
                     #  Remove class
                     $null = $ClassObject.Delete()
+                    $ClassObject.Dispose()
                 }
             }
             Else {
-                Write-Log -Message "No matching classes [$($ClassName | Out-String)] found for namespace [$Namespace]." -Severity 2 -Source ${CmdletName}
+                $ClassNotFoundErr = "No matching class [$ClassName] found for namespace [$Namespace]."
+                Write-Log -Message $ClassNotFoundErr -Severity 2 -Source ${CmdletName}
+                Write-Error -Message $ClassNotFoundErr -Category 'ObjectNotFound'
             }
         }
         Catch {
-            Write-Log -Message "Failed to remove class [$Namespace`:$($ClassName | Out-String)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Failed to remove class [$Namespace`:$ClassName]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
+        }
+        Finally {}
+    }
+    End {
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -Footer
+    }
+}
+#endregion
+
+
+#region Function Remove-WmiClassQualifier
+Function Remove-WmiClassQualifier {
+<#
+.SYNOPSIS
+    This function is used to set qualifiers to a WMI class.
+.DESCRIPTION
+    This function is used to set qualifiers to a WMI class. Existing qualifiers with the same name will be overwriten
+.PARAMETER Namespace
+    Specifies the namespace where to search for the WMI namespace. Default is: 'ROOT\cimv2'.
+.PARAMETER ClassName
+    Specifies the class name for which to remove the qualifiers.
+.PARAMETER QualifierName
+    Specifies the qualifier name or names to be removed.
+.PARAMETER RemoveAll
+    This switch will remove all class qualifiers.
+.EXAMPLE
+    Remove-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -QualifierName 'Description', 'Static'
+.EXAMPLE
+    Remove-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -RemoveAll
+.NOTES
+    This is a module function and can typically be called directly.
+.NOTES
+    To do: Add Success and Debug messages.
+    v1.0
+.LINK
+    https://sccm-zone.com
+.LINK
+    https://github.com/JhonnyTerminus/SCCM
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(Mandatory=$false,Position=0)]
+    [ValidateNotNullorEmpty()]
+    [string]$Namespace = 'ROOT\cimv2',
+    [Parameter(Mandatory=$true,Position=1)]
+    [ValidateNotNullorEmpty()]
+    [string]$ClassName,
+    [Parameter(Mandatory=$false,ValueFromPipeline,Position=2)]
+    [ValidateNotNullorEmpty()]
+    [string[]]$QualifierName,
+    [Parameter(Mandatory=$false,Position=3)]
+    [ValidateNotNullorEmpty()]
+    [switch]$RemoveAll = $false
+    )
+
+    Begin {
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
+    }
+    Process {
+        Try {
+
+            ## Check if the class exist
+            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
+
+            ## Create the ManagementClass object
+            [wmiclass]$ClassObject = New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList @("\\.\$Namespace`:$ClassName")
+
+            ## Remove all qualifiers if the -RemoveAll switch was specified, otherwise remove specified qualifiers
+            If ($RemoveAll) {
+                $ClassObject.Qualifiers.Name | ForEach-Object { $ClassObject.Qualifiers.Remove($_) }
+            }
+            Else {
+                $QualifierName | ForEach-Object { $ClassObject.Qualifiers.Remove($_) }
+            }
+          
+            ## Write class object
+            $null = $ClassObject.Put()
+            $ClassObject.Dispose()
+        }
+        Catch {
+            Write-Log -Message "Failed to remove qualifier for class [$Namespace`:$ClassName]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
         }
         Finally {}
     }
@@ -2309,7 +2317,7 @@ Function Remove-WmiInstance {
 .PARAMETER ClassName
     Specifies the class name from which to remove the instances.
 .PARAMETER Property
-    The class instance property to match. If there is more than one matching instance and the RemoveAll switch is not specified, an error will be thrown. 
+    The class instance property to match. Can be piped. If there is more than one matching instance and the RemoveAll switch is not specified, an error will be thrown. 
 .PARAMETER RemoveAll
     Removes all matching or existing instances.
 .EXAMPLE
@@ -2335,7 +2343,7 @@ Function Remove-WmiInstance {
         [Parameter(Mandatory=$true,Position=1)]
         [ValidateNotNullorEmpty()]
         [string]$ClassName,
-        [Parameter(Mandatory=$false,Position=2)]
+        [Parameter(Mandatory=$false,ValueFromPipeline,Position=2)]
         [ValidateNotNullorEmpty()]
         [hashtable]$Property,
         [Parameter(Mandatory=$false,Position=3)]
