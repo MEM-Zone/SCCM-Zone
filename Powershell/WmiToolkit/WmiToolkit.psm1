@@ -16,6 +16,9 @@
 * Ioan Popovici   | 2017-12-27 | v0.1.0     | Remove-WmiInstance re-written and working                 *
 * Ioan Popovici   | 2017-01-07 | v0.1.1     | Get-WmiClass output fix, Remove class, namespace working  *
 * Ioan Popovici   | 2017-01-08 | v0.1.2     | Remove class qualifiers working working                   *
+* Ioan Popovici   | 2017-01-09 | v0.1.3     | Fixed namespace functions input, only path input now      *
+* Ioan Popovici   | 2017-01-09 | v0.1.4     | Fixed Get-WmiPropertyQualifier output                     *
+* Ioan Popovici   | 2017-01-09 | v0.1.5     | All Remove functions working correctly now                *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -996,31 +999,20 @@ Function Get-WmiPropertyQualifier {
         Try {
 
             ## Get all details for the specified property name
-            $WmiPropertyQualifier = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop').CimClassProperties | Where-Object -Property Name -like $PropertyName
+            $WmiPropertyQualifier = (Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop').CimClassProperties | Where-Object -Property Name -like $PropertyName | Select-Object -ExpandProperty 'Qualifiers'
 
             ## Get property qualifiers based on specified parameters
             If ($QualifierName -and $QualifierValue) {
-                $GetPropertyQualifier = $WmiPropertyQualifier | Where-Object { ($_.Qualifiers.Name -in $QualifierName) -and ($_.Qualifiers.Value -in $QualifierValue) }
+                $GetPropertyQualifier = $WmiPropertyQualifier | Where-Object { ($_.Name -in $QualifierName) -and ($_.Value -in $QualifierValue) }
             }
             ElseIf ($QualifierName) {
-                $GetPropertyQualifier = $WmiPropertyQualifier | Where-Object { ($_.Qualifiers.Name -in $QualifierName) }
+                $GetPropertyQualifier = $WmiPropertyQualifier | Where-Object { ($_.Name -in $QualifierName) }
             }
             ElseIf ($QualifierValue) {
-                $GetPropertyQualifier = $WmiPropertyQualifier | Where-Object { $_.Qualifiers.Value -in $QualifierValue }
+                $GetPropertyQualifier = $WmiPropertyQualifier | Where-Object { $_.Value -in $QualifierValue }
             }
             Else {
                 $GetPropertyQualifier = $WmiPropertyQualifier
-            }
-
-            ## Assemble output object, discard properties without qualifiers and add property name
-            $GetPropertyQualifier = $GetPropertyQualifier | Where-Object { $_.Qualifiers.Name } | ForEach-Object {
-                [PSCustomObject]@{
-                    PropertyName = $_.Name
-                    Name = $_.Qualifiers.Name
-                    Value = $_.Qualifiers.Value
-                    CimType = $_.Qualifiers.CimType
-                    Flags = $_.Qualifiers.Flags         #  Flags = Qualifier flavors
-                }
             }
 
             ## On property qualifiers retrieval failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
@@ -1177,11 +1169,9 @@ Function New-WmiNameSpace {
 .DESCRIPTION
     This function is used to create a new WMI namespace with custom properties.
 .PARAMETER Namespace
-    Specifies the namespace where to search for the WMI namespace. Default is: 'ROOT\cimv2'.
-.PARAMETER NamespaceName
-    Specifies the name for the new namespace.
+    Specifies the namespace to create.
 .EXAMPLE
-    New-WmiNameSpace -Namespace 'ROOT' -NamespaceName 'SCCM'
+    New-WmiNameSpace -Namespace 'ROOT\SCCM'
 .NOTES
     This is a module function and can typically be called directly.
     v1.0
@@ -1192,12 +1182,9 @@ Function New-WmiNameSpace {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory=$true,Position=0)]
         [ValidateNotNullorEmpty()]
-        [string]$Namespace = 'ROOT\cimv2',
-        [Parameter(Mandatory=$true,Position=1)]
-        [ValidateNotNullorEmpty()]
-        [string]$NamespaceName
+        [string]$Namespace
     )
 
     Begin {
@@ -1208,15 +1195,17 @@ Function New-WmiNameSpace {
     Process {
         Try {
 
-            ## Set Namespace path
-            $NamespacePath = Join-Path -Path $Namespace -ChildPath $NamespaceName
+            ## Set namespace root
+            $NamespaceRoot = Split-Path -Path $Namespace
+            ## Set namespace name
+            $NamespaceName = Split-Path -Path $Namespace -Leaf
 
-            ## Check if the Namespace exists
-            $WmiNamespace = Get-WmiNameSpace -Namespace $NamespacePath -ErrorAction 'SilentlyContinue'
+            ## Check if the namespace exists
+            $WmiNamespace = Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'SilentlyContinue'
 
             ## Create Namespace if it does not exist
             If (-not $WmiNamespace) {
-                $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$Namespace`:__NAMESPACE").CreateInstance()
+                $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$NamespaceRoot`:__NAMESPACE").CreateInstance()
                 $NameSpaceObject.Name = $NamespaceName
 
                 #  Write the namespace object
@@ -1224,19 +1213,19 @@ Function New-WmiNameSpace {
 
                 #  On namespace creation failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
                 If (-not $NewNamespace) {
-                    $CreateNamespaceErr = "Failed to create namespace [$NamespacePath]."
+                    $CreateNamespaceErr = "Failed to create namespace [$Namespace]."
                     Write-Log -Message $CreateNamespaceErr -Severity 3 -Source ${CmdletName} -DebugMessage
                     Write-Error -Message $CreateNamespaceErr -Category 'InvalidResult'
                 }
             }
             Else {
-                $NamespaceAlreadyExistsErr = "Failed to create namespace. [$NamespacePath] already exists."
+                $NamespaceAlreadyExistsErr = "Failed to create namespace. [$Namespace] already exists."
                 Write-Log -Message $NamespaceAlreadyExistsErr -Severity 2 -Source ${CmdletName} -DebugMessage
                 Write-Error -Message $NamespaceAlreadyExistsErr -Category 'ResourceExists'
             }
         }
         Catch {
-            Write-Log -Message "Failed to create namespace [$NamespacePath]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Failed to create namespace [$Namespace]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
         }
         Finally {
             Write-Output -InputObject $NewNamespace
@@ -1398,11 +1387,11 @@ Function Set-WmiClassQualifier {
             IsOverridable = $true
         }
 .EXAMPLE
-    New-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -Qualifier @{ Name = 'Description'; Value = 'SCCMZone Blog' }
+    Set-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -Qualifier @{ Name = 'Description'; Value = 'SCCMZone Blog' }
 .EXAMPLE
-    New-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -Qualifier "Name = Description `n Value = SCCMZone Blog"
+    Set-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -Qualifier "Name = Description `n Value = SCCMZone Blog"
 .EXAMPLE
-    "Name = Description `n Value = SCCMZone Blog" | New-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone'
+    "Name = Description `n Value = SCCMZone Blog" | Set-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone'
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
@@ -1844,7 +1833,7 @@ Function Remove-WmiNameSpace {
 .DESCRIPTION
     This function is used to delete a WMI namespace by name.
 .PARAMETER Namespace
-    Specifies the namespace to delete.
+   Specifies the namespace to remove.
 .PARAMETER Force
     Specifies if it should forcefully remove the namespace. This switch deletes all existing classes. Default is: $false.
 .EXAMPLE
@@ -1865,8 +1854,8 @@ Function Remove-WmiNameSpace {
     Param (
         [Parameter(Mandatory=$true,Position=0)]
         [ValidateNotNullorEmpty()]
-        [string]$Namespace,
-        [Parameter(Mandatory=$false,Position=1)]
+        [string]$Namespace,     
+        [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
         [switch]$Force = $false
     )
@@ -1879,25 +1868,38 @@ Function Remove-WmiNameSpace {
     Process {
         Try {
 
-            ## Get the namespace name
-            $WmiNamespaceName = (Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'Stop').Name
+            ## Set namespace root
+            $NamespaceRoot = Split-Path -Path $Namespace
+            ## Set namespace name
+            $NamespaceName = Split-Path -Path $Namespace -Leaf
+
+            ## Check if the namespace exists
+            $null = Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'Stop'
+
+            ## Check if there are any classes
+            $ClassTest = Get-WmiClass -Namespace $Namespace -ErrorAction 'SilentlyContinue'
 
             ##  Remove all existing classes and instances if the -Force switch was specified
-            If ($Force) {
+            If ($Force -and $ClassTest) {
                 Remove-WmiClass -Namespace $Namespace -RemoveAll
             }
+            ElseIf ($ClassTest) {
+                $NamespaceHasClassesErr = "Classes [$($ClassTest.Count)] detected in namespace [$Namespace]. Use the -Force switch to remove classes."
+                Write-Log -Message $NamespaceHasClassesErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $NamespaceHasClassesErr -Category 'InvalidOperation'        
+            }
 
-            ## Remove Namespace
-            #  Create the Namespace Object
-            $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$Namespace`:__NAMESPACE").CreateInstance()
-            $NameSpaceObject.Name = $WmiNamespaceName
+            ## Create the Namespace Object
+            $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$NamespaceRoot`:__NAMESPACE").CreateInstance()
+            $NameSpaceObject.Name = $NamespaceName
 
-            #  Remove the Namespace
+            ## Remove the Namespace
             $null = $NameSpaceObject.Delete()
             $NameSpaceObject.Dispose()
         }
         Catch {
             Write-Log -Message "Failed to remove namespace [$Namespace]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
         }
         Finally {}
     }
@@ -2009,9 +2011,9 @@ Function Remove-WmiClass {
 Function Remove-WmiClassQualifier {
 <#
 .SYNOPSIS
-    This function is used to set qualifiers to a WMI class.
+    This function is used to remove qualifiers from a WMI class.
 .DESCRIPTION
-    This function is used to set qualifiers to a WMI class. Existing qualifiers with the same name will be overwriten
+    This function is used to remove qualifiers from a WMI class by name.
 .PARAMETER Namespace
     Specifies the namespace where to search for the WMI namespace. Default is: 'ROOT\cimv2'.
 .PARAMETER ClassName
@@ -2058,18 +2060,38 @@ Param (
     Process {
         Try {
 
-            ## Check if the class exist
-            $null = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop'
+            ## Get class qualifiers
+            $WmiClassQualifier = (Get-WmiClassQualifier -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop').Name
 
-            ## Create the ManagementClass object
-            [wmiclass]$ClassObject = New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList @("\\.\$Namespace`:$ClassName")
-
-            ## Remove all qualifiers if the -RemoveAll switch was specified, otherwise remove specified qualifiers
+            ## Add qualifier name to deletion array depending on selected options
             If ($RemoveAll) {
-                $ClassObject.Qualifiers.Name | ForEach-Object { $ClassObject.Qualifiers.Remove($_) }
+                $RemoveClassQualifier = $WmiClassQualifier
+            }
+            ElseIf ($QualifierName) {
+                $RemoveClassQualifier = $WmiClassQualifier | Where-Object { $_ -in $QualifierName }
             }
             Else {
+                $QualifierNameIsNullErr = "QualifierName cannot be `$null if -RemoveAll is not specified."
+                Write-Log -Message $QualifierNameIsNullErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $QualifierNameIsNullErr -Category 'InvalidArgument'
+            }
+
+            ## Remove qualifiers by name
+            If ($RemoveClassQualifier) {
+                
+                #  Create the ManagementClass object
+                [wmiclass]$ClassObject = New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList @("\\.\$Namespace`:$ClassName")
+
+                #  Remove class qualifiers one by one
                 $QualifierName | ForEach-Object { $ClassObject.Qualifiers.Remove($_) }
+
+            }
+            Else {
+
+                #  Error handling
+                $PropertyNotFoundErr = "No matching qualifier [$QualifierName] found for class [$Namespace`:$ClassName]."
+                Write-Log -Message $PropertyNotFoundErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $PropertyNotFoundErr -Category 'ObjectNotFound'
             }
           
             ## Write class object
@@ -2100,19 +2122,21 @@ Function Remove-WmiProperty {
     Specifies the namespace where to search for the WMI class. Default is: 'ROOT\cimv2'.
 .PARAMETER ClassName
     Specifies the class name for which to remove the properties.
-.PARAMETER Property
-    Specifies the class properties. You can specify as many properties as you want.
+.PARAMETER PropertyName
+    Specifies the class property name or names to remove.
 .PARAMETER RemoveAll
     This switch is used to remove all properties. Default is: $false. If this switch is specified the Property parameter is ignored.
 .PARAMETER Force
     This switch is used to remove all instances. The class must be empty in order to be able to delete properties. Default is: $false.
 .EXAMPLE
     Remove-WmiProperty -Namespace 'ROOT' -ClassName 'SCCMZone' -Property 'SCCMZone','Blog'
+.EXAMPLE
+    Remove-WmiProperty -Namespace 'ROOT' -ClassName 'SCCMZone' -RemoveAll -Force
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
     To do: Add Success and Debug messages.
-    v0.1 - Beta
+    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2128,64 +2152,74 @@ Function Remove-WmiProperty {
         [string]$ClassName,
         [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
-        [string[]]$Property,
+        [string[]]$PropertyName,
         [Parameter(Mandatory=$false,Position=3)]
         [ValidateNotNullorEmpty()]
         [switch]$RemoveAll = $false,
-        [Parameter(Mandatory=$false,Position=3)]
+        [Parameter(Mandatory=$false,Position=4)]
         [ValidateNotNullorEmpty()]
         [switch]$Force = $false
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
-
-        ## Set Connection Props
-        [hashtable]$ConnectionProps = @{ 'Namespace' = $Namespace; 'ClassName' = $ClassName }
     }
     Process {
         Try {
 
             ## Get class property names
-            [string[]]$ClassPropertyNames = (Get-WmiProperty -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop').Name
+            [string[]]$WmiPropertyNames = (Get-WmiProperty -Namespace $Namespace -ClassName $ClassName -ErrorAction 'Stop').Name
+
+            ## Get class instances
+            $InstanceTest = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'SilentlyContinue'
 
             ## Add property to deletion string array depending on selected options
             If ($RemoveAll) {
-                $ClassPropertyNamesToDelete = $ClassPropertyNames
+                $RemoveWmiProperty = $WmiPropertyNames
             }
-            ElseIf ($Property) {
-                $ClassPropertyNamesToDelete = $ClassPropertyNames | Where-Object {$_ -in $Property }
+            ElseIf ($PropertyName) {
+                $RemoveWmiProperty = $WmiPropertyNames | Where-Object {$_ -in $PropertyName }
             }
             Else {
-                Write-Log -Message "Property cannot be `$null if -RemoveAll is not specified." -Severity 3 -Source ${CmdletName}
-                Throw "Property cannot be `$null if -RemoveAll is not specified."
+                $PropertyNameIsNullErr = "PropertyName cannot be `$null if -RemoveAll is not specified."
+                Write-Log -Message $PropertyNameIsNullErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $PropertyNameIsNullErr -Category 'InvalidArgument'
             }
 
             ## Remove class property
-            If ($ClassPropertyNamesToDelete) {
+            If ($RemoveWmiProperty) {
 
                 #  Remove all existing instances if the -Force switch was specified
-                If ($Force) {
-                    Remove-WmiInstance -Namespace $Namespace -ClassName $ClassName -RemoveAll -ErrorAction 'Stop'
+                If ($Force -and $InstanceTest) {
+                    Remove-WmiInstance -Namespace $Namespace -ClassName $ClassName -RemoveAll -ErrorAction 'Continue'
+                }
+                ElseIf ($InstanceTest) {
+                    $ClassHasInstancesErr = "Instances [$($InstanceTest.Count)] detected in class [$Namespace`:$ClassName]. Use the -Force switch to remove instances."
+                    Write-Log -Message $ClassHasInstancesErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                    Write-Error -Message $ClassHasInstancesErr -Category 'InvalidOperation'
                 }
 
                 #  Create the ManagementClass Object
                 [wmiclass]$ClassObject = New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList @("\\.\$Namespace`:$ClassName")
 
                 #  Remove the specified class properties
-                $ClassPropertyNamesToDelete | ForEach-Object { $ClassObject.Properties.Remove($_) }
+                $RemoveWmiProperty | ForEach-Object { $ClassObject.Properties.Remove($_) }
 
-                #  Write the class object
+                #  Write the class and dispose of the object
                 $null = $ClassObject.Put()
+                $ClassObject.Dispose()
             }
             Else {
-                Write-Log -Message "No matching property [$($Property | Out-String)] found for class [$Namespace`:$ClassName]." -Severity 2 -Source ${CmdletName}
+                $PropertyNotFoundErr = "No matching property [$Property] found for class [$Namespace`:$ClassName]."
+                Write-Log -Message $PropertyNotFoundErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $PropertyNotFoundErr -Category 'ObjectNotFound'
             }
         }
         Catch {
-            Write-Log -Message "Failed to remove property [$($Property | Out-String)] for class [$Namespace`:$ClassName]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Failed to remove property for class [$Namespace`:$ClassName]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
         }
         Finally {}
     }
@@ -2202,27 +2236,29 @@ Function Remove-WmiPropertyQualifier {
 .SYNOPSIS
     This function is used to remove WMI property qualifiers.
 .DESCRIPTION
-    This function is used to remove WMI class properties qualifiers by name.
+    This function is used to remove WMI class property qualifiers by name.
 .PARAMETER Namespace
     Specifies the namespace. Default is: 'ROOT\cimv2'.
 .PARAMETER ClassName
     Specifies the class name.
-.PARAMETER Property
+.PARAMETER PropertyName
     Specifies the property name for which to remove the qualifiers.
-.PARAMETER Qualifier
-    Specifies the class qualifier name. You can specify multiple qualifiers names.
+.PARAMETER QualifierName
+    Specifies the property qualifier name or names.
 .PARAMETER RemoveAll
     This switch is used to remove all qualifiers. Default is: $false. If this switch is specified the QualifierName parameter is ignored.
 .PARAMETER Force
     This switch is used to remove all class instances. The class must be empty in order to be able to delete properties. Default is: $false.
 .EXAMPLE
-    Remove-WmiPropertyQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -Property 'Source' -Qualifier 'Key','Description'
+    Remove-WmiPropertyQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -PropertyName 'Source' -QualifierName 'Key','Description'
+.EXAMPLE
+    Remove-WmiPropertyQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -RemoveAll -Force
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
     To do: Add Success and Debug messages.
 .NOTES
-    v0.1 - Beta
+    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2238,10 +2274,10 @@ Function Remove-WmiPropertyQualifier {
         [string]$ClassName,
         [Parameter(Mandatory=$true,Position=2)]
         [ValidateNotNullorEmpty()]
-        [string]$Property,
+        [string]$PropertyName,
         [Parameter(Mandatory=$false,Position=3)]
         [ValidateNotNullorEmpty()]
-        [string[]]$Qualifier,
+        [string[]]$QualifierName,
         [Parameter(Mandatory=$false,Position=4)]
         [ValidateNotNullorEmpty()]
         [switch]$RemoveAll = $false,
@@ -2254,47 +2290,61 @@ Function Remove-WmiPropertyQualifier {
         ## Get the name of this function and write header
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
-
-        ## Set Connection Props
-        [hashtable]$ConnectionProps = @{ 'Namespace' = $Namespace; 'ClassName' = $ClassName }
     }
     Process {
         Try {
 
-            ## Get property qualifiers
-            [string[]]$ClassPropertyQualifierNames = (Get-WmiPropertyQualifier -Namespace $Namespace -ClassName $ClassName -Property $Property -ErrorAction 'Stop').Qualifiers.Name
+            ## Get property qualifier names
+            [string[]]$WmiPropertyQualifierNames = (Get-WmiPropertyQualifier -Namespace $Namespace -ClassName $ClassName -PropertyName $PropertyName -ErrorAction 'Stop').Name
+
+            ## Get class instances
+            $InstanceTest = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'SilentlyContinue'
 
             ## Add property qualifiers to deletion string array depending on selected options
             If ($RemoveAll) {
-                $PropertyQualifiersToDelete = $ClassPropertyQualifierNames
+                $RemovePropertyQualifier = $ClassPropertyQualifierNames
+            }
+            ElseIf ($QualifierName) {
+                $RemovePropertyQualifier = $WmiPropertyQualifierNames | Where-Object { $_ -in $QualifierName }
             }
             Else {
-                $PropertyQualifiersToDelete = $Qualifier | Where-Object { $_ -in $ClassPropertyQualifierNames }
+                $QualifierNameIsNullErr = "QualifierName cannot be `$null if -RemoveAll is not specified."
+                Write-Log -Message $QualifierNameIsNullErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $QualifierNameIsNullErr -Category 'InvalidArgument'
             }
 
             ## Remove property qualifiers
-            If ($PropertyQualifiersToDelete) {
+            If ($RemovePropertyQualifier) {
 
                 #  Remove all existing instances if the -Force switch was specified
-                If ($Force) {
+                If ($Force -and $InstanceTest) {
                     Remove-WmiInstance -Namespace $Namespace -ClassName $ClassName -RemoveAll -ErrorAction 'Stop'
+                }
+                ElseIf ($InstanceTest) {
+                    $ClassHasInstancesErr = "Instances [$($InstanceTest.Count)] detected in class [$Namespace`:$ClassName]. Use the -Force switch to remove instances."
+                    Write-Log -Message $ClassHasInstancesErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                    Write-Error -Message $ClassHasInstancesErr -Category 'InvalidOperation'
                 }
 
                 #  Create the ManagementClass Object
                 [wmiclass]$ClassObject = New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList @("\\.\$Namespace`:$ClassName")
 
                 #  Remove the specified property qualifiers
-                $PropertyQualifiersToDelete | ForEach-Object { $ClassObject.Properties[$Property].Qualifiers.Remove($_) }
+                $RemovePropertyQualifier | ForEach-Object { $ClassObject.Properties[$Property].Qualifiers.Remove($_) }
 
-                #  Write the class object
+                #  Write the class and dispose of the object
                 $null = $ClassObject.Put()
+                $ClassObject.Dispose()
             }
             Else {
-                Write-Log -Message "No matching qualifiers [$($Qualifier | Out-String)] found for property [$Property]." -Severity 2 -Source ${CmdletName}
+                $ProperyQualifierNotFoundErr = "No matching property qualifier [$Property`($QualifierName`)] found for class [$Namespace`:$ClassName]."
+                Write-Log -Message $ProperyQualifierNotFoundErr -Severity 2 -Source ${CmdletName}
+                Write-Error -Message $ProperyQualifierNotFoundErr -Category 'ObjectNotFound'
             }
         }
         Catch {
-            Write-Log -Message "Failed to remove qualifiers [$($Qualifier | Out-String)] for [$Property]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Failed to remove property qualifier for class [$Namespace`:$ClassName]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
         }
         Finally {}
     }
@@ -2351,8 +2401,8 @@ Function Remove-WmiInstance {
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
         Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
@@ -2418,13 +2468,13 @@ Function Copy-WmiClass {
 .PARAMETER NamespaceDestination
     Specifies the destination namespace.
 .PARAMETER CreateDestination
-    This switch is used to create the destination if it does not exist. Default is: $false.
+    This switch is used to create the destination namespace if it does not exist. Default is: $false.
 .EXAMPLE
     Copy-WmiClass -ClassName 'SCCMZone' -NamespaceSource 'ROOT' -NamespaceDestination 'ROOT\SCCMZone' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
-    v0.1 - Beta
+    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2447,46 +2497,49 @@ Function Copy-WmiClass {
     )
 
     Begin {
-    ## Get the name of this function and write header
-    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
-    Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
+        ## Get the name of this function and write header
+        [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        Write-FunctionHeaderOrFooter -CmdletName ${CmdletName} -CmdletBoundParameters $PSBoundParameters -Header
     }
     Process {
         Try {
 
             ## Check if the class exists in the source location
-            $ClassTest = Get-WmiClass -Namespace $NamespaceSource -ClassName $ClassName
+            $null = Get-WmiClass -Namespace $NamespaceSource -ClassName $ClassName -ErrorAction 'Stop'
+
+            ## Get source class instances
+            $InstanceTest = Get-WmiInstance -Namespace $Namespace -ClassName $ClassName -ErrorAction 'SilentlyContinue'
 
             ## Check if the destination namespace exists
-            $NamespaceTest = Get-WmiNameSpace -Namespace $NamespaceDestination
+            $DestinationTest = Get-WmiNameSpace -Namespace $NamespaceDestination -ErrorAction 'SilentlyContinue'
 
-            ## If the class exists, check destination
-            If ($ClassTest) {
+            ## Create destination namespace if specified
+            If ($CreateDestination -and (-not $DestinationTest)) {
 
-                ## Create CopyClassScriptBlock
-                [scriptblock]$CopyClassScriptBlock = { (Get-WmiObject -ClassName $ClassName -Namespace $NamespaceSource -list).CopyTo($NamespaceDestination) }
-
-                ## If the Destination exists execute $CopyClassScriptBlock
-                If ($NamespaceTest) { $CopyClassOutput = & $CopyClassScriptBlock }
-
-                ## If the -CreateDestination switch was specified, create the destination and execute $CopyClassScriptBlock
-                ElseIf ($CreateDestination) {
-                    New-WmiNameSpace -Namespace $NamespaceDestination
-                    $CopyClassOutput = & $CopyClassScriptBlock
-                }
-                Else {
-                    Write-Log -Message "Failed to copy class. $NamespaceDestination`:$ClassName (source) does not exist." -Severity 3 -Source ${CmdletName}
-                }
+                #  Create destination namespace
+                $null = New-WmiNameSpace -Namespace $NamespaceDestination -ErrorAction 'Continue'
             }
-            Else {
-                Write-Log -Message "Failed to copy class. $NamespaceSource`:$ClassName (destination) does not exist." -Severity 3 -Source ${CmdletName}
+            ElseIf (-not $DestinationTest) {
+                $DestinationNotFoundErr = "Destination namespace [$NamespaceDestination] not found. Use -CreateDestination switch to create the destination automatically."
+                Write-Log -Message $DestinationNotFoundErr -Severity 2 -Source ${CmdletName}
+                Write-Error -Message $DestinationNotFoundErr -Category 'ObjectNotFound'
             }
+            
+            ## Copy class to destination namespace
+            $CopyClass = (Get-WmiObject -ClassName $ClassName -Namespace $NamespaceSource -list).CopyTo($NamespaceDestination)
+
+            ## Copy source class instances if any are found
+            If ($InstanceTest) {
+                $null = Copy-WmiInstance #####
+            }
+               
         }
         Catch {
             Write-Log -Message "Failed to copy class. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
         }
         Finally {
-            Write-Output -InputObject $CopyClassOutput
+            Write-Output -InputObject $CopyClass
         }
     }
     End {
@@ -2503,18 +2556,14 @@ Function Copy-WmiInstance {
     This function is used to copy the instances of a WMI class.
 .DESCRIPTION
     This function is used to copy the instances of a WMI class to another class.
-.PARAMETER ClassNameSource
-    Specifies the class name to be copied from.
-.PARAMETER ClassNameDestination
-    Specifies the class name to be copied to.
-.PARAMETER NamespaceSource
-    Specifies the namespace where to search for the source WMI class. Default is: 'ROOT\cimv2'.
-.PARAMETER NamespaceDestination
-    Specifies the destination namespace.
+.PARAMETER ClassSourcePath
+    Specifies the class to be copied from.
+.PARAMETER ClassDestinationPath
+    Specifies the class to be copied to.
 .PARAMETER CreateDestination
     This switch is used to create the destination if it does not exist. Default is: $false.
 .EXAMPLE
-    Copy-WmiInstance -NamespaceSource 'ROOT' -ClassNameSource 'SCCMZone' -NamespaceDestination 'ROOT\TEST' -ClassNameDestination 'Test' -CreateDestination
+    Copy-WmiInstance -ClassSource 'ROOT\SCCM:SCCMZone' -ClassDestination 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
@@ -2526,19 +2575,13 @@ Function Copy-WmiInstance {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory=$true,Position=0)]
         [ValidateNotNullorEmpty()]
-        [string]$NamespaceSource = 'ROOT\cimv2',
+        [string]$ClassSourcePath,
         [Parameter(Mandatory=$true,Position=1)]
         [ValidateNotNullorEmpty()]
-        [string]$ClassNameSource,
-        [Parameter(Mandatory=$true,Position=2)]
-        [ValidateNotNullorEmpty()]
-        [string]$NamespaceDestination,
-        [Parameter(Mandatory=$true,Position=3)]
-        [ValidateNotNullorEmpty()]
-        [string]$ClassNameDestination,
-        [Parameter(Mandatory=$false,Position=4)]
+        [string]$ClassDestinationPath,
+        [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
         [switch]$CreateDestination = $false
     )
@@ -2550,9 +2593,19 @@ Function Copy-WmiInstance {
     }
     Process {
         Try {
+            
+            ## Set source and destination paths and name variables
+            #  Set NamespaceSource
+            $NamespaceSource = (Split-Path -Path $ClassSourcePath -Qualifier).TrimEnd(':')
+            #  Set NamespaceDestination
+            $NamespaceDestination =  (Split-Path -Path $ClassDestinationPath -Qualifier).TrimEnd(':')
+            #  Set ClassNameSource
+            $ClassNameSource = (Split-Path -Path $ClassSourcePath -NoQualifier)
+            #  Set ClassNameDestination
+            $ClassNameDestination = (Split-Path -Path $ClassDestinationPath -NoQualifier)
 
-            ## If source class instances exist stop execution
-            Get-WmiInstance -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
+            ## Check if source class instances exist
+            $WmiClassInstances = Get-WmiInstance -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
 
             ## Check if the destination class exists
             $ClassDestinationTest = Get-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -ErrorAction 'SilentlyContinue'
@@ -2612,22 +2665,18 @@ Function Copy-WmiClassQualifier {
     This function is used to copy the qualifiers of a WMI class.
 .DESCRIPTION
     This function is used to copy the qualifiers of a WMI class to another class.
-.PARAMETER ClassNameSource
-    Specifies the class name to be copied from.
-.PARAMETER ClassNameDestination
-    Specifies the class name to be copied to.
-.PARAMETER NamespaceSource
-    Specifies the namespace where to search for the source WMI class. Default is: 'ROOT\cimv2'.
-.PARAMETER NamespaceDestination
-    Specifies the destination namespace.
+.PARAMETER ClassSourcePath
+    Specifies the class to be copied from.
+.PARAMETER ClassDestinationPath
+    Specifies the class to be copied to.
 .PARAMETER CreateDestination
-    This switch is used to create the destination class if it does not exist. Default is: $false.
+    This switch is used to create the destination if it does not exist. Default is: $false.
 .EXAMPLE
-    Copy-WmiClassQualifier-NamespaceSource 'ROOT' -ClassNameSource 'SCCMZone' -NamespaceDestination 'ROOT\TEST' -ClassNameDestination 'Test' -CreateDestination
+    Copy-WmiClassQualifier -ClassSource 'ROOT\SCCM:SCCMZone' -ClassDestination 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
-    v0.1 - Beta
+    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2635,19 +2684,13 @@ Function Copy-WmiClassQualifier {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory=$true,Position=0)]
         [ValidateNotNullorEmpty()]
-        [string]$NamespaceSource = 'ROOT\cimv2',
+        [string]$ClassSourcePath,
         [Parameter(Mandatory=$true,Position=1)]
         [ValidateNotNullorEmpty()]
-        [string]$ClassNameSource,
-        [Parameter(Mandatory=$true,Position=2)]
-        [ValidateNotNullorEmpty()]
-        [string]$NamespaceDestination,
-        [Parameter(Mandatory=$true,Position=3)]
-        [ValidateNotNullorEmpty()]
-        [string]$ClassNameDestination,
-        [Parameter(Mandatory=$false,Position=4)]
+        [string]$ClassDestinationPath,
+        [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
         [switch]$CreateDestination = $false
     )
@@ -2660,52 +2703,47 @@ Function Copy-WmiClassQualifier {
     Process {
         Try {
 
+            ## Set source and destination paths and name variables
+            #  Set NamespaceSource
+            $NamespaceSource = (Split-Path -Path $ClassSourcePath -Qualifier).TrimEnd(':')
+            #  Set NamespaceDestination
+            $NamespaceDestination =  (Split-Path -Path $ClassDestinationPath -Qualifier).TrimEnd(':')
+            #  Set ClassNameSource
+            $ClassNameSource = (Split-Path -Path $ClassSourcePath -NoQualifier)
+            #  Set ClassNameDestination
+            $ClassNameDestination = (Split-Path -Path $ClassDestinationPath -NoQualifier)
+
             ## Check if the source class exists
-            Get-WmiClassQualifier -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
+            $null = Get-WmiClassQualifier -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
 
             ## Check if the destination class exists
             $ClassDestinationTest = Get-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -ErrorAction 'SilentlyContinue'
 
-            ## Set the copy class qualifiers scriptblock
-            $CopyClassQualifiersScriptBlock = {
-                # Get source class qualifiers
-                $ClassSourceQualifiers = Get-WmiClass -Namespace $Namespace -ClassName $ClassName  | Select-Object -ExpandProperty 'CimClassQualifiers'
-                #  Set new class qualifiers
-                $ClassSourceQualifiers | ForEach-Object {
-                    Switch ($_.Value) {
-                        'True'  { $ClassDestinationQualifierValue = $true }
-                        'False' { $ClassDestinationQualifierValue = $false }
-                        Default { $ClassDestinationQualifierValue = "$_" }
-                    }
-                    #  Assemble new class qualifiers array
-                    [array]$ClassDestinationQualifiers += @(
-                        $_.Name,
-                        $ClassNewQualifierValue
-                    )
-                }
+            ## Create destination class if specified
+            If ((-not $ClassDestinationTest) -and $CreateDestination) {
+                $null = New-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -ErrorAction 'Stop'
             }
-            If ($ClassDestinationTest) {
-
-                ## Copy class qualifiers
-                If ($NamespaceTest) { $CopyClassQualifiersOutput = & $CopyClassQualifiersScriptBlock }
+            ElseIf (-not $ClassDestinationTest) {
+                $DestinationClassErr = "Destination [$NamespaceSource`:$ClassName] does not exist. Use the -CreateDestination switch to automatically create the destination class."
+                Write-Log -Message $DestinationClassErr -Severity 2 -Source ${CmdletName}
+                Write-Error -Message $DestinationClassErr -Category 'ObjectNotFound'
             }
-            ElseIf ($CreateDestination) {
-
-                ## Create new class
-                New-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination
-
-                ## Copy class qualifiers
-                $CopyClassQualifiersOutput = & $CopyClassQualifiersScriptBlock
-            }
-            Else {
-                Write-Log -Message "Failed to copy class qualifiers. Destination [$NamespaceSource`:$ClassName] does not exist." -Severity 3 -Source ${CmdletName}
+            
+            ## Get source class qualifiers
+            $ClassSourceQualifiers = Get-WmiClassQualifier -Namespace $NamespaceSource -ClassName $ClassNameSource
+           
+            ## Set destination class qualifiers 
+            $ClassSourceQualifiers | ForEach-Object {
+                #  Set class qualifiers one by one
+                $CopyClassQuaifier = Set-WmiClassQualifier -Namespace $NamespaceDestination -ClassName $ClassNameDestination -Qualifier @{ Name = $_.Name; Value = $_.Value } -ErrorAction 'Stop'
             }
         }
         Catch {
             Write-Log -Message "Failed to copy class qualifiers. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Break
         }
         Finally {
-            Write-Output -InputObject $CopyClassQualifiersOutput
+            Write-Output -InputObject $CopyClassQuaifier
         }
     }
     End {
@@ -2722,18 +2760,14 @@ Function Copy-WmiProperty {
     This function is used to copy the properties of a WMI class.
 .DESCRIPTION
     This function is used to copy the properties of a WMI class to another class.
-.PARAMETER ClassNameSource
-    Specifies the class name to be copied from.
-.PARAMETER ClassNameDestination
-    Specifies the class name to be copied to.
-.PARAMETER NamespaceSource
-    Specifies the namespace where to search for the source WMI class. Default is: 'ROOT\cimv2'.
-.PARAMETER NamespaceDestination
-    Specifies the destination namespace.
+.PARAMETER ClassSourcePath
+    Specifies the class to be copied from.
+.PARAMETER ClassDestinationPath
+    Specifies the class to be copied to.
 .PARAMETER CreateDestination
-    This switch is used to create the destination class if it does not exist. Default is: $false.
+    This switch is used to create the destination if it does not exist. Default is: $false.
 .EXAMPLE
-    Copy-WmiProperty -NamespaceSource 'ROOT' -ClassNameSource 'SCCMZone' -NamespaceDestination 'ROOT\TEST' -ClassNameDestination 'Test' -CreateDestination
+    Copy-WmiProperty -ClassSource 'ROOT\SCCM:SCCMZone' -ClassDestination 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
 .NOTES
@@ -2745,23 +2779,17 @@ Function Copy-WmiProperty {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory=$true,Position=0)]
         [ValidateNotNullorEmpty()]
-        [string]$NamespaceSource = 'ROOT\cimv2',
+        [string]$ClassSourcePath,
         [Parameter(Mandatory=$true,Position=1)]
         [ValidateNotNullorEmpty()]
-        [string]$ClassNameSource,
-        [Parameter(Mandatory=$true,Position=2)]
-        [ValidateNotNullorEmpty()]
-        [string]$NamespaceDestination,
-        [Parameter(Mandatory=$true,Position=3)]
-        [ValidateNotNullorEmpty()]
-        [string]$ClassNameDestination,
-        [Parameter(Mandatory=$false,Position=4)]
+        [string]$ClassDestinationPath,
+        [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
         [switch]$CreateDestination = $false
     )
-
+    
     Begin {
         ## Get the name of this function and write header
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
@@ -2769,6 +2797,16 @@ Function Copy-WmiProperty {
     }
     Process {
         Try {
+
+            ## Set source and destination paths and name variables
+            #  Set NamespaceSource
+            $NamespaceSource = (Split-Path -Path $ClassSourcePath -Qualifier).TrimEnd(':')
+            #  Set NamespaceDestination
+            $NamespaceDestination =  (Split-Path -Path $ClassDestinationPath -Qualifier).TrimEnd(':')
+            #  Set ClassNameSource
+            $ClassNameSource = (Split-Path -Path $ClassSourcePath -NoQualifier)
+            #  Set ClassNameDestination
+            $ClassNameDestination = (Split-Path -Path $ClassDestinationPath -NoQualifier)
 
             ## Check if the source class exists
             Get-WmiClass -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
