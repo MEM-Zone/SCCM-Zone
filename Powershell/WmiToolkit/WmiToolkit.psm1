@@ -19,6 +19,8 @@
 * Ioan Popovici   | 2017-01-09 | v0.1.3     | Fixed namespace functions input, only path input now      *
 * Ioan Popovici   | 2017-01-09 | v0.1.4     | Fixed Get-WmiPropertyQualifier output                     *
 * Ioan Popovici   | 2017-01-09 | v0.1.5     | All Remove functions working correctly now                *
+* Ioan Popovici   | 2017-01-10 | v0.1.6     | Fix namespace recurse deletion and creation               *
+* Ioan Popovici   | 2017-01-10 | v0.1.7     | Fix Copy-WmiClassQualifiers                               *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -572,12 +574,9 @@ Function Get-WmiNameSpace {
 .EXAMPLE
     Get-WmiNameSpace -NameSpace 'ROOT\SCCM'
 .EXAMPLE
-    Get-WmiNameSpace -$NameSpace = 'ROOT\*'
+    Get-WmiNameSpace -NameSpace 'ROOT\*'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    V1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -655,9 +654,6 @@ Function Get-WmiClass {
     Get-WmiClass -Namespace 'ROOT\SCCM'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -751,9 +747,6 @@ Function Get-WmiClassQualifier {
     Get-WmiClassQualifier -Namespace 'ROOT\SCCM' -ClassName 'SCCMZone'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    V1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -857,9 +850,6 @@ Function Get-WmiProperty {
     $Property | Get-WmiProperty -Namespace 'ROOT' -ClassName 'SCCMZone'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -965,7 +955,6 @@ Function Get-WmiPropertyQualifier {
     Get-WmiPropertyQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -QualifierName 'key','Description'
 .NOTES
     This is a module function and can typically be called directly.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1065,9 +1054,6 @@ Function Get-WmiInstance {
     Get-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1167,14 +1153,17 @@ Function New-WmiNameSpace {
 .SYNOPSIS
     This function is used to create a new WMI namespace.
 .DESCRIPTION
-    This function is used to create a new WMI namespace with custom properties.
+    This function is used to create a new WMI namespace.
 .PARAMETER Namespace
     Specifies the namespace to create.
+.PARAMETER CreateSubTree
+    This swith is used to create the whole namespace sub tree if it does not exist.
 .EXAMPLE
     New-WmiNameSpace -Namespace 'ROOT\SCCM'
+.EXAMPLE
+    New-WmiNameSpace -Namespace 'ROOT\SCCM\SCCMZone\Blog' -CreateSubTree
 .NOTES
     This is a module function and can typically be called directly.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1184,7 +1173,10 @@ Function New-WmiNameSpace {
     Param (
         [Parameter(Mandatory=$true,Position=0)]
         [ValidateNotNullorEmpty()]
-        [string]$Namespace
+        [string]$Namespace,
+        [Parameter(Mandatory=$false,Position=1)]
+        [ValidateNotNullorEmpty()]
+        [switch]$CreateSubTree = $false       
     )
 
     Begin {
@@ -1195,27 +1187,84 @@ Function New-WmiNameSpace {
     Process {
         Try {
 
-            ## Set namespace root
-            $NamespaceRoot = Split-Path -Path $Namespace
-            ## Set namespace name
-            $NamespaceName = Split-Path -Path $Namespace -Leaf
-
             ## Check if the namespace exists
             $WmiNamespace = Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'SilentlyContinue'
-
+            
             ## Create Namespace if it does not exist
             If (-not $WmiNamespace) {
-                $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$NamespaceRoot`:__NAMESPACE").CreateInstance()
-                $NameSpaceObject.Name = $NamespaceName
+               
+                #  Split path into it's components
+                $NamespacePaths = $Namespace.Split('\')
 
-                #  Write the namespace object
-                $NewNamespace = $NameSpaceObject.Put()
+                #  Assigning root namespace, just for show, should always be 'ROOT'
+                [string]$Path = $NamespacePaths[0]
 
-                #  On namespace creation failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
-                If (-not $NewNamespace) {
-                    $CreateNamespaceErr = "Failed to create namespace [$Namespace]."
-                    Write-Log -Message $CreateNamespaceErr -Severity 3 -Source ${CmdletName} -DebugMessage
-                    Write-Error -Message $CreateNamespaceErr -Category 'InvalidResult'
+                #  Initialize NamespacePathsObject
+                [PSCustomObject]$NamespacePathsObject = @()
+
+                #  Parsing path components and assemle individual paths
+                For ($i = 1; $i -le $($NamespacePaths.Length -1); $i++ ) {
+                    $Path += '\' + $NamespacePaths[$i]
+
+                    #  Assembing path props and add them to the NamspacePathsObject
+                    $PathProps = [ordered]@{ Name = $(Split-Path -Path $Path) ; Value = $(Split-Path -Path $Path -Leaf) }
+                    $NamespacePathsObject += $PathProps
+                }            
+                
+                #  Split path into it's components
+                $NamespacePaths = $Namespace.Split('\')
+
+                #  Assigning root namespace, just for show, should always be 'ROOT'
+                [string]$Path = $NamespacePaths[0]
+
+                #  Initialize NamespacePathsObject
+                [PSCustomObject]$NamespacePathsObject = @()
+
+                #  Parsing path components and assemle individual paths
+                For ($i = 1; $i -le $($NamespacePaths.Length -1); $i++ ) {
+                    $Path += '\' + $NamespacePaths[$i]
+
+                    #  Assembing path props and add them to the NamspacePathsObject
+                    $PathProps = [ordered]@{ 
+                        'NamespacePath' = $(Split-Path -Path $Path) 
+                        'NamespaceName' = $(Split-Path -Path $Path -Leaf)
+                        'NamespaceTest' = [boolean]$(Get-WmiNameSpace -Namespace $Path -ErrorAction 'SilentlyContinue')
+                    }
+                    $NamespacePathsObject += New-Object -TypeName 'PSObject' -Property $PathProps
+                }
+
+                #  If the path does not contain missing subnamespaces or the -CreateSubTree switch is specified create namespace or namespaces
+                If (($($NamespacePathsObject -match $false).Count -eq 1 ) -or $CreateSubTree) {
+
+                    #  Create each namespace in path one by one
+                    $NamespacePathsObject | ForEach-Object {
+
+                        #  Check if we need to create the namespace
+                        If (-not $_.NamespaceTest) {
+                            #  Create namespace object and assign namespace name
+                            $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$($_.NameSpacePath)`:__NAMESPACE").CreateInstance()
+                            $NameSpaceObject.Name = $_.NamespaceName
+            
+                            #  Write the namespace object
+                            $NewNamespace = $NameSpaceObject.Put()
+                            $NameSpaceObject.Dispose()
+                        }
+                        Else {
+                            Write-Log -Message "Namespace [$($_.NamespacePath)`\$($_.NamespaceName)] already exists." -Severity 2 -Source ${CmdletName} -DebugMessage
+                        }
+                    }
+
+                    #  On namespace creation failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
+                    If (-not $NewNamespace) {
+                        $CreateNamespaceErr = "Failed to create namespace [$($_.NameSpacePath)`\$($_.NamespaceName)]."
+                        Write-Log -Message $CreateNamespaceErr -Severity 3 -Source ${CmdletName} -DebugMessage
+                        Write-Error -Message $CreateNamespaceErr -Category 'InvalidResult'
+                    }
+                }
+                ElseIf (($($NamespacePathsObject -match $false).Count -gt 1)) {
+                    $SubNamespaceFoundErr = "Subnamespace detected in namespace path [$Namespace]. Use the -CreateSubtree switch to create the whole path."
+                    Write-Log -Message $SubNamespaceFoundErr -Severity 3 -Source ${CmdletName} -DebugMessage
+                    Write-Error -Message $SubNamespaceFoundErr -Category 'InvalidOperation'
                 }
             }
             Else {
@@ -1258,6 +1307,8 @@ Function New-WmiClass {
         PropagatesToInstance = $true
         PropagatesToSubClass = $false
         IsOverridable = $true
+.PARAMETER CreateDestination
+    This switch is used to create destination namespace.
 .EXAMPLE
     [hashtable]$Qualifiers = @{
         Key = $true
@@ -1268,12 +1319,9 @@ Function New-WmiClass {
 .EXAMPLE
     "Key = $true `n Static = $true `n Description = SCCMZone Blog" | New-WmiClass -Namespace 'ROOT' -ClassName 'SCCMZone'
 .EXAMPLE
-    New-WmiClass -Namespace 'ROOT' -ClassName 'SCCMZone'
+    New-WmiClass -Namespace 'ROOT\SCCM' -ClassName 'SCCMZone' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1289,7 +1337,10 @@ Function New-WmiClass {
         [string]$ClassName,
         [Parameter(Mandatory=$false,ValueFromPipeline,Position=2)]
         [ValidateNotNullorEmpty()]
-        [PSCustomObject]$Qualifiers = @("Static = $true")
+        [PSCustomObject]$Qualifiers = @("Static = $true"),
+        [Parameter(Mandatory=$false,Position=3)]
+        [ValidateNotNullorEmpty()]
+        [switch]$CreateDestination = $false
     )
 
     Begin {
@@ -1303,8 +1354,23 @@ Function New-WmiClass {
             ## Check if the class exists
             $ClassTest = Get-WmiClass -Namespace $Namespace -ClassName $ClassName -ErrorAction 'SilentlyContinue'
 
+            ## Check if the namespace exists
+            $NamespaceTest = Get-WmiNameSpace -Namespace $Namespace -ErrorAction 'SilentlyContinue'
+
+            ## Create destination namespace if specified, otherwise throw error if -ErrorAction 'Stop' is specified
+            If ((-not $NamespaceTest) -and $CreateDestination) {
+                $null = New-WmiNameSpace -$Namespace -CreateSubTree -ErrorAction 'Stop'
+            }
+            Else {
+                $NamespaceNotFoundErr = "Namespace [$Namespace] does not exist. Use the -CreateDestination switch to create namespace."
+                Write-Log -Message $NamespaceNotFoundErr -Severity 3 -Source ${CmdletName}
+                Write-Error -Message $NamespaceNotFoundErr -Category 'ObjectNotFound'  
+            }
+
             ## Create class if it does not exist
             If (-not $ClassTest) {
+
+                #  Create class object
                 [wmiclass]$ClassObject = New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList @("\\.\$Namespace`:__CLASS",[String]::Empty,$null)
                 $ClassObject.Name = $ClassName
 
@@ -1312,7 +1378,7 @@ Function New-WmiClass {
                 $NewClass = $ClassObject.Put()
                 $ClassObject.Dispose()
 
-                ##  On class creation failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
+                #  On class creation failure, write debug message and optionally throw error if -ErrorAction 'Stop' is specified
                 If (-not $NewClass) {
 
                     #  Error handling and logging
@@ -1340,8 +1406,6 @@ Function New-WmiClass {
                 }
             }
             Else {
-
-                #  Error handling and logging
                 $ClassAlreadyExistsErr = "Failed to create class [$Namespace`:$ClassName]. Class already exists."
                 Write-Log -Message $ClassAlreadyExistsErr -Severity 2 -Source ${CmdletName} -DebugMessage
                 Write-Error -Message $ClassAlreadyExistsErr -Category 'ResourceExists'
@@ -1394,9 +1458,6 @@ Function Set-WmiClassQualifier {
     "Name = Description `n Value = SCCMZone Blog" | Set-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1507,9 +1568,6 @@ Function New-WmiProperty {
     "Key = $true `n Description = SCCMZone Blog" | New-WmiProperty -Namespace 'ROOT\SCCM' -ClassName 'SCCMZone' -PropertyName 'Website' -PropertyType 'String'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1645,9 +1703,6 @@ Function Set-WmiPropertyQualifier {
     "Name = Description `n Value = SCCMZone Blog" | Set-WmiPropertyQualifier -Namespace 'ROOT\SCCM' -ClassName 'SCCMZone' -Property 'WebSite'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1759,7 +1814,6 @@ Function New-WmiInstance {
     "Server Port = 89 `n ServerIp = 11.11.11.11 `n Source = File `n Date = $(GetDate)" | New-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone' -Property $Property
 .NOTES
     This is a module function and can typically be called directly.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1835,16 +1889,13 @@ Function Remove-WmiNameSpace {
 .PARAMETER Namespace
    Specifies the namespace to remove.
 .PARAMETER Force
-    Specifies if it should forcefully remove the namespace. This switch deletes all existing classes. Default is: $false.
+    This switch deletes all existing classes in the specified path. Default is: $false.
+.PARAMETER Recurse
+    This switch deletes all existing child namespaces in the specified path.
 .EXAMPLE
-    Remove-WmiNameSpace -Namespace 'ROOT\TEST' -Force
+    Remove-WmiNameSpace -Namespace 'ROOT\SCCM' -Force -Recurse
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do:
-    Add Success and Debug messages.
-    Add Recurse for deleting namespace tree.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -1857,7 +1908,10 @@ Function Remove-WmiNameSpace {
         [string]$Namespace,     
         [Parameter(Mandatory=$false,Position=2)]
         [ValidateNotNullorEmpty()]
-        [switch]$Force = $false
+        [switch]$Force = $false,
+        [Parameter(Mandatory=$false,Position=2)]
+        [ValidateNotNullorEmpty()]
+        [switch]$Recurse = $false
     )
 
     Begin {
@@ -1879,23 +1933,33 @@ Function Remove-WmiNameSpace {
             ## Check if there are any classes
             $ClassTest = Get-WmiClass -Namespace $Namespace -ErrorAction 'SilentlyContinue'
 
-            ##  Remove all existing classes and instances if the -Force switch was specified
-            If ($Force -and $ClassTest) {
-                Remove-WmiClass -Namespace $Namespace -RemoveAll
-            }
-            ElseIf ($ClassTest) {
-                $NamespaceHasClassesErr = "Classes [$($ClassTest.Count)] detected in namespace [$Namespace]. Use the -Force switch to remove classes."
-                Write-Log -Message $NamespaceHasClassesErr -Severity 2 -Source ${CmdletName} -DebugMessage
-                Write-Error -Message $NamespaceHasClassesErr -Category 'InvalidOperation'        
-            }
+            ## Check if there are any child namespaces or if the -Recurse switch was specified
+            $ChildNamespaceTest = (Get-WmiNameSpace -Namespace $Namespace'\*' -ErrorAction 'SilentlyContinue').Name
+            If ((-not $ChildNamespaceTest) -or $Recurse) {
 
-            ## Create the Namespace Object
-            $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$NamespaceRoot`:__NAMESPACE").CreateInstance()
-            $NameSpaceObject.Name = $NamespaceName
+                #   Remove all existing classes and instances if the -Force switch was specified
+                If ($Force -and $ClassTest) {
+                    Remove-WmiClass -Namespace $Namespace -RemoveAll
+                }
+                ElseIf ($ClassTest) {
+                    $NamespaceHasClassesErr = "Classes [$($ClassTest.Count)] detected in namespace [$Namespace]. Use the -Force switch to remove classes."
+                    Write-Log -Message $NamespaceHasClassesErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                    Write-Error -Message $NamespaceHasClassesErr -Category 'InvalidOperation'        
+                }
 
-            ## Remove the Namespace
-            $null = $NameSpaceObject.Delete()
-            $NameSpaceObject.Dispose()
+                #  Create the Namespace Object
+                $NameSpaceObject = (New-Object -TypeName 'System.Management.ManagementClass' -ArgumentList "\\.\$NamespaceRoot`:__NAMESPACE").CreateInstance()
+                $NameSpaceObject.Name = $NamespaceName
+
+                #  Remove the Namespace
+                $null = $NameSpaceObject.Delete()
+                $NameSpaceObject.Dispose()
+            }
+            ElseIf ($ChildNamespaceTest) {
+                $ChildNamespaceDetectedErr = "Child namespace [$ChildNamespaceTest] detected in namespace [$Namespace]. Use the -Recurse switch to remove Child namespaces."
+                Write-Log -Message $ChildNamespaceDetectedErr -Severity 2 -Source ${CmdletName} -DebugMessage
+                Write-Error -Message $ChildNamespaceDetectedErr -Category 'InvalidOperation'  
+            }
         }
         Catch {
             Write-Log -Message "Failed to remove namespace [$Namespace]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
@@ -1931,9 +1995,6 @@ Function Remove-WmiClass {
     Remove-WmiClass -Namespace 'ROOT' -RemoveAll
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2028,9 +2089,6 @@ Function Remove-WmiClassQualifier {
     Remove-WmiClassQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -RemoveAll
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2134,9 +2192,6 @@ Function Remove-WmiProperty {
     Remove-WmiProperty -Namespace 'ROOT' -ClassName 'SCCMZone' -RemoveAll -Force
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2255,10 +2310,6 @@ Function Remove-WmiPropertyQualifier {
     Remove-WmiPropertyQualifier -Namespace 'ROOT' -ClassName 'SCCMZone' -RemoveAll -Force
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    To do: Add Success and Debug messages.
-.NOTES
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2378,8 +2429,6 @@ Function Remove-WmiInstance {
     Remove-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone' -Property $Property -RemoveAll
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2473,8 +2522,6 @@ Function Copy-WmiClass {
     Copy-WmiClass -ClassName 'SCCMZone' -NamespaceSource 'ROOT' -NamespaceDestination 'ROOT\SCCMZone' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2566,8 +2613,6 @@ Function Copy-WmiInstance {
     Copy-WmiInstance -ClassSource 'ROOT\SCCM:SCCMZone' -ClassDestination 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v0.1 - Beta
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2664,19 +2709,21 @@ Function Copy-WmiClassQualifier {
 .SYNOPSIS
     This function is used to copy the qualifiers of a WMI class.
 .DESCRIPTION
-    This function is used to copy the qualifiers of a WMI class to another class.
+    This function is used to copy the qualifiers of a WMI class to another class. Default qualifier flavors will be used.
 .PARAMETER ClassSourcePath
     Specifies the class to be copied from.
 .PARAMETER ClassDestinationPath
     Specifies the class to be copied to.
+.PARAMETER QualifierName
+    Specifies the class qualifier name or names to copy. Default is: 'All'.
 .PARAMETER CreateDestination
     This switch is used to create the destination if it does not exist. Default is: $false.
 .EXAMPLE
-    Copy-WmiClassQualifier -ClassSource 'ROOT\SCCM:SCCMZone' -ClassDestination 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
+    Copy-WmiClassQualifier -ClassSourcePath 'ROOT\SCCM:SCCMZone' -ClassDestinationPath 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
+.EXAMPLE
+    Copy-WmiClassQualifier -ClassSourcePath 'ROOT\SCCM:SCCMZone' -ClassDestinationPath 'ROOT\SCCM:SCCMZoneBlog' -QualifierName 'Description' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v1.0
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2691,6 +2738,9 @@ Function Copy-WmiClassQualifier {
         [ValidateNotNullorEmpty()]
         [string]$ClassDestinationPath,
         [Parameter(Mandatory=$false,Position=2)]
+        [ValidateNotNullorEmpty()]
+        [string[]]$QualifierName = 'All',
+        [Parameter(Mandatory=$false,Position=3)]
         [ValidateNotNullorEmpty()]
         [switch]$CreateDestination = $false
     )
@@ -2713,29 +2763,55 @@ Function Copy-WmiClassQualifier {
             #  Set ClassNameDestination
             $ClassNameDestination = (Split-Path -Path $ClassDestinationPath -NoQualifier)
 
-            ## Check if the source class exists
-            $null = Get-WmiClassQualifier -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
+            ## Check if source class exists
+            $null = Get-WmiClass -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
+
+            ## Get source class qualifiers
+            $ClassQualifiersSource = Get-WmiClassQualifier -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'SilentlyContinue'
 
             ## Check if the destination class exists
             $ClassDestinationTest = Get-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -ErrorAction 'SilentlyContinue'
 
-            ## Create destination class if specified
+            ## Create destination namespace and class if specified
             If ((-not $ClassDestinationTest) -and $CreateDestination) {
-                $null = New-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -ErrorAction 'Stop'
+                $null = New-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -CreateDestination -ErrorAction 'Stop'
             }
             ElseIf (-not $ClassDestinationTest) {
                 $DestinationClassErr = "Destination [$NamespaceSource`:$ClassName] does not exist. Use the -CreateDestination switch to automatically create the destination class."
                 Write-Log -Message $DestinationClassErr -Severity 2 -Source ${CmdletName}
                 Write-Error -Message $DestinationClassErr -Category 'ObjectNotFound'
             }
-            
-            ## Get source class qualifiers
-            $ClassSourceQualifiers = Get-WmiClassQualifier -Namespace $NamespaceSource -ClassName $ClassNameSource
-           
-            ## Set destination class qualifiers 
-            $ClassSourceQualifiers | ForEach-Object {
-                #  Set class qualifiers one by one
-                $CopyClassQuaifier = Set-WmiClassQualifier -Namespace $NamespaceDestination -ClassName $ClassNameDestination -Qualifier @{ Name = $_.Name; Value = $_.Value } -ErrorAction 'Stop'
+
+            ## Check if there are any qualifers in the source class 
+            If ($ClassQualifiersSource) {
+                
+                ## Copy all qualifiers if not specified otherwise
+                If ('All' -eq $QualifierName) {
+                
+                    #  Set destination class qualifiers 
+                    $ClassQualifiersSource | ForEach-Object {
+                        #  Set class qualifiers one by one
+                        $CopyClassQualifier = Set-WmiClassQualifier -Namespace $NamespaceDestination -ClassName $ClassNameDestination -Qualifier @{ Name = $_.Name; Value = $_.Value } -ErrorAction 'Stop'
+                    }
+                }
+                Else {
+
+                    ## Copy class qualifier if it exists in source class, otherwise log the error and continue 
+                    $ClassQualifiersSource | ForEach-Object {
+                        If ($_.Name -in $QualifierName) {
+                            $CopyClassQualifier = Set-WmiClassQualifier -Namespace $NamespaceDestination -ClassName $ClassNameDestination -Qualifier @{ Name = $_.Name; Value = $_.Value } -ErrorAction 'Stop'
+                        }
+                        Else {
+                            $ClassQualifierNotFoundErr = "Failed to copy class qualifier [$($_.Name)]. Qualifier not found in source class [$NamespaceSource`:$ClassName]."
+                            Write-Log -Message $ClassQualifierNotFoundErr -Severity 3 -Source ${CmdletName}
+                        }
+                    }
+                }
+            }
+            Else {
+
+                ## If no class qualifiers are found log error but continue execution regardless of the $ErrorActionPreference variable value
+                Write-Log -Message "No qualifiers found in source class [$NamespaceSource`:$ClassName]." -Severity 2 -Source ${CmdletName}
             }
         }
         Catch {
@@ -2743,7 +2819,7 @@ Function Copy-WmiClassQualifier {
             Break
         }
         Finally {
-            Write-Output -InputObject $CopyClassQuaifier
+            Write-Output -InputObject $CopyClassQualifier
         }
     }
     End {
@@ -2759,19 +2835,19 @@ Function Copy-WmiProperty {
 .SYNOPSIS
     This function is used to copy the properties of a WMI class.
 .DESCRIPTION
-    This function is used to copy the properties of a WMI class to another class.
+    This function is used to copy the properties of a WMI class to another class. Default qualifier flavors will be used.
 .PARAMETER ClassSourcePath
     Specifies the class to be copied from.
 .PARAMETER ClassDestinationPath
     Specifies the class to be copied to.
+.PARAMETER PropertyName
+    Specifies the property name or names to copy. Default is: 'All'.
 .PARAMETER CreateDestination
     This switch is used to create the destination if it does not exist. Default is: $false.
 .EXAMPLE
-    Copy-WmiProperty -ClassSource 'ROOT\SCCM:SCCMZone' -ClassDestination 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
+    Copy-WmiProperty -ClassSourcePath 'ROOT\SCCM:SCCMZone' -ClassDestinationPath 'ROOT\SCCM:SCCMZoneBlog' -CreateDestination
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v0.1 - Beta
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2786,6 +2862,9 @@ Function Copy-WmiProperty {
         [ValidateNotNullorEmpty()]
         [string]$ClassDestinationPath,
         [Parameter(Mandatory=$false,Position=2)]
+        [ValidateNotNullorEmpty()]
+        [string]$PropertyName = 'All',
+        [Parameter(Mandatory=$false,Position=3)]
         [ValidateNotNullorEmpty()]
         [switch]$CreateDestination = $false
     )
@@ -2808,62 +2887,54 @@ Function Copy-WmiProperty {
             #  Set ClassNameDestination
             $ClassNameDestination = (Split-Path -Path $ClassDestinationPath -NoQualifier)
 
-            ## Check if the source class exists
-            Get-WmiClass -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
+            ## Check if source class exists
+            $null = Get-WmiClass -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'Stop'
+
+            ## Get source class properties
+            $ClassPropertiesSource = Get-WmiProperty -Namespace $NamespaceSource -ClassName $ClassNameSource -ErrorAction 'SilentlyContinue'
 
             ## Check if the destination class exists
             $ClassDestinationTest = Get-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -ErrorAction 'SilentlyContinue'
 
-            ## Set the copy class properties scriptblock
-            $CopyClassPropertiesScriptBlock = {
-                #  Get the source class properties
-                $ClassPropertiesSource = Get-WmiProperty -Namespace $Namespace -ClassName $ClassName
-                #  Set the destination class properties
-                $ClassPropertiesSource | ForEach-Object {
-                    #  Format destination class properties in order to match the Create-WmiProperty function input
-                    #  Set the Type property
-                    [string]$CimType = & {
-                        If ($_.CimType -match 'Array') {
-                            Write-Output -InputObject $($_.CimType -replace $Matches[0], '')
-                        }
-                        Else {
-                            Write-Output -InputObject $($_.CimType)
-                        }
+            ## Create destination class if specified
+            If ((-not $ClassDestinationTest) -and $CreateDestination) {
+                $null = Copy-WmiClassQualifier -ClassSourcePath $ClassSourcePath -ClassDestinationPath $ClassDestinationPath -CreateDestination -ErrorAction 'Stop'
+            }
+            ElseIf (-not $ClassDestinationTest) {
+                $DestinationClassErr = "Destination [$NamespaceSource`:$ClassName] does not exist. Use the -CreateDestination switch to automatically create the destination class."
+                Write-Log -Message $DestinationClassErr -Severity 2 -Source ${CmdletName}
+                Write-Error -Message $DestinationClassErr -Category 'ObjectNotFound'
+            }
+
+            ## Check if there are any properties in the source class 
+            If ($ClassPropertiesSource) {       
+
+                ## Copy all class properties if not specified otherwise
+                If ('All' -eq $PropertyName) {
+                    
+                    #  Create destination property and property qualifiers
+                    $ClassSourceProperties | ForEach-Object {
+                        
+                        #  Create property and property qualifier one by one 
+                        $CopyClassProperties = New-WmiProperty -Namespace $NamespaceDestination -ClassName $ClassNameDestination -PropertyName $_.Name -PropertyType $_.CimType -Qualifiers @{ Name = $_.Qualifiers.Name; Value = $_.Qualifiers.Value }
                     }
-                    #  Set the IsArray property when CimType contains 'Array'
-                    [boolean]$IsArray = $($_.CimType -match 'Array')
-                    #  Assemble the destination class property hashtable
-                    [hashtable]$ClassPropertyDestination = @{
-                        'Name' = $($_.Name)
-                        'Type' = $CimType
-                        'IsArray' = $IsArray
-                    }
-                    New-WmiProperty -Namespace $NamespaceDestination -ClassName $ClassNameDestination -Property $ClassPropertyDestination -ErrorAction 'Stop'
+                }
+                Else {
+                    $PropertyNotFoundErr = "Failed to copy property [$($_.Name)]. Property not found in source class [$NamespaceSource`:$ClassName]."
+                    Write-Log -Message $PropertyNotFoundErr -Severity 3 -Source ${CmdletName}
                 }
             }
-            If ($ClassDestinationTest) {
-                $CopyClassPropertiesOutput = & $CopyClassPropertiesScriptBlock
-            }
-            ElseIf ($CreateDestination) {
-
-                ## Create new class
-                New-WmiClass -Namespace $NamespaceDestination -ClassName $ClassNameDestination -ErrorAction 'Stop'
-
-                ## Copy class qualifiers
-                Copy-WmiClassQualifier-NamespaceSource $NamespaceSource -NamespaceDestination $NamespaceDestination -ClassNameSource $ClassNameSource -ClassNameDestination $ClassNameDestination -ErrorAction 'Stop'
-
-                ## Copy class properties
-                $CopyClassPropertiesOutput = & $CopyClassPropertiesScriptBlock
-            }
             Else {
-                Write-Log -Message "Failed to copy class properties. Destination [$NamespaceSource`:$ClassName] does not exist." -Severity 3 -Source ${CmdletName}
+
+                ## If no class properties are found log error but continue execution regardless of the $ErrorActionPreference variable value
+                Write-Log -Message "No properties found in source class [$NamespaceSource`:$ClassName]." -Severity 2 -Source ${CmdletName}
             }
         }
         Catch {
             Write-Log -Message "Failed to copy class properties. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
         }
         Finally {
-            Write-Output -InputObject $CopyClassPropertiesOutput
+            Write-Output -InputObject $CopyClassProperties
         }
     }
     End {
@@ -2890,8 +2961,6 @@ Function Copy-WmiNamespace {
     Copy-WmiNamespace -NamespaceSource 'ROOT\SCCMZone' -NamespaceDestination 'ROOT\cimv2'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v0.1 - Beta
 .LINK
     https://sccm-zone.com
 .LINK
@@ -2998,8 +3067,6 @@ Function Rename-WmiNamespace {
     Rename-WmiNamespace -Namespace 'ROOT\cimv2' -NamespaceName 'OldName' -NamespaceNewName 'NewName'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v0.1 - Beta
 .LINK
     https://sccm-zone.com
 .LINK
@@ -3091,8 +3158,6 @@ Function Rename-WmiClass {
     Rename-WmiClass -Namespace 'Root\cimv2' -ClassName 'OldName' -ClassNewName 'NewName'
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v0.1 - Beta
 .LINK
     https://sccm-zone.com
 .LINK
@@ -3208,8 +3273,6 @@ Function Set-WmiInstance {
     Set-WmiInstance -Namespace 'ROOT' -ClassName 'SCCMZone' -Property $Property -CreateInstance
 .NOTES
     This is a module function and can typically be called directly.
-.NOTES
-    v0.1 - Beta
 .LINK
     https://sccm-zone.com
 .LINK
