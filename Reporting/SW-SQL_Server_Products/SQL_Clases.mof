@@ -1,3 +1,22 @@
+//——————————————— // SQL 2017 Properties //———————————————
+
+[dynamic, provider("MS_VIEW_INSTANCE_PROVIDER"),
+SMS_Report(TRUE),
+SMS_Group_Name("SQL 20167 Property"),
+SMS_Class_ID("CUSTOM|SQL_2017_Property|2.0")]
+class SQL_2017 : SMS_Class_Template
+
+{
+    [SMS_Report(TRUE)    ]  Boolean    IsReadOnly;
+    [SMS_Report(TRUE),key]  UInt32     PropertyIndex;
+    [SMS_Report(TRUE),key]  String     PropertyName;
+    [SMS_Report(TRUE)    ]  UInt32     PropertyNumValue;
+    [SMS_Report(TRUE)    ]  String     PropertyStrValue;
+    [SMS_Report(TRUE)    ]  UInt32     PropertyValueType;
+    [SMS_Report(TRUE),key]  String     ServiceName;
+    [SMS_Report(TRUE),key]  UInt32     SqlServiceType;
+};
+
 //——————————————— // SQL 2016 Properties //———————————————
 
 [dynamic, provider("MS_VIEW_INSTANCE_PROVIDER"),
