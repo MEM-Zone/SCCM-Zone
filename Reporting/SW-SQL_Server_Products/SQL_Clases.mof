@@ -2,7 +2,7 @@
 
 [dynamic, provider("MS_VIEW_INSTANCE_PROVIDER"),
 SMS_Report(TRUE),
-SMS_Group_Name("SQL 20167 Property"),
+SMS_Group_Name("SQL 2017 Property"),
 SMS_Class_ID("CUSTOM|SQL_2017_Property|2.0")]
 class SQL_2017 : SMS_Class_Template
 
