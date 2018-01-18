@@ -9,7 +9,7 @@
     </DataSource>
   </DataSources>
   <DataSets>
-    <DataSet Name="CollectionInfo">
+    <DataSet Name="DataSetCollection">
       <Query>
         <DataSourceName>DataSource18</DataSourceName>
         <QueryParameters>
@@ -41,8 +41,8 @@ order by v_Collection_Alias.Name</CommandText>
       <Query>
         <DataSourceName>DataSource18</DataSourceName>
         <QueryParameters>
-          <QueryParameter Name="@CollID">
-            <Value>=Parameters!CollID.Value</Value>
+          <QueryParameter Name="@CollectionID">
+            <Value>=Parameters!CollectionID.Value</Value>
             <rd:UserDefined>true</rd:UserDefined>
           </QueryParameter>
         </QueryParameters>
@@ -121,7 +121,7 @@ order by v_Collection_Alias.Name</CommandText>
                             WHERE [sql2017].[PropertyName0] IN('SKUNAME',
                             'SPLevel', 'version', 'fileversion'
                                                               )
-                            AND [c].[CollectionID] = @CollID
+                            AND [c].[CollectionID] = @CollectionID
                             AND ISNULL([sql2017].[ServiceName0], 0) NOT
                             LIKE '%EXPRESS%'
                             GROUP BY [VRS].[Netbios_name0],
@@ -185,7 +185,7 @@ order by v_Collection_Alias.Name</CommandText>
                             WHERE [sql2016].[PropertyName0] IN('SKUNAME',
                             'SPLevel', 'version', 'fileversion'
                                                               )
-                            AND [c].[CollectionID] = @CollID
+                            AND [c].[CollectionID] = @CollectionID
                             AND ISNULL([sql2016].[ServiceName0], 0) NOT
                             LIKE '%EXPRESS%'
                             GROUP BY [VRS].[Netbios_name0],
@@ -250,7 +250,7 @@ order by v_Collection_Alias.Name</CommandText>
                             WHERE [sql2014].[PropertyName0] IN('SKUNAME',
                             'SPLevel', 'version', 'fileversion'
                                                               )
-                            AND [c].[CollectionID] = @CollID
+                            AND [c].[CollectionID] = @CollectionID
                             AND ISNULL([sql2014].[ServiceName0], 0) NOT
                             LIKE '%EXPRESS%'
                             GROUP BY [VRS].[Netbios_name0],
@@ -313,7 +313,7 @@ order by v_Collection_Alias.Name</CommandText>
                             WHERE [sql2012].[PropertyName0] IN('SKUNAME',
                             'SPLevel', 'version', 'fileversion'
                                                               )
-                            AND [c].[CollectionID] = @CollID
+                            AND [c].[CollectionID] = @CollectionID
                             AND ISNULL([ServiceName0], 0) NOT LIKE
                             '%EXPRESS%'
                             GROUP BY [VRS].[Netbios_name0],
@@ -376,7 +376,7 @@ order by v_Collection_Alias.Name</CommandText>
                             WHERE [sql2008].[PropertyName0] IN('SKUNAME',
                             'SPLevel', 'version', 'fileversion'
                                                               )
-                            AND [c].[CollectionID] = @CollID
+                            AND [c].[CollectionID] = @CollectionID
                             AND ISNULL([sql2008].[ServiceName0], 0) NOT
                             LIKE '%EXPRESS%'
                             AND ISNULL([sql2008].[ServiceName0], 0) NOT
@@ -441,7 +441,7 @@ order by v_Collection_Alias.Name</CommandText>
                             WHERE [sqlLgcy].[PropertyName0] IN('SKUNAME',
                             'SPLevel', 'version', 'fileversion'
                                                               )
-                            AND [c].[CollectionID] = @CollID
+                            AND [c].[CollectionID] = @CollectionID
                             AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT
                             LIKE '%EXPRESS%'
                             AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT
@@ -1853,7 +1853,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                     </TablixMember>
                   </TablixMembers>
                 </TablixRowHierarchy>
-                <DataSetName>DataSet1</DataSetName>
+                <DataSetName>DataSetSQLVersions</DataSetName>
                 <Top>1.46366cm</Top>
                 <Height>3cm</Height>
                 <Width>26.4516cm</Width>
@@ -1978,12 +1978,12 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
         <cl:SyncDate>2015-02-25T10:56:21.3870000+01:00</cl:SyncDate>
       </cl:ComponentMetadata>
     </ReportParameter>
-    <ReportParameter Name="CollID">
+    <ReportParameter Name="CollectionID">
       <DataType>String</DataType>
       <Prompt>Collection</Prompt>
       <ValidValues>
         <DataSetReference>
-          <DataSetName>CollectionInfo</DataSetName>
+          <DataSetName>DataSetCollection</DataSetName>
           <ValueField>CollectionID</ValueField>
           <LabelField>Name</LabelField>
         </DataSetReference>
