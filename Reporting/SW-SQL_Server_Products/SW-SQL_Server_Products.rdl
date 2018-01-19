@@ -1,17 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
-    <DataSource Name="DataSource18">
-      <DataSourceReference></DataSourceReference>
+    <DataSource Name="DataSource1">
+      <DataSourceReference>/ConfigMgr_A01/{5C6358F2-4BB6-4a1b-A16E-8D96795D8602}</DataSourceReference>
       <rd:SecurityType>None</rd:SecurityType>
-      <rd:DataSourceID>6c697feb-bfb1-4005-9208-25d285db2f5f</rd:DataSourceID>
+      <rd:DataSourceID>a6956036-330b-4f81-9ac1-36ab952cf9ad</rd:DataSourceID>
     </DataSource>
   </DataSources>
   <DataSets>
     <DataSet Name="DataSetCollection">
       <Query>
-        <DataSourceName>DataSource18</DataSourceName>
+        <DataSourceName>DataSource1</DataSourceName>
         <QueryParameters>
           <QueryParameter Name="@UserSIDs">
             <Value>=Parameters!UserSIDs.Value</Value>
@@ -39,478 +39,437 @@ order by v_Collection_Alias.Name</CommandText>
     </DataSet>
     <DataSet Name="DataSetSQLVersions">
       <Query>
-        <DataSourceName>DataSource18</DataSourceName>
+        <DataSourceName>DataSource1</DataSourceName>
         <QueryParameters>
           <QueryParameter Name="@CollectionID">
             <Value>=Parameters!CollectionID.Value</Value>
             <rd:UserDefined>true</rd:UserDefined>
           </QueryParameter>
         </QueryParameters>
-        <CommandText>WITH temp([ResourceID],
-          [ComputerName],
-          [Company],
-          [SQL TYPE],
-          [SQL Service Pack],
-          [SQL Version],
-          [SQL CU Version],
-          [Version])
-     AS (SELECT DISTINCT
-                [ResourceID],
-                [ComputerName],
-                [Company],
-                [SQL TYPE],
-                [SQL Service Pack],
-                [SQL Version],
-                [SQL CU Version],
-                [Version]
-                FROM
-                     (
-	 -- SQL 2017
-                     SELECT [vrs].[resourceID] [ResourceID],
-                            [VRS].[Netbios_name0] [ComputerName],
-                            ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS
-                            'Company',
-                            --vrs.company0 as 'Company',
-                            MAX(CASE [sql2017].[PropertyName0]
-                                    WHEN 'SKUName'
-                                    THEN [sql2017].[PropertySTRValue0]
-                                END) AS [SQL TYPE],
-                            MAX(CASE [sql2017].[PropertyName0]
-                                    WHEN 'SPLEVEL'
-                                    THEN [sql2017].[PropertyNUMValue0]
-                                END) AS [SQL Service Pack],
-                            MAX(CASE [sql2017].[PropertyName0]
-                                    WHEN 'VERSION'
-                                    THEN [sql2017].[PropertySTRValue0]
-                                END) AS [SQL Version],
-                            MAX(CASE [sql2017].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN [sql2017].[PropertySTRValue0]
-                                END) AS [SQL CU Version],
-                            MAX(CASE [sql2017].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN CASE LEFT([sql2017].
-                                    [PropertySTRValue0], 4)
-					     WHEN '2017'
-                                             THEN '2017'
-                                             WHEN '2016'
-                                             THEN '2016'
-                                             WHEN '2014'
-                                             THEN '2014'
-                                             WHEN '2011'
-                                             THEN '2012'
-                                             WHEN '2009'
-                                             THEN '2008 R2'
-                                             WHEN '2007'
-                                             THEN '2008'
-                                             WHEN '2005'
-                                             THEN '2005'
-                                             WHEN '2000'
-                                             THEN '2000'
-                                             ELSE '2016'
-                                         END
-                                END) AS [Version]
-                            FROM [dbo].[v_R_System] [VRS]
-                                 LEFT JOIN 
-                                 [v_GS_CUSTOM_SQL_2017_Property_2_00]
-                                 [sql2016] ON [sql2017].[ResourceID] =
-                                 [VRS].[ResourceID]
-                                 LEFT OUTER JOIN
-                                 [v_ClientCollectionMembers] [c] ON [c].
-                                 [ResourceID] = [vrs].[ResourceID]
-                            WHERE [sql2017].[PropertyName0] IN('SKUNAME',
-                            'SPLevel', 'version', 'fileversion'
-                                                              )
-                            AND [c].[CollectionID] = @CollectionID
-                            AND ISNULL([sql2017].[ServiceName0], 0) NOT
-                            LIKE '%EXPRESS%'
-                            GROUP BY [VRS].[Netbios_name0],
-                                     [sql2017].[ServiceName0],
-                                     [vrs].[company0],
-                                     [vrs].[resourceID]
-					UNION ALL				 
-                     -- SQL 2016
-                     SELECT [vrs].[resourceID] [ResourceID],
-                            [VRS].[Netbios_name0] [ComputerName],
-                            ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS
-                            'Company',
-                            --vrs.company0 as 'Company',
-                            MAX(CASE [sql2016].[PropertyName0]
-                                    WHEN 'SKUName'
-                                    THEN [sql2016].[PropertySTRValue0]
-                                END) AS [SQL TYPE],
-                            MAX(CASE [sql2016].[PropertyName0]
-                                    WHEN 'SPLEVEL'
-                                    THEN [sql2016].[PropertyNUMValue0]
-                                END) AS [SQL Service Pack],
-                            MAX(CASE [sql2016].[PropertyName0]
-                                    WHEN 'VERSION'
-                                    THEN [sql2016].[PropertySTRValue0]
-                                END) AS [SQL Version],
-                            MAX(CASE [sql2016].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN [sql2016].[PropertySTRValue0]
-                                END) AS [SQL CU Version],
-                            MAX(CASE [sql2016].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN CASE LEFT([sql2016].
-                                    [PropertySTRValue0], 4)
-					     WHEN '2017'
-                                             THEN '2017'
-                                             WHEN '2016'
-                                             THEN '2016'
-                                             WHEN '2014'
-                                             THEN '2014'
-                                             WHEN '2011'
-                                             THEN '2012'
-                                             WHEN '2009'
-                                             THEN '2008 R2'
-                                             WHEN '2007'
-                                             THEN '2008'
-                                             WHEN '2005'
-                                             THEN '2005'
-                                             WHEN '2000'
-                                             THEN '2000'
-                                             ELSE '2016'
-                                         END
-                                END) AS [Version]
-                            FROM [dbo].[v_R_System] [VRS]
-                                 LEFT JOIN 
-                                 [v_GS_CUSTOM_SQL_2016_Property_2_00]
-                                 [sql2016] ON [sql2016].[ResourceID] =
-                                 [VRS].[ResourceID]
-                                 LEFT OUTER JOIN
-                                 [v_ClientCollectionMembers] [c] ON [c].
-                                 [ResourceID] = [vrs].[ResourceID]
-                            WHERE [sql2016].[PropertyName0] IN('SKUNAME',
-                            'SPLevel', 'version', 'fileversion'
-                                                              )
-                            AND [c].[CollectionID] = @CollectionID
-                            AND ISNULL([sql2016].[ServiceName0], 0) NOT
-                            LIKE '%EXPRESS%'
-                            GROUP BY [VRS].[Netbios_name0],
-                                     [sql2016].[ServiceName0],
-                                     [vrs].[company0],
-                                     [vrs].[resourceID]
+        <CommandText>WITH temp (
+        [ResourceID],
+        [ComputerName],
+        --[Company],
+        [SQL TYPE],
+        [SQL Service Pack],
+        [SQL Version],
+        [SQL CU Version],
+        [Version]
+    ) AS (
+        SELECT DISTINCT
+            [ResourceID],
+            [ComputerName],
+            --[Company],
+            [SQL TYPE],
+            [SQL Service Pack],
+            [SQL Version],
+            [SQL CU Version],
+            [Version]
+        FROM (
 
-                     -- SQL 2014
-                     UNION ALL
-                     SELECT [vrs].[resourceID] [ResourceID],
-                            [VRS].[Netbios_name0] [ComputerName],
-                            ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS
-                            'Company',
-                            --vrs.company0 as 'Company',
-                            MAX(CASE [sql2014].[PropertyName0]
-                                    WHEN 'SKUName'
-                                    THEN [sql2014].[PropertySTRValue0]
-                                END) AS [SQL TYPE],
-                            MAX(CASE [sql2014].[PropertyName0]
-                                    WHEN 'SPLEVEL'
-                                    THEN [sql2014].[PropertyNUMValue0]
-                                END) AS [SQL Service Pack],
-                            MAX(CASE [sql2014].[PropertyName0]
-                                    WHEN 'VERSION'
-                                    THEN [sql2014].[PropertySTRValue0]
-                                END) AS [SQL Version],
-                            MAX(CASE [sql2014].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN [sql2014].[PropertySTRValue0]
-                                END) AS [SQL CU Version],
-                            MAX(CASE [sql2014].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN CASE LEFT([sql2014].
-                                    [PropertySTRValue0], 4)
-					     WHEN '2017'
-                                             THEN '2017'
-                                             WHEN '2016'
-                                             THEN '2016'
-                                             WHEN '2014'
-                                             THEN '2014'
-                                             WHEN '2011'
-                                             THEN '2012'
-                                             WHEN '2009'
-                                             THEN '2008 R2'
-                                             WHEN '2007'
-                                             THEN '2008'
-                                             WHEN '2005'
-                                             THEN '2005'
-                                             WHEN '2000'
-                                             THEN '2000'
-                                             ELSE '2014'
-                                         END
-                                END) AS [Version]
-                            FROM [v_R_System] [VRS]
-                                 LEFT JOIN 
-                                 [v_GS_CUSTOM_SQL_2014_Property_2_00]
-                                 [sql2014] ON [sql2014].[ResourceID] =
-                                 [VRS].[ResourceID]
-                                 LEFT OUTER JOIN
-                                 [v_ClientCollectionMembers] [c] ON [c].
-                                 [ResourceID] = [vrs].[ResourceID]
-                            WHERE [sql2014].[PropertyName0] IN('SKUNAME',
-                            'SPLevel', 'version', 'fileversion'
-                                                              )
-                            AND [c].[CollectionID] = @CollectionID
-                            AND ISNULL([sql2014].[ServiceName0], 0) NOT
-                            LIKE '%EXPRESS%'
-                            GROUP BY [VRS].[Netbios_name0],
-                                     [sql2014].[ServiceName0],
-                                     [vrs].[company0],
-                                     [vrs].[resourceID]
-                     -- SQL 2012
-                     UNION ALL
-                     SELECT [vrs].[resourceID] [ResourceID],
-                            [VRS].[Netbios_name0] [ComputerName],
-                            ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS
-                            'Company',
-                            MAX(CASE [sql2012].[PropertyName0]
-                                    WHEN 'SKUName'
-                                    THEN [sql2012].[PropertySTRValue0]
-                                END) AS [SQL TYPE],
-                            MAX(CASE [sql2012].[PropertyName0]
-                                    WHEN 'SPLEVEL'
-                                    THEN [sql2012].[PropertyNUMValue0]
-                                END) AS [SQL Service Pack],
-                            MAX(CASE [sql2012].[PropertyName0]
-                                    WHEN 'VERSION'
-                                    THEN [sql2012].[PropertySTRValue0]
-                                END) AS [SQL Version],
-                            MAX(CASE [sql2012].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN [sql2012].[PropertySTRValue0]
-                                END) AS [SQL CU Version],
-                            MAX(CASE [sql2012].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN CASE LEFT([sql2012].
-                                    [PropertySTRValue0], 4)
-					     WHEN '2017'
-                                             THEN '2017'
-                                             WHEN '2016'
-                                             THEN '2016'
-                                             WHEN '2014'
-                                             THEN '2014'
-                                             WHEN '2011'
-                                             THEN '2012'
-                                             WHEN '2009'
-                                             THEN '2008 R2'
-                                             WHEN '2007'
-                                             THEN '2008'
-                                             WHEN '2005'
-                                             THEN '2005'
-                                             WHEN '2000'
-                                             THEN '2000'
-                                             ELSE '2012'
-                                         END
-                                END) AS [Version]
-                            FROM [V_R_System] [VRS]
-                                 LEFT JOIN 
-                                 [v_GS_CUSTOM_SQL_2012_Property_2_00]
-                                 [sql2012] ON [sql2012].[ResourceID] =
-                                 [VRS].[ResourceID]
-                                 LEFT OUTER JOIN
-                                 [v_ClientCollectionMembers] [c] ON [c].
-                                 [ResourceID] = [vrs].[ResourceID]
-                            WHERE [sql2012].[PropertyName0] IN('SKUNAME',
-                            'SPLevel', 'version', 'fileversion'
-                                                              )
-                            AND [c].[CollectionID] = @CollectionID
-                            AND ISNULL([ServiceName0], 0) NOT LIKE
-                            '%EXPRESS%'
-                            GROUP BY [VRS].[Netbios_name0],
-                                     [sql2012].[ServiceName0],
-                                     [vrs].[company0],
-                                     [vrs].[resourceID]
-                     -- SQL 2008
-                     UNION ALL
-                     SELECT [vrs].[resourceID] [ResourceID],
-                            [VRS].[Netbios_name0] [ComputerName],
-                            ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS
-                            'Company',
-                            MAX(CASE [sql2008].[PropertyName0]
-                                    WHEN 'SKUName'
-                                    THEN [sql2008].[PropertySTRValue0]
-                                END) AS [SQL TYPE],
-                            MAX(CASE [sql2008].[PropertyName0]
-                                    WHEN 'SPLEVEL'
-                                    THEN [sql2008].[PropertyNUMValue0]
-                                END) AS [SQL Service Pack],
-                            MAX(CASE [sql2008].[PropertyName0]
-                                    WHEN 'VERSION'
-                                    THEN [sql2008].[PropertySTRValue0]
-                                END) AS [SQL Version],
-                            MAX(CASE [sql2008].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN [sql2008].[PropertySTRValue0]
-                                END) AS [SQL CU Version],
-                            MAX(CASE [sql2008].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN CASE LEFT([sql2008].
-                                    [PropertySTRValue0], 4)
-					     WHEN '2017'
-                                             THEN '2017'
-                                             WHEN '2016'
-                                             THEN '2016'
-                                             WHEN '2014'
-                                             THEN '2014'
-                                             WHEN '2011'
-                                             THEN '2012'
-                                             WHEN '2009'
-                                             THEN '2008 R2'
-                                             WHEN '2007'
-                                             THEN '2008'
-                                             WHEN '2005'
-                                             THEN '2005'
-                                             WHEN '2000'
-                                             THEN '2000'
-                                             ELSE '2008'
-                                         END
-                                END) AS [Version]
-                            FROM [V_R_System] [VRS]
-                                 LEFT JOIN 
-                                 [v_GS_CUSTOM_SQL_2008_Property_2_00]
-                                 [sql2008] ON [sql2008].[ResourceID] =
-                                 [VRS].[ResourceID]
-                                 LEFT OUTER JOIN
-                                 [v_ClientCollectionMembers] [c] ON [c].
-                                 [ResourceID] = [vrs].[ResourceID]
-                            WHERE [sql2008].[PropertyName0] IN('SKUNAME',
-                            'SPLevel', 'version', 'fileversion'
-                                                              )
-                            AND [c].[CollectionID] = @CollectionID
-                            AND ISNULL([sql2008].[ServiceName0], 0) NOT
-                            LIKE '%EXPRESS%'
-                            AND ISNULL([sql2008].[ServiceName0], 0) NOT
-                            LIKE 'SQLBrowser'
-                            GROUP BY [VRS].[Netbios_name0],
-                                     [sql2008].[ServiceName0],
-                                     [vrs].[company0],
-                                     [vrs].[resourceID]
-                     -- SQL Legacy
-                     UNION ALL
-                     SELECT [vrs].[resourceID] [ResourceID],
-                            [VRS].[Netbios_name0] [ComputerName],
-                            ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS
-                            'Company',
-                            MAX(CASE [sqlLgcy].[PropertyName0]
-                                    WHEN 'SKUName'
-                                    THEN [sqlLgcy].[PropertySTRValue0]
-                                END) AS [SQL TYPE],
-                            MAX(CASE [sqlLgcy].[PropertyName0]
-                                    WHEN 'SPLEVEL'
-                                    THEN [sqlLgcy].[PropertyNUMValue0]
-                                END) AS [SQL Service Pack],
-                            MAX(CASE [sqlLgcy].[PropertyName0]
-                                    WHEN 'VERSION'
-                                    THEN [sqlLgcy].[PropertySTRValue0]
-                                END) AS [SQL Version],
-                            MAX(CASE [sqlLgcy].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN [sqlLgcy].[PropertySTRValue0]
-                                END) AS [SQL CU Version],
-                            MAX(CASE [sqllgcy].[PropertyName0]
-                                    WHEN 'FILEVERSION'
-                                    THEN CASE LEFT([sqllgcy].
-                                    [PropertySTRValue0], 4)
-					     WHEN '2017'
-                                             THEN '2017'
-                                             WHEN '2016'
-                                             THEN '2016'
-                                             WHEN '2014'
-                                             THEN '2014'
-                                             WHEN '2011'
-                                             THEN '2012'
-                                             WHEN '2009'
-                                             THEN '2008 R2'
-                                             WHEN '2007'
-                                             THEN '2008'
-                                             WHEN '2005'
-                                             THEN '2005'
-                                             WHEN '2000'
-                                             THEN '2000'
-                                             ELSE '2005'
-                                         END
-                                END) AS [Version]
-                            FROM [V_R_System] [VRS]
-                                 LEFT JOIN 
-                                 [v_GS_CUSTOM_SQL_Legacy_Property_2_00]
-                                 [sqlLgcy] ON [sqlLgcy].[ResourceID] =
-                                 [VRS].[ResourceID]
-                                 LEFT OUTER JOIN
-                                 [v_ClientCollectionMembers] [c] ON [c].
-                                 [ResourceID] = [vrs].[ResourceID]
-                            WHERE [sqlLgcy].[PropertyName0] IN('SKUNAME',
-                            'SPLevel', 'version', 'fileversion'
-                                                              )
-                            AND [c].[CollectionID] = @CollectionID
-                            AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT
-                            LIKE '%EXPRESS%'
-                            AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT
-                            LIKE 'SQLBrowser'
-                            GROUP BY [VRS].[Netbios_Name0],
-                                     [sqlLgcy].[ServiceName0],
-                                     [vrs].[company0],
-                                     [vrs].[resourceID]
-                     ) [SQLInv]
-                WHERE [SQL TYPE] NOT LIKE 'Express%'
-                      AND [SQL TYPE] NOT LIKE 'Windows Internal Database%'
-                      AND SUBSTRING([SQL Version], 1, 2) != SUBSTRING(
-                      [SQL CU Version], 1, 2))
+--region SQL 2017
+            SELECT 
+                [vrs].[resourceID] AS [ResourceID],
+                [VRS].[Netbios_name0] [ComputerName],
+                --ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS  'Company',
+                --vrs.company0 as 'Company',
+                MAX (
+                    CASE [sql2017].[PropertyName0]
+                        WHEN 'SKUName' THEN [sql2017].[PropertySTRValue0]
+                    END
+                ) AS [SQL TYPE],
+                MAX (
+                    CASE [sql2017].[PropertyName0]
+                        WHEN 'SPLEVEL' THEN [sql2017].[PropertyNUMValue0]
+                    END
+                ) AS [SQL Service Pack],
+                MAX (
+                    CASE [sql2017].[PropertyName0]
+                        WHEN 'VERSION' THEN [sql2017].[PropertySTRValue0]
+                    END
+                ) AS [SQL Version],
+                MAX (
+                    CASE [sql2017].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN [sql2017].[PropertySTRValue0]
+                    END
+                ) AS [SQL CU Version],
+                MAX (
+                    CASE [sql2017].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN 
+                            CASE LEFT ([sql2017].[PropertySTRValue0], 4)
+                                WHEN '2017' THEN '2017'
+                                WHEN '2016' THEN '2016'
+                                WHEN '2014' THEN '2014'
+                                WHEN '2011' THEN '2012'
+                                WHEN '2009' THEN '2008 R2' 
+                                WHEN '2007' THEN '2008'
+                                WHEN '2005' THEN '2005'
+                                WHEN '2000' THEN '2000'
+                                ELSE '2016'
+                            END
+                    END
+                ) AS [Version]
+            FROM [dbo].[v_R_System] [VRS]
+                LEFT JOIN [v_GS_SQL_2017_Property0] [sql2017] ON [sql2017].[ResourceID] = [VRS].[ResourceID]
+                LEFT OUTER JOIN [v_ClientCollectionMembers] [c] ON [c].[ResourceID] = [vrs].[ResourceID]
+            WHERE [sql2017].[PropertyName0] IN ('SKUNAME', 'SPLevel', 'version', 'fileversion')
+                AND [c].[CollectionID] = @CollectionID
+                AND ISNULL([sql2017].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
+            GROUP BY 
+                [VRS].[Netbios_name0],
+                [sql2017].[ServiceName0],
+                --[vrs].[company0],
+                [vrs].[resourceID]
+            UNION ALL
+--endregion
 
-SELECT distinct
-	[Company],
-	[ComputerName],
-	[SQL TYPE],
-	[SQL Service Pack],
-	[SQL Version],
-	[SQL CU Version],
-	[version] as VER,
-	(CASE
-				 WHEN [sql type] LIKE '%develop%' THEN 'Developer Edition' 
-				 WHEN [sql type] LIKE '%standard%' THEN 'Standard Edition' 
-				 WHEN [sql type] LIKE '%enterprise%' THEN 'Enterprise Edition' 
-				 END)  AS 'Version'
-FROM temp
-order by temp.[Company], ver,version, ComputerName</CommandText>
+--region SQL 2016
+            SELECT 
+                [vrs].[resourceID] [ResourceID],
+                [VRS].[Netbios_name0] [ComputerName],
+                --ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS 'Company',
+                --vrs.company0 as 'Company',
+                MAX (
+                    CASE [sql2016].[PropertyName0]
+                        WHEN 'SKUName' THEN [sql2016].[PropertySTRValue0]
+                    END
+                ) AS [SQL TYPE],
+                MAX (CASE [sql2016].[PropertyName0]
+                        WHEN 'SPLEVEL' THEN [sql2016].[PropertyNUMValue0]
+                    END
+                ) AS [SQL Service Pack],
+                MAX (
+                    CASE [sql2016].[PropertyName0]
+                        WHEN 'VERSION' THEN [sql2016].[PropertySTRValue0]
+                    END
+                ) AS [SQL Version],
+                MAX (
+                    CASE [sql2016].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN [sql2016].[PropertySTRValue0]
+                    END
+                ) AS [SQL CU Version],
+                MAX (
+                    CASE [sql2016].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN 
+                            CASE LEFT ([sql2016].[PropertySTRValue0], 4)
+                                WHEN '2017' THEN '2017'
+                                WHEN '2016' THEN '2016'
+                                WHEN '2014' THEN '2014'
+                                WHEN '2011' THEN '2012'
+                                WHEN '2009' THEN '2008 R2'
+                                WHEN '2007' THEN '2008'
+                                WHEN '2005' THEN '2005'
+                                WHEN '2000' THEN '2000'
+                                ELSE '2016'
+                            END
+                    END
+                ) AS [Version]
+            FROM [dbo].[v_R_System] [VRS]
+                LEFT JOIN [v_GS_SQL_2016_Property0] [sql2016] ON [sql2016].[ResourceID] = [VRS].[ResourceID]
+                LEFT OUTER JOIN [v_ClientCollectionMembers] [c] ON [c].[ResourceID] = [vrs].[ResourceID]
+            WHERE [sql2016].[PropertyName0] IN ('SKUNAME', 'SPLevel', 'version', 'fileversion')
+                AND [c].[CollectionID] = @CollectionID
+                AND ISNULL([sql2016].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
+            GROUP BY [VRS].[Netbios_name0],
+                [sql2016].[ServiceName0],
+                --[vrs].[company0],
+                [vrs].[resourceID]
+--endregion
+
+--region SQL 2014
+            UNION ALL
+            SELECT 
+                [vrs].[resourceID] [ResourceID],
+                [VRS].[Netbios_name0] [ComputerName],
+                --ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS 'Company',
+                --vrs.company0 as 'Company',
+                MAX (
+                    CASE [sql2014].[PropertyName0]
+                        WHEN 'SKUName' THEN [sql2014].[PropertySTRValue0]
+                    END
+                ) AS [SQL TYPE],
+                MAX (
+                    CASE [sql2014].[PropertyName0]
+                        WHEN 'SPLEVEL' THEN [sql2014].[PropertyNUMValue0]
+                    END
+                ) AS [SQL Service Pack],
+                MAX (CASE [sql2014].[PropertyName0]
+                        WHEN 'VERSION' THEN [sql2014].[PropertySTRValue0]
+                    END
+                ) AS [SQL Version],
+                MAX (
+                    CASE [sql2014].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN [sql2014].[PropertySTRValue0]
+                    END
+                ) AS [SQL CU Version],
+                MAX (
+                    CASE [sql2014].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN 
+                            CASE LEFT([sql2014].[PropertySTRValue0], 4)
+                                WHEN '2017' THEN '2017'
+                                WHEN '2016' THEN '2016'
+                                WHEN '2014' THEN '2014'
+                                WHEN '2011' THEN '2012'
+                                WHEN '2009' THEN '2008 R2'
+                                WHEN '2007' THEN '2008'
+                                WHEN '2005' THEN '2005'
+                                WHEN '2000' THEN '2000'
+                                ELSE '2014'
+                            END
+                    END
+                ) AS [Version]
+            FROM [v_R_System] [VRS]
+                LEFT JOIN [v_GS_SQL_2014_Property0] [sql2014] ON [sql2014].[ResourceID] = [VRS].[ResourceID]
+                LEFT OUTER JOIN [v_ClientCollectionMembers] [c] ON [c].[ResourceID] = [vrs].[ResourceID]
+            WHERE [sql2014].[PropertyName0] IN ('SKUNAME', 'SPLevel', 'version', 'fileversion')
+                AND [c].[CollectionID] = @CollectionID
+                AND ISNULL([sql2014].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
+            GROUP BY 
+                [VRS].[Netbios_name0],
+                [sql2014].[ServiceName0],
+                --[vrs].[company0],
+                [vrs].[resourceID]
+--endregion
+
+--region SQL 2012
+            UNION ALL
+            SELECT 
+                [vrs].[resourceID] [ResourceID],
+                [VRS].[Netbios_name0] [ComputerName],
+                --ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS 'Company',
+                MAX (
+                    CASE [sql2012].[PropertyName0]
+                        WHEN 'SKUName' THEN [sql2012].[PropertySTRValue0]
+                    END
+                ) AS [SQL TYPE],
+                MAX (
+                    CASE [sql2012].[PropertyName0]
+                        WHEN 'SPLEVEL' THEN [sql2012].[PropertyNUMValue0]
+                    END
+                ) AS [SQL Service Pack],
+                MAX (
+                    CASE [sql2012].[PropertyName0]
+                        WHEN 'VERSION' THEN [sql2012].[PropertySTRValue0]
+                    END
+                ) AS [SQL Version],
+                MAX (CASE [sql2012].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN [sql2012].[PropertySTRValue0]
+                    END
+                ) AS [SQL CU Version],
+                MAX (
+                    CASE [sql2012].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN 
+                            CASE LEFT([sql2012].[PropertySTRValue0], 4)
+                                WHEN '2017' THEN '2017'
+                                WHEN '2016' THEN '2016'
+                                WHEN '2014' THEN '2014'
+                                WHEN '2011' THEN '2012'
+                                WHEN '2009' THEN '2008 R2'
+                                WHEN '2007' THEN '2008'
+                                WHEN '2005' THEN '2005'
+                                WHEN '2000' THEN '2000'
+                                ELSE '2012'
+                            END
+                    END
+                ) AS [Version]
+            FROM [V_R_System] [VRS]
+                LEFT JOIN [v_GS_SQL_2012_Property0] [sql2012] ON [sql2012].[ResourceID] = [VRS].[ResourceID]
+                LEFT OUTER JOIN [v_ClientCollectionMembers] [c] ON [c].[ResourceID] = [vrs].[ResourceID]
+            WHERE [sql2012].[PropertyName0] IN('SKUNAME', 'SPLevel', 'version', 'fileversion')
+                AND [c].[CollectionID] = @CollectionID
+                AND ISNULL([ServiceName0], 0) NOT LIKE '%EXPRESS%'
+            GROUP BY 
+                [VRS].[Netbios_name0],
+                [sql2012].[ServiceName0],
+                --[vrs].[company0],
+                [vrs].[resourceID]
+--endregion
+
+--region SQL 2008
+            UNION ALL
+            SELECT 
+                [vrs].[resourceID] [ResourceID],
+                [VRS].[Netbios_name0] [ComputerName],
+                --ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS 'Company',
+                MAX (
+                    CASE [sql2008].[PropertyName0]
+                        WHEN 'SKUName' THEN [sql2008].[PropertySTRValue0]
+                    END
+                ) AS [SQL TYPE],
+                MAX (
+                    CASE [sql2008].[PropertyName0]
+                        WHEN 'SPLEVEL' THEN [sql2008].[PropertyNUMValue0]
+                    END
+                ) AS [SQL Service Pack],
+                MAX (
+                    CASE [sql2008].[PropertyName0]
+                        WHEN 'VERSION' THEN [sql2008].[PropertySTRValue0]
+                    END
+                ) AS [SQL Version],
+                MAX (
+                    CASE [sql2008].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN [sql2008].[PropertySTRValue0]
+                    END
+                ) AS [SQL CU Version],
+                MAX (
+                    CASE [sql2008].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN 
+                            CASE LEFT([sql2008].[PropertySTRValue0], 4)
+                                WHEN '2017' THEN '2017'
+                                WHEN '2016' THEN '2016'
+                                WHEN '2014' THEN '2014'
+                                WHEN '2011' THEN '2012'
+                                WHEN '2009' THEN '2008 R2'
+                                WHEN '2007' THEN '2008'
+                                WHEN '2005' THEN '2005'
+                                WHEN '2000' THEN '2000'
+                                ELSE '2008'
+                            END
+                    END
+                ) AS [Version]
+            FROM [V_R_System] [VRS]
+                LEFT JOIN [v_GS_SQL_2008_Property0] [sql2008] ON [sql2008].[ResourceID] = [VRS].[ResourceID]
+                LEFT OUTER JOIN [v_ClientCollectionMembers] [c] ON [c].[ResourceID] = [vrs].[ResourceID]
+            WHERE [sql2008].[PropertyName0] IN ('SKUNAME', 'SPLevel', 'version', 'fileversion')
+                AND [c].[CollectionID] = @CollectionID
+                AND ISNULL([sql2008].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
+                AND ISNULL([sql2008].[ServiceName0], 0) NOT LIKE 'SQLBrowser'
+            GROUP BY 
+                [VRS].[Netbios_name0],
+                [sql2008].[ServiceName0],
+                --[vrs].[company0],
+                [vrs].[resourceID]
+--endregion
+
+--region SQL Legacy
+            UNION ALL
+            SELECT [vrs].[resourceID] [ResourceID],
+                [VRS].[Netbios_name0] [ComputerName],
+                --ISNULL([vrs].[company0], '&lt;Unknown&gt;') AS 'Company',
+                MAX (
+                    CASE [sqlLgcy].[PropertyName0]
+                        WHEN 'SKUName' THEN [sqlLgcy].[PropertySTRValue0]
+                    END
+                ) AS [SQL TYPE],
+                MAX (
+                    CASE [sqlLgcy].[PropertyName0]
+                        WHEN 'SPLEVEL' THEN [sqlLgcy].[PropertyNUMValue0]
+                    END
+                ) AS [SQL Service Pack],
+                MAX (
+                    CASE [sqlLgcy].[PropertyName0]
+                        WHEN 'VERSION' THEN [sqlLgcy].[PropertySTRValue0]
+                    END
+                ) AS [SQL Version],
+                MAX (
+                    CASE [sqlLgcy].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN [sqlLgcy].[PropertySTRValue0]
+                    END
+                ) AS [SQL CU Version],
+                MAX (
+                    CASE [sqllgcy].[PropertyName0]
+                        WHEN 'FILEVERSION' THEN 
+                        CASE LEFT ([sqllgcy].[PropertySTRValue0], 4)
+                            WHEN '2017' THEN '2017'
+                            WHEN '2016' THEN '2016'
+                            WHEN '2014' THEN '2014'
+                            WHEN '2011' THEN '2012'
+                            WHEN '2009' THEN '2008 R2'
+                            WHEN '2007' THEN '2008'
+                            WHEN '2005' THEN '2005'
+                            WHEN '2000' THEN '2000'
+                            ELSE '2005'
+                        END
+                    END
+                ) AS [Version]
+            FROM [V_R_System] [VRS]
+                LEFT JOIN [v_GS_SQL_Legacy_Property0] [sqlLgcy] ON [sqlLgcy].[ResourceID] = [VRS].[ResourceID]
+                LEFT OUTER JOIN [v_ClientCollectionMembers] [c] ON [c].[ResourceID] = [vrs].[ResourceID]
+            WHERE [sqlLgcy].[PropertyName0] IN('SKUNAME', 'SPLevel', 'version', 'fileversion')
+                AND [c].[CollectionID] = @CollectionID
+                AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
+                AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT LIKE 'SQLBrowser'
+            GROUP BY 
+                [VRS].[Netbios_Name0],
+                [sqlLgcy].[ServiceName0],
+                --[vrs].[company0],
+                [vrs].[resourceID]
+        ) AS [SQLInv]
+--endregion
+
+        WHERE [SQL TYPE] NOT LIKE 'Express%'
+            AND [SQL TYPE] NOT LIKE 'Windows Internal Database%'
+            AND SUBSTRING ( [SQL Version], 1, 2) != SUBSTRING ([SQL CU Version], 1, 2) )
+        SELECT DISTINCT
+            --[Company],
+            [ComputerName],
+            [SQL Type],
+            [SQL Service Pack] AS [Service Pack],
+            [SQL Version] AS Version,
+            [SQL CU Version] AS [CU Version],
+            [version] AS Release,
+            (
+                CASE
+                    WHEN [SQL Type] LIKE '%workgroup%' THEN 'Workgroup Edition'
+                    WHEN [SQL Type] LIKE '%develop%' THEN 'Developer Edition'
+                    WHEN [SQL Type] LIKE '%standard%' THEN 'Standard Edition'
+                    WHEN [SQL Type] LIKE '%enterprise%' THEN 'Enterprise Edition'
+                END
+            ) AS 'Edition',
+            (
+                CASE
+                    WHEN [SQL Type] LIKE '%64%' THEN 'x64'
+                    ELSE 'x32'
+                END
+            ) AS 'Bitness'
+        FROM temp
+        ORDER BY 
+            --temp.[Company], 
+            Release,
+            Edition,
+            Bitness,
+            Version,
+            ComputerName;</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
-        <Field Name="Company">
-          <DataField>Company</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
         <Field Name="ComputerName">
           <DataField>ComputerName</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="SQL_TYPE">
-          <DataField>SQL TYPE</DataField>
+          <DataField>SQL Type</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="SQL_Service_Pack">
-          <DataField>SQL Service Pack</DataField>
+        <Field Name="Service_Pack">
+          <DataField>Service Pack</DataField>
           <rd:TypeName>System.Int32</rd:TypeName>
         </Field>
-        <Field Name="SQL_Version">
-          <DataField>SQL Version</DataField>
+        <Field Name="CU_Version">
+          <DataField>CU Version</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="SQL_CU_Version">
-          <DataField>SQL CU Version</DataField>
+        <Field Name="Release">
+          <DataField>Release</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="VER">
-          <DataField>VER</DataField>
+        <Field Name="Edition">
+          <DataField>Edition</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="Version">
           <DataField>Version</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
+        <Field Name="Bitness">
+          <DataField>Bitness</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
       </Fields>
     </DataSet>
     <DataSet Name="DataSetAdminID">
       <Query>
-        <DataSourceName>DataSource18</DataSourceName>
+        <DataSourceName>DataSource1</DataSourceName>
         <QueryParameters>
           <QueryParameter Name="@UserTokenSIDs">
             <Value>=Parameters!UserTokenSIDs.Value</Value>
@@ -596,6 +555,9 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                     </TablixColumn>
                     <TablixColumn>
                       <Width>3.92875cm</Width>
+                    </TablixColumn>
+                    <TablixColumn>
+                      <Width>1.865cm</Width>
                     </TablixColumn>
                   </TablixColumns>
                   <TablixRows>
@@ -792,6 +754,44 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                             </Textbox>
                           </CellContents>
                         </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="Textbox1">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value>Bitness</Value>
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <FontSize>11pt</FontSize>
+                                        <FontWeight>Bold</FontWeight>
+                                        <Color>White</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style>
+                                    <TextAlign>Center</TextAlign>
+                                  </Style>
+                                </Paragraph>
+                              </Paragraphs>
+                              <rd:DefaultName>Textbox1</rd:DefaultName>
+                              <Style>
+                                <Border>
+                                  <Color>#7292cc</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>#4c68a2</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
                       </TablixCells>
                     </TablixRow>
                     <TablixRow>
@@ -868,14 +868,14 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="SQL_Version">
+                            <Textbox Name="Version">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
                               <Paragraphs>
                                 <Paragraph>
                                   <TextRuns>
                                     <TextRun>
-                                      <Value>=Fields!SQL_Version.Value</Value>
+                                      <Value>=Fields!Version.Value</Value>
                                       <Style>
                                         <FontFamily>Tahoma</FontFamily>
                                         <Color>#4d4d4d</Color>
@@ -885,7 +885,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                   <Style />
                                 </Paragraph>
                               </Paragraphs>
-                              <rd:DefaultName>SQL_Version</rd:DefaultName>
+                              <rd:DefaultName>Version</rd:DefaultName>
                               <Style>
                                 <Border>
                                   <Color>#e5e5e5</Color>
@@ -902,14 +902,14 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="SQL_Service_Pack1">
+                            <Textbox Name="Service_Pack">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
                               <Paragraphs>
                                 <Paragraph>
                                   <TextRuns>
                                     <TextRun>
-                                      <Value>=Fields!SQL_Service_Pack.Value</Value>
+                                      <Value>=Fields!Service_Pack.Value</Value>
                                       <Style>
                                         <FontFamily>Tahoma</FontFamily>
                                         <Color>#4d4d4d</Color>
@@ -921,7 +921,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                   </Style>
                                 </Paragraph>
                               </Paragraphs>
-                              <rd:DefaultName>SQL_Service_Pack1</rd:DefaultName>
+                              <rd:DefaultName>Service_Pack</rd:DefaultName>
                               <Style>
                                 <Border>
                                   <Color>#e5e5e5</Color>
@@ -938,14 +938,14 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="SQL_CU_Version1">
+                            <Textbox Name="CU_Version">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
                               <Paragraphs>
                                 <Paragraph>
                                   <TextRuns>
                                     <TextRun>
-                                      <Value>=Fields!SQL_CU_Version.Value</Value>
+                                      <Value>=Fields!CU_Version.Value</Value>
                                       <Style>
                                         <FontFamily>Tahoma</FontFamily>
                                         <Color>#4d4d4d</Color>
@@ -955,7 +955,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                   <Style />
                                 </Paragraph>
                               </Paragraphs>
-                              <rd:DefaultName>SQL_CU_Version1</rd:DefaultName>
+                              <rd:DefaultName>CU_Version</rd:DefaultName>
                               <Style>
                                 <Border>
                                   <Color>#e5e5e5</Color>
@@ -968,6 +968,43 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                 <PaddingBottom>2pt</PaddingBottom>
                               </Style>
                             </Textbox>
+                          </CellContents>
+                        </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="Bitness">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value>=Fields!Bitness.Value</Value>
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <Color>#4d4d4d</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style>
+                                    <TextAlign>Center</TextAlign>
+                                  </Style>
+                                </Paragraph>
+                              </Paragraphs>
+                              <rd:DefaultName>Bitness</rd:DefaultName>
+                              <Style>
+                                <Border>
+                                  <Color>#e5e5e5</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>White</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                            <rd:Selected>true</rd:Selected>
                           </CellContents>
                         </TablixCell>
                       </TablixCells>
@@ -1138,6 +1175,41 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                 </Paragraph>
                               </Paragraphs>
                               <rd:DefaultName>Textbox72</rd:DefaultName>
+                              <Style>
+                                <Border>
+                                  <Color>#e6eefc</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>#c6daf8</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="Textbox3">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value />
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <FontWeight>Bold</FontWeight>
+                                        <Color>#4c68a2</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <rd:DefaultName>Textbox3</rd:DefaultName>
                               <Style>
                                 <Border>
                                   <Color>#e6eefc</Color>
@@ -1334,6 +1406,41 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                             </Textbox>
                           </CellContents>
                         </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="Textbox4">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value />
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <FontWeight>Bold</FontWeight>
+                                        <Color>#465678</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <rd:DefaultName>Textbox4</rd:DefaultName>
+                              <Style>
+                                <Border>
+                                  <Color>#c6daf8</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>#9eb6e4</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
                       </TablixCells>
                     </TablixRow>
                     <TablixRow>
@@ -1516,12 +1623,48 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                             </Textbox>
                           </CellContents>
                         </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="Textbox5">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value />
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <FontWeight>Bold</FontWeight>
+                                        <Color>White</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <rd:DefaultName>Textbox5</rd:DefaultName>
+                              <Style>
+                                <Border>
+                                  <Color>#9eb6e4</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>#7292cc</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
                       </TablixCells>
                     </TablixRow>
                   </TablixRows>
                 </TablixBody>
                 <TablixColumnHierarchy>
                   <TablixMembers>
+                    <TablixMember />
                     <TablixMember />
                     <TablixMember />
                     <TablixMember />
@@ -1542,7 +1685,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                               <Paragraph>
                                 <TextRuns>
                                   <TextRun>
-                                    <Value>SQL Type</Value>
+                                    <Value>Release</Value>
                                     <Style>
                                       <FontFamily>Tahoma</FontFamily>
                                       <FontSize>11pt</FontSize>
@@ -1583,7 +1726,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value>Version</Value>
+                                        <Value>Edition</Value>
                                         <Style>
                                           <FontFamily>Tahoma</FontFamily>
                                           <FontSize>11pt</FontSize>
@@ -1620,27 +1763,27 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                       <KeepWithGroup>After</KeepWithGroup>
                     </TablixMember>
                     <TablixMember>
-                      <Group Name="VER">
+                      <Group Name="RG_Release">
                         <GroupExpressions>
-                          <GroupExpression>=Fields!VER.Value</GroupExpression>
+                          <GroupExpression>=Fields!Release.Value</GroupExpression>
                         </GroupExpressions>
                       </Group>
                       <SortExpressions>
                         <SortExpression>
-                          <Value>=Fields!VER.Value</Value>
+                          <Value>=Fields!Version.Value</Value>
                         </SortExpression>
                       </SortExpressions>
                       <TablixHeader>
                         <Size>5.2305cm</Size>
                         <CellContents>
-                          <Textbox Name="VER1">
+                          <Textbox Name="Release">
                             <CanGrow>true</CanGrow>
                             <KeepTogether>true</KeepTogether>
                             <Paragraphs>
                               <Paragraph>
                                 <TextRuns>
                                   <TextRun>
-                                    <Value>=Fields!VER.Value</Value>
+                                    <Value>=Fields!Release.Value</Value>
                                     <Style>
                                       <FontFamily>Tahoma</FontFamily>
                                       <FontWeight>Bold</FontWeight>
@@ -1651,7 +1794,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                 <Style />
                               </Paragraph>
                             </Paragraphs>
-                            <rd:DefaultName>VER1</rd:DefaultName>
+                            <rd:DefaultName>Release</rd:DefaultName>
                             <Style>
                               <Border>
                                 <Color>#c6daf8</Color>
@@ -1668,27 +1811,27 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                       </TablixHeader>
                       <TablixMembers>
                         <TablixMember>
-                          <Group Name="Version1">
+                          <Group Name="RG_Edition">
                             <GroupExpressions>
-                              <GroupExpression>=Fields!Version.Value</GroupExpression>
+                              <GroupExpression>=Fields!Edition.Value</GroupExpression>
                             </GroupExpressions>
                           </Group>
                           <SortExpressions>
                             <SortExpression>
-                              <Value>=Fields!Version.Value</Value>
+                              <Value>=Fields!Edition.Value</Value>
                             </SortExpression>
                           </SortExpressions>
                           <TablixHeader>
                             <Size>4.04857cm</Size>
                             <CellContents>
-                              <Textbox Name="Version1">
+                              <Textbox Name="Edition1">
                                 <CanGrow>true</CanGrow>
                                 <KeepTogether>true</KeepTogether>
                                 <Paragraphs>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value>=Fields!Version.Value</Value>
+                                        <Value>=Fields!Edition.Value</Value>
                                         <Style>
                                           <FontFamily>Tahoma</FontFamily>
                                           <FontWeight>Bold</FontWeight>
@@ -1699,7 +1842,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                     <Style />
                                   </Paragraph>
                                 </Paragraphs>
-                                <rd:DefaultName>Version1</rd:DefaultName>
+                                <rd:DefaultName>Edition1</rd:DefaultName>
                                 <Style>
                                   <Border>
                                     <Color>#e6eefc</Color>
@@ -1716,10 +1859,10 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                           </TablixHeader>
                           <TablixMembers>
                             <TablixMember>
-                              <Group Name="Details1" />
+                              <Group Name="RG_Details" />
                               <Visibility>
                                 <Hidden>true</Hidden>
-                                <ToggleItem>Version1</ToggleItem>
+                                <ToggleItem>Edition1</ToggleItem>
                               </Visibility>
                             </TablixMember>
                             <TablixMember>
@@ -1728,7 +1871,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                           </TablixMembers>
                           <Visibility>
                             <Hidden>true</Hidden>
-                            <ToggleItem>VER1</ToggleItem>
+                            <ToggleItem>Release</ToggleItem>
                           </Visibility>
                         </TablixMember>
                         <TablixMember>
@@ -1821,7 +1964,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value />
+                                        <Value>Total</Value>
                                         <Style>
                                           <FontFamily>Tahoma</FontFamily>
                                           <FontWeight>Bold</FontWeight>
@@ -1856,7 +1999,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
                 <DataSetName>DataSetSQLVersions</DataSetName>
                 <Top>1.46366cm</Top>
                 <Height>3cm</Height>
-                <Width>26.4516cm</Width>
+                <Width>28.3166cm</Width>
                 <ZIndex>1</ZIndex>
                 <Style>
                   <Border>
@@ -1869,7 +2012,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
             <Top>0.08208in</Top>
             <Left>0.125in</Left>
             <Height>1.75735in</Height>
-            <Width>10.41402in</Width>
+            <Width>11.17952in</Width>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1886,10 +2029,10 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
           <BackgroundColor>#616161</BackgroundColor>
         </Style>
       </Body>
-      <Width>27.06014cm</Width>
+      <Width>28.71348cm</Width>
       <Page>
         <PageFooter>
-          <Height>0.61648cm</Height>
+          <Height>0.65315cm</Height>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
             <Textbox Name="Textbox23">
@@ -1916,7 +2059,7 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
               <rd:DefaultName>Textbox23</rd:DefaultName>
               <Left>0.125in</Left>
               <Height>0.24271in</Height>
-              <Width>10.41402in</Width>
+              <Width>11.14827in</Width>
               <Style>
                 <Border>
                   <Style>None</Style>
@@ -1994,6 +2137,6 @@ order by temp.[Company], ver,version, ComputerName</CommandText>
     <CodeModule>SrsResources, culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
-  <rd:ReportServerUrl></rd:ReportServerUrl>
+  <rd:ReportServerUrl>http://resscmp02/ReportServer</rd:ReportServerUrl>
   <rd:ReportID>6fbd236a-d836-4950-8788-14b828deb616</rd:ReportID>
 </Report>
