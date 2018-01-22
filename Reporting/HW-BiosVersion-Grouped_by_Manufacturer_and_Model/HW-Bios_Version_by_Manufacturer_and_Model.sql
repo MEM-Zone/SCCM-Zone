@@ -39,7 +39,7 @@ SELECT
     --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Systems].[ResourceID]) ) AS [Company],
     Systems.Manufacturer0 AS [Manufacturer],
     CASE 
-	   WHEN Product.Version0 = 'Lenovo Product' THEN ('Lenovo Product' + Systems.Model0)
+	   WHEN Product.Version0 = 'Lenovo Product' THEN ('Unknown ' + Systems.Model0)
         WHEN Systems.Manufacturer0 = 'LENOVO' THEN Product.Version0
 	   ELSE Systems.Model0
     END AS Model,
