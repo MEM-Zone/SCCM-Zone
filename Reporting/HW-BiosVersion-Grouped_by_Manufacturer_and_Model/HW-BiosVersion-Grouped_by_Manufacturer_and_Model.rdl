@@ -31,6 +31,7 @@
 * Ioan Popovici   | 2018-01-19 | v1.2     | Added BIOS Version and BIOS Name                            *
 * Ioan Popovici   | 2018-01-22 | v1.3     | Added Lenovo workaround to get the model                    *
 * Ioan Popovici   | 2018-01-22 | v1.4     | Leave model number for 'Lenovo Peroduct' model              *
+* Ioan Popovici   | 2018-01-22 | v1.5     | Resolve model for 'Lenovo Peroduct' for my environment      *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -60,9 +61,12 @@ SELECT
     --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Systems].[ResourceID]) ) AS [Company],
     Systems.Manufacturer0 AS [Manufacturer],
     CASE 
-	   WHEN Product.Version0 = 'Lenovo Product' THEN ('Unknown ' + Systems.Model0)
+	      WHEN Systems.Model0 LIKE '10AB%' THEN 'ThinkCentre M93p'
+        WHEN Systems.Model0 LIKE '10AA%' THEN 'ThinkCentre M93p'
+        WHEN Systems.Model0 LIKE '10FLS1TJ%' THEN 'ThinkCentre M900'
+        WHEN Product.Version0 = 'Lenovo Product' THEN ('Unknown ' + Systems.Model0)
         WHEN Systems.Manufacturer0 = 'LENOVO' THEN Product.Version0
-	   ELSE Systems.Model0
+	    ELSE Systems.Model0
     END AS Model,
     Systems.Name0 AS [Computer Name],
     Systems.UserName0 AS [User Name],   
