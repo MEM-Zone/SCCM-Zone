@@ -396,7 +396,7 @@ WITH temp (
                     WHEN [SQL Type] LIKE '%develop%' THEN 'Developer Edition'
                     WHEN [SQL Type] LIKE '%standard%' THEN 'Standard Edition'
                     WHEN [SQL Type] LIKE '%enterprise%' THEN 'Enterprise Edition'
-                    ELSE 'Unknown'
+                    ELSE version
                 END
             ) AS 'Edition',
             (
