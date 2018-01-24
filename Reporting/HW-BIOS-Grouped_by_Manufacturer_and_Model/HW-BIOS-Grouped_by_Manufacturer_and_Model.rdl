@@ -18,20 +18,18 @@
           <QueryParameter Name="@CollectionID">
             <Value>=Parameters!CollectionID.Value</Value>
           </QueryParameter>
+          <QueryParameter Name="@ExcludeVirtualMachines">
+            <Value>=Parameters!ExcludeVirtualMachines.Value</Value>
+          </QueryParameter>
         </QueryParameters>
-        <CommandText>
-/*
+        <CommandText>/*
 *********************************************************************************************************
 * Requires        | SQL, company AD attribute, Wi32_Computer_System_Product WMI class gathering         *
 * ===================================================================================================== *
-* Modified by     |    Date    | Revision | Comments                                                    *
+* Created by      |    Date    | Comments                                                               *
 * _____________________________________________________________________________________________________ *
-* Octavian Cordos | 2018-01-18 | v1.0     | First version                                               *
-* Ioan Popovici   | 2018-01-18 | v1.1     | Format and fixes                                            *
-* Ioan Popovici   | 2018-01-19 | v1.2     | Added BIOS Version and BIOS Name                            *
-* Ioan Popovici   | 2018-01-22 | v1.3     | Added Lenovo workaround to get the model                    *
-* Ioan Popovici   | 2018-01-22 | v1.4     | Leave model number for 'Lenovo Peroduct' model              *
-* Ioan Popovici   | 2018-01-22 | v1.5     | Resolve model for 'Lenovo Peroduct' for my environment      *
+* Octavian Cordos | 2018-01-18 | First version                                                          *
+* Ioan Popovici   |            |                                                                        *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -51,19 +49,24 @@
 /*## QUERY BODY                                  */
 /*##=============================================*/
 
+/* For testing only */
 --DECLARE @UserSIDs VARCHAR(16);
 --SELECT @UserSIDs = 'disabled';
+--DECLARE @CollectionID VARCHAR(16);
+--SELECT @CollectionID = 'WT10000A';
+--DECLARE @ExcludeVirtualMachines VARCHAR(5);
+--SELECT @ExcludeVirtualMachines = 'NO';
 
 SELECT
-
+    
     /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
     Systems.Company0 as 'Company',
     --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Systems].[ResourceID]) ) AS [Company],
     Systems.Manufacturer0 AS [Manufacturer],
     CASE 
-	      WHEN Systems.Model0 LIKE '10AA%' THEN 'ThinkCentre M93p'
-	      WHEN Systems.Model0 LIKE '10AB%' THEN 'ThinkCentre M93p'
-	      WHEN Systems.Model0 LIKE '10AE%' THEN 'ThinkCentre M93z'
+        WHEN Systems.Model0 LIKE '10AA%' THEN 'ThinkCentre M93p'
+        WHEN Systems.Model0 LIKE '10AB%' THEN 'ThinkCentre M93p'
+        WHEN Systems.Model0 LIKE '10AE%' THEN 'ThinkCentre M93z'
         WHEN Systems.Model0 LIKE '10FLS1TJ%' THEN 'ThinkCentre M900'
         WHEN Product.Version0 = 'Lenovo Product' THEN ('Unknown ' + Systems.Model0)
         WHEN Systems.Manufacturer0 = 'LENOVO' THEN Product.Version0
@@ -76,7 +79,7 @@ SELECT
     BIOS.SMBIOSBIOSVersion0 AS [SMBIOS Version],
     BIOS.SerialNumber0 AS [BIOS Serial Number],
     OperatingSystem.Caption0 AS [Operating System],
-    OperatingSystem.CSDVersion0 AS [Service Pack],
+    OperatingSystem.CSDVersion0 AS [OS Service Pack],
     OperatingSystem.Version0 AS [OS Version],
     OperatingSystem.InstallDate0 AS [OS Installed Date]
 FROM dbo.v_GS_COMPUTER_SYSTEM AS Systems
@@ -85,6 +88,13 @@ FROM dbo.v_GS_COMPUTER_SYSTEM AS Systems
     JOIN dbo.v_GS_PC_BIOS BIOS ON BIOS.ResourceID = Systems.ResourceID
     JOIN dbo.v_GS_COMPUTER_SYSTEM_PRODUCT AS Product ON Product.ResourceID = Systems.ResourceID
 WHERE Collections.CollectionID = @CollectionID
+    AND
+      Systems.Model0 NOT LIKE (
+		    CASE @ExcludeVirtualMachines
+			    WHEN 'YES' THEN '%Virtual%'
+		      ELSE ''
+		    END
+	    )
 ORDER BY 
     Model, 
     [BIOS Name], 
@@ -92,8 +102,7 @@ ORDER BY
 
 /*##=============================================*/
 /*## END QUERY BODY                              */
-/*##=============================================*/
-        </CommandText>
+/*##=============================================*/</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
@@ -137,8 +146,8 @@ ORDER BY
           <DataField>Operating System</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="Service_Pack">
-          <DataField>Service Pack</DataField>
+        <Field Name="OS_Service_Pack">
+          <DataField>OS Service Pack</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="OS_Version">
@@ -177,11 +186,13 @@ ORDER BY
             <Value>=Parameters!UserSIDs.Value</Value>
           </QueryParameter>
         </QueryParameters>
-        <CommandText>SELECT DISTINCT 
-	CollectionID,
+        <CommandText>
+SELECT DISTINCT 
+  CollectionID,
 	Name
 FROM dbo.fn_rbac_collection(@UserSIDs)
-ORDER BY Name</CommandText>
+ORDER BY Name
+        </CommandText>
       </Query>
       <Fields>
         <Field Name="CollectionID">
@@ -514,7 +525,7 @@ ORDER BY Name</CommandText>
                                 <Paragraph>
                                   <TextRuns>
                                     <TextRun>
-                                      <Value>Service Pack</Value>
+                                      <Value>OS Service Pack</Value>
                                       <Style>
                                         <FontFamily>Tahoma</FontFamily>
                                         <FontSize>11pt</FontSize>
@@ -864,14 +875,14 @@ ORDER BY Name</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="Service_Pack">
+                            <Textbox Name="OS_Service_Pack">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
                               <Paragraphs>
                                 <Paragraph>
                                   <TextRuns>
                                     <TextRun>
-                                      <Value>=Fields!Service_Pack.Value</Value>
+                                      <Value>=Fields!OS_Service_Pack.Value</Value>
                                       <Style>
                                         <FontFamily>Tahoma</FontFamily>
                                         <Color>#4d4d4d</Color>
@@ -1118,7 +1129,7 @@ ORDER BY Name</CommandText>
                                   <Color>#e6eefc</Color>
                                   <Style>Solid</Style>
                                 </Border>
-                                <BackgroundColor>SkyBlue</BackgroundColor>
+                                <BackgroundColor>LightSkyBlue</BackgroundColor>
                                 <PaddingLeft>2pt</PaddingLeft>
                                 <PaddingRight>2pt</PaddingRight>
                                 <PaddingTop>2pt</PaddingTop>
@@ -1152,7 +1163,7 @@ ORDER BY Name</CommandText>
                                   <Color>#e6eefc</Color>
                                   <Style>Solid</Style>
                                 </Border>
-                                <BackgroundColor>SkyBlue</BackgroundColor>
+                                <BackgroundColor>LightSkyBlue</BackgroundColor>
                                 <PaddingLeft>2pt</PaddingLeft>
                                 <PaddingRight>2pt</PaddingRight>
                                 <PaddingTop>2pt</PaddingTop>
@@ -1186,7 +1197,7 @@ ORDER BY Name</CommandText>
                                   <Color>#e6eefc</Color>
                                   <Style>Solid</Style>
                                 </Border>
-                                <BackgroundColor>SkyBlue</BackgroundColor>
+                                <BackgroundColor>LightSkyBlue</BackgroundColor>
                                 <PaddingLeft>2pt</PaddingLeft>
                                 <PaddingRight>2pt</PaddingRight>
                                 <PaddingTop>2pt</PaddingTop>
@@ -1228,6 +1239,122 @@ ORDER BY Name</CommandText>
                                   <Style />
                                 </Paragraph>
                               </Paragraphs>
+                              <Style>
+                                <Border>
+                                  <Color>#c6daf8</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>SkyBlue</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="BIOS_Version_Count_Models2">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value>=CountDistinct(Fields!Model.Value)</Value>
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <FontWeight>Bold</FontWeight>
+                                        <Color>#465678</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <Style>
+                                <Border>
+                                  <Color>#e6eefc</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>SkyBlue</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                          </CellContents>
+                        </TablixCell>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="Row_Merged_2">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value />
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <FontWeight>Bold</FontWeight>
+                                        <Color>#465678</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <Style>
+                                <Border>
+                                  <Color>#c6daf8</Color>
+                                  <Style>Solid</Style>
+                                </Border>
+                                <BackgroundColor>SkyBlue</BackgroundColor>
+                                <PaddingLeft>2pt</PaddingLeft>
+                                <PaddingRight>2pt</PaddingRight>
+                                <PaddingTop>2pt</PaddingTop>
+                                <PaddingBottom>2pt</PaddingBottom>
+                              </Style>
+                            </Textbox>
+                            <ColSpan>8</ColSpan>
+                          </CellContents>
+                        </TablixCell>
+                        <TablixCell />
+                        <TablixCell />
+                        <TablixCell />
+                        <TablixCell />
+                        <TablixCell />
+                        <TablixCell />
+                        <TablixCell />
+                      </TablixCells>
+                    </TablixRow>
+                    <TablixRow>
+                      <Height>6.35mm</Height>
+                      <TablixCells>
+                        <TablixCell>
+                          <CellContents>
+                            <Textbox Name="Textbox44">
+                              <CanGrow>true</CanGrow>
+                              <KeepTogether>true</KeepTogether>
+                              <Paragraphs>
+                                <Paragraph>
+                                  <TextRuns>
+                                    <TextRun>
+                                      <Value />
+                                      <Style>
+                                        <FontFamily>Tahoma</FontFamily>
+                                        <FontWeight>Bold</FontWeight>
+                                        <Color>#465678</Color>
+                                      </Style>
+                                    </TextRun>
+                                  </TextRuns>
+                                  <Style />
+                                </Paragraph>
+                              </Paragraphs>
+                              <rd:DefaultName>Textbox44</rd:DefaultName>
                               <Style>
                                 <Border>
                                   <Color>#c6daf8</Color>
@@ -1278,7 +1405,7 @@ ORDER BY Name</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="Row_Merged_2">
+                            <Textbox Name="Textbox46">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
                               <Paragraphs>
@@ -1296,6 +1423,7 @@ ORDER BY Name</CommandText>
                                   <Style />
                                 </Paragraph>
                               </Paragraphs>
+                              <rd:DefaultName>Textbox46</rd:DefaultName>
                               <Style>
                                 <Border>
                                   <Color>#c6daf8</Color>
@@ -1776,7 +1904,7 @@ ORDER BY Name</CommandText>
                                         <Color>#e5e5e5</Color>
                                         <Style>Solid</Style>
                                       </Border>
-                                      <BackgroundColor>SkyBlue</BackgroundColor>
+                                      <BackgroundColor>LightSkyBlue</BackgroundColor>
                                       <VerticalAlign>Middle</VerticalAlign>
                                       <PaddingLeft>2pt</PaddingLeft>
                                       <PaddingRight>2pt</PaddingRight>
@@ -1792,6 +1920,84 @@ ORDER BY Name</CommandText>
                             <Hidden>true</Hidden>
                             <ToggleItem>Company</ToggleItem>
                           </Visibility>
+                        </TablixMember>
+                        <TablixMember>
+                          <TablixHeader>
+                            <Size>46.68742mm</Size>
+                            <CellContents>
+                              <Textbox Name="Textbox55">
+                                <CanGrow>true</CanGrow>
+                                <KeepTogether>true</KeepTogether>
+                                <Paragraphs>
+                                  <Paragraph>
+                                    <TextRuns>
+                                      <TextRun>
+                                        <Value>Models per Company</Value>
+                                        <Style>
+                                          <FontFamily>Tahoma</FontFamily>
+                                          <FontWeight>Bold</FontWeight>
+                                          <Color>#465678</Color>
+                                        </Style>
+                                      </TextRun>
+                                    </TextRuns>
+                                    <Style />
+                                  </Paragraph>
+                                </Paragraphs>
+                                <rd:DefaultName>Textbox55</rd:DefaultName>
+                                <Style>
+                                  <Border>
+                                    <Color>#e6eefc</Color>
+                                    <Style>Solid</Style>
+                                  </Border>
+                                  <BackgroundColor>SkyBlue</BackgroundColor>
+                                  <PaddingLeft>2pt</PaddingLeft>
+                                  <PaddingRight>2pt</PaddingRight>
+                                  <PaddingTop>2pt</PaddingTop>
+                                  <PaddingBottom>2pt</PaddingBottom>
+                                </Style>
+                              </Textbox>
+                            </CellContents>
+                          </TablixHeader>
+                          <TablixMembers>
+                            <TablixMember>
+                              <TablixHeader>
+                                <Size>56.35625mm</Size>
+                                <CellContents>
+                                  <Textbox Name="Model_0">
+                                    <CanGrow>true</CanGrow>
+                                    <KeepTogether>true</KeepTogether>
+                                    <Paragraphs>
+                                      <Paragraph>
+                                        <TextRuns>
+                                          <TextRun>
+                                            <Value />
+                                            <Style>
+                                              <FontFamily>Tahoma</FontFamily>
+                                              <FontWeight>Bold</FontWeight>
+                                              <Color>#465678</Color>
+                                            </Style>
+                                          </TextRun>
+                                        </TextRuns>
+                                        <Style />
+                                      </Paragraph>
+                                    </Paragraphs>
+                                    <Style>
+                                      <Border>
+                                        <Color>#c6daf8</Color>
+                                        <Style>Solid</Style>
+                                      </Border>
+                                      <BackgroundColor>SkyBlue</BackgroundColor>
+                                      <PaddingLeft>2pt</PaddingLeft>
+                                      <PaddingRight>2pt</PaddingRight>
+                                      <PaddingTop>2pt</PaddingTop>
+                                      <PaddingBottom>2pt</PaddingBottom>
+                                    </Style>
+                                  </Textbox>
+                                </CellContents>
+                              </TablixHeader>
+                            </TablixMember>
+                          </TablixMembers>
+                          <KeepWithGroup>Before</KeepWithGroup>
                         </TablixMember>
                         <TablixMember>
                           <TablixHeader>
@@ -1835,7 +2041,7 @@ ORDER BY Name</CommandText>
                               <TablixHeader>
                                 <Size>56.35625mm</Size>
                                 <CellContents>
-                                  <Textbox Name="Model_0">
+                                  <Textbox Name="Textbox43">
                                     <CanGrow>true</CanGrow>
                                     <KeepTogether>true</KeepTogether>
                                     <Paragraphs>
@@ -1853,6 +2059,7 @@ ORDER BY Name</CommandText>
                                         <Style />
                                       </Paragraph>
                                     </Paragraphs>
+                                    <rd:DefaultName>Textbox43</rd:DefaultName>
                                     <Style>
                                       <Border>
                                         <Color>#c6daf8</Color>
@@ -1997,7 +2204,7 @@ ORDER BY Name</CommandText>
                 <DataSetName>DataSetHardwareInfo</DataSetName>
                 <Top>12.70251mm</Top>
                 <Left>0mm</Left>
-                <Height>44.3404mm</Height>
+                <Height>50.6904mm</Height>
                 <Width>543.72196mm</Width>
                 <Style>
                   <Border>
@@ -2012,7 +2219,7 @@ ORDER BY Name</CommandText>
                   <Paragraph>
                     <TextRuns>
                       <TextRun>
-                        <Value>Hardware Report by Manufacturer and Model Number</Value>
+                        <Value>Hardware - BIOS - Report by Manufacturer and Model</Value>
                         <Style>
                           <FontWeight>Bold</FontWeight>
                         </Style>
@@ -2054,7 +2261,7 @@ ORDER BY Name</CommandText>
               </Textbox>
             </ReportItems>
             <KeepTogether>true</KeepTogether>
-            <Height>2.24578in</Height>
+            <Height>2.49578in</Height>
             <Width>21.40638in</Width>
             <Style>
               <Border>
@@ -2075,7 +2282,7 @@ ORDER BY Name</CommandText>
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Copyright © - SCCM-Zone.com</Value>
+                    <Value>Copyright © SCCM-Zone.com</Value>
                     <Style>
                       <FontFamily>Verdana</FontFamily>
                       <FontSize>9pt</FontSize>
@@ -2166,6 +2373,27 @@ ORDER BY Name</CommandText>
           <ValueField>CollectionID</ValueField>
           <LabelField>Name</LabelField>
         </DataSetReference>
+      </ValidValues>
+    </ReportParameter>
+    <ReportParameter Name="ExcludeVirtualMachines">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>YES</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Exclude Virtual Machines</Prompt>
+      <ValidValues>
+        <ParameterValues>
+          <ParameterValue>
+            <Value>YES</Value>
+            <Label>Yes</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>NO</Value>
+            <Label>No</Label>
+          </ParameterValue>
+        </ParameterValues>
       </ValidValues>
     </ReportParameter>
   </ReportParameters>

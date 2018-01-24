@@ -3,14 +3,10 @@
 *********************************************************************************************************
 * Requires        | SQL, company AD attribute, Wi32_Computer_System_Product WMI class gathering         *
 * ===================================================================================================== *
-* Modified by     |    Date    | Revision | Comments                                                    *
+* Created by      |    Date    | Comments                                                               *
 * _____________________________________________________________________________________________________ *
-* Octavian Cordos | 2018-01-18 | v1.0     | First version                                               *
-* Ioan Popovici   | 2018-01-18 | v1.1     | Format and fixes                                            *
-* Ioan Popovici   | 2018-01-19 | v1.2     | Added BIOS Version and BIOS Name                            *
-* Ioan Popovici   | 2018-01-22 | v1.3     | Added Lenovo workaround to get the model                    *
-* Ioan Popovici   | 2018-01-22 | v1.4     | Leave model number for 'Lenovo Peroduct' model              *
-* Ioan Popovici   | 2018-01-22 | v1.5     | Resolve model for 'Lenovo Peroduct' for my environment      *
+* Octavian Cordos | 2018-01-18 | First version                                                          *
+* Ioan Popovici   |            |                                                                        *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -30,8 +26,13 @@
 /*## QUERY BODY                                  */
 /*##=============================================*/
 
+/* For testing only */
 --DECLARE @UserSIDs VARCHAR(16);
 --SELECT @UserSIDs = 'disabled';
+--DECLARE @CollectionID VARCHAR(16);
+--SELECT @CollectionID = 'WT10000A';
+--DECLARE @ExcludeVirtualMachines VARCHAR(5);
+--SELECT @ExcludeVirtualMachines = 'NO';
 
 SELECT
     
@@ -55,7 +56,7 @@ SELECT
     BIOS.SMBIOSBIOSVersion0 AS [SMBIOS Version],
     BIOS.SerialNumber0 AS [BIOS Serial Number],
     OperatingSystem.Caption0 AS [Operating System],
-    OperatingSystem.CSDVersion0 AS [Service Pack],
+    OperatingSystem.CSDVersion0 AS [OS Service Pack],
     OperatingSystem.Version0 AS [OS Version],
     OperatingSystem.InstallDate0 AS [OS Installed Date]
 FROM dbo.v_GS_COMPUTER_SYSTEM AS Systems
@@ -64,6 +65,13 @@ FROM dbo.v_GS_COMPUTER_SYSTEM AS Systems
     JOIN dbo.v_GS_PC_BIOS BIOS ON BIOS.ResourceID = Systems.ResourceID
     JOIN dbo.v_GS_COMPUTER_SYSTEM_PRODUCT AS Product ON Product.ResourceID = Systems.ResourceID
 WHERE Collections.CollectionID = @CollectionID
+    AND
+        Systems.Model0 NOT LIKE (
+		    CASE @ExcludeVirtualMachines
+			    WHEN 'YES' THEN '%Virtual%'
+			    ELSE ''
+		    END
+	    )
 ORDER BY 
     Model, 
     [BIOS Name], 

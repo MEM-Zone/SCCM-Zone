@@ -2,11 +2,10 @@
 *********************************************************************************************************
 * Requires        | SCCM Hardware extentsion                                                            *
 * ===================================================================================================== *
-* Modified by     |    Date    | Revision | Comments                                                    *
+* Created by      |    Date    | Comments                                                               *
 * _____________________________________________________________________________________________________ *
-* Octavian Cordos | 2016-01-15 | v1.0     | First version                                               *
-* Ioan Popovici   | 2017-01-18 | v1.1     | Format and fixes, added support for SQL 2016                *
-* Ioan Popovici   | 2018-01-19 | v1.2     | Support for SQL 2017, bitness, workgroup edition            *
+* Octavian Cordos | 2016-01-15 | First version                                                          *
+* Ioan Popovici   |            |                                                                        *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -397,6 +396,7 @@ WITH temp (
                     WHEN [SQL Type] LIKE '%develop%' THEN 'Developer Edition'
                     WHEN [SQL Type] LIKE '%standard%' THEN 'Standard Edition'
                     WHEN [SQL Type] LIKE '%enterprise%' THEN 'Enterprise Edition'
+                    ELSE 'Unknown'
                 END
             ) AS 'Edition',
             (
