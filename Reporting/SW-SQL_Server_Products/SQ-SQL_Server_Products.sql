@@ -50,7 +50,7 @@ WITH temp (
         FROM (
 
 --region SQL 2017
-            SELECT 
+            SELECT
                 [vrs].[resourceID] AS [ResourceID],
                 [VRS].[Netbios_name0] [ComputerName],
                 --ISNULL([vrs].[company0], '<Unknown>') AS  'Company',
@@ -77,13 +77,13 @@ WITH temp (
                 ) AS [SQL CU Version],
                 MAX (
                     CASE [sql2017].[PropertyName0]
-                        WHEN 'FILEVERSION' THEN 
+                        WHEN 'FILEVERSION' THEN
                             CASE LEFT ([sql2017].[PropertySTRValue0], 4)
                                 WHEN '2017' THEN '2017'
                                 WHEN '2016' THEN '2016'
                                 WHEN '2014' THEN '2014'
                                 WHEN '2011' THEN '2012'
-                                WHEN '2009' THEN '2008 R2' 
+                                WHEN '2009' THEN '2008 R2'
                                 WHEN '2007' THEN '2008'
                                 WHEN '2005' THEN '2005'
                                 WHEN '2000' THEN '2000'
@@ -97,7 +97,7 @@ WITH temp (
             WHERE [sql2017].[PropertyName0] IN ('SKUNAME', 'SPLevel', 'version', 'fileversion')
                 AND [c].[CollectionID] = @CollectionID
                 AND ISNULL([sql2017].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
-            GROUP BY 
+            GROUP BY
                 [VRS].[Netbios_name0],
                 [sql2017].[ServiceName0],
                 --[vrs].[company0],
@@ -106,7 +106,7 @@ WITH temp (
 --endregion
 
 --region SQL 2016
-            SELECT 
+            SELECT
                 [vrs].[resourceID] [ResourceID],
                 [VRS].[Netbios_name0] [ComputerName],
                 --ISNULL([vrs].[company0], '<Unknown>') AS 'Company',
@@ -132,7 +132,7 @@ WITH temp (
                 ) AS [SQL CU Version],
                 MAX (
                     CASE [sql2016].[PropertyName0]
-                        WHEN 'FILEVERSION' THEN 
+                        WHEN 'FILEVERSION' THEN
                             CASE LEFT ([sql2016].[PropertySTRValue0], 4)
                                 WHEN '2017' THEN '2017'
                                 WHEN '2016' THEN '2016'
@@ -160,7 +160,7 @@ WITH temp (
 
 --region SQL 2014
             UNION ALL
-            SELECT 
+            SELECT
                 [vrs].[resourceID] [ResourceID],
                 [VRS].[Netbios_name0] [ComputerName],
                 --ISNULL([vrs].[company0], '<Unknown>') AS 'Company',
@@ -186,7 +186,7 @@ WITH temp (
                 ) AS [SQL CU Version],
                 MAX (
                     CASE [sql2014].[PropertyName0]
-                        WHEN 'FILEVERSION' THEN 
+                        WHEN 'FILEVERSION' THEN
                             CASE LEFT([sql2014].[PropertySTRValue0], 4)
                                 WHEN '2017' THEN '2017'
                                 WHEN '2016' THEN '2016'
@@ -206,7 +206,7 @@ WITH temp (
             WHERE [sql2014].[PropertyName0] IN ('SKUNAME', 'SPLevel', 'version', 'fileversion')
                 AND [c].[CollectionID] = @CollectionID
                 AND ISNULL([sql2014].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
-            GROUP BY 
+            GROUP BY
                 [VRS].[Netbios_name0],
                 [sql2014].[ServiceName0],
                 --[vrs].[company0],
@@ -215,7 +215,7 @@ WITH temp (
 
 --region SQL 2012
             UNION ALL
-            SELECT 
+            SELECT
                 [vrs].[resourceID] [ResourceID],
                 [VRS].[Netbios_name0] [ComputerName],
                 --ISNULL([vrs].[company0], '<Unknown>') AS 'Company',
@@ -240,7 +240,7 @@ WITH temp (
                 ) AS [SQL CU Version],
                 MAX (
                     CASE [sql2012].[PropertyName0]
-                        WHEN 'FILEVERSION' THEN 
+                        WHEN 'FILEVERSION' THEN
                             CASE LEFT([sql2012].[PropertySTRValue0], 4)
                                 WHEN '2017' THEN '2017'
                                 WHEN '2016' THEN '2016'
@@ -260,7 +260,7 @@ WITH temp (
             WHERE [sql2012].[PropertyName0] IN('SKUNAME', 'SPLevel', 'version', 'fileversion')
                 AND [c].[CollectionID] = @CollectionID
                 AND ISNULL([ServiceName0], 0) NOT LIKE '%EXPRESS%'
-            GROUP BY 
+            GROUP BY
                 [VRS].[Netbios_name0],
                 [sql2012].[ServiceName0],
                 --[vrs].[company0],
@@ -269,7 +269,7 @@ WITH temp (
 
 --region SQL 2008
             UNION ALL
-            SELECT 
+            SELECT
                 [vrs].[resourceID] [ResourceID],
                 [VRS].[Netbios_name0] [ComputerName],
                 --ISNULL([vrs].[company0], '<Unknown>') AS 'Company',
@@ -295,7 +295,7 @@ WITH temp (
                 ) AS [SQL CU Version],
                 MAX (
                     CASE [sql2008].[PropertyName0]
-                        WHEN 'FILEVERSION' THEN 
+                        WHEN 'FILEVERSION' THEN
                             CASE LEFT([sql2008].[PropertySTRValue0], 4)
                                 WHEN '2017' THEN '2017'
                                 WHEN '2016' THEN '2016'
@@ -316,7 +316,7 @@ WITH temp (
                 AND [c].[CollectionID] = @CollectionID
                 AND ISNULL([sql2008].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
                 AND ISNULL([sql2008].[ServiceName0], 0) NOT LIKE 'SQLBrowser'
-            GROUP BY 
+            GROUP BY
                 [VRS].[Netbios_name0],
                 [sql2008].[ServiceName0],
                 --[vrs].[company0],
@@ -350,7 +350,7 @@ WITH temp (
                 ) AS [SQL CU Version],
                 MAX (
                     CASE [sqllgcy].[PropertyName0]
-                        WHEN 'FILEVERSION' THEN 
+                        WHEN 'FILEVERSION' THEN
                         CASE LEFT ([sqllgcy].[PropertySTRValue0], 4)
                             WHEN '2017' THEN '2017'
                             WHEN '2016' THEN '2016'
@@ -371,7 +371,7 @@ WITH temp (
                 AND [c].[CollectionID] = @CollectionID
                 AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT LIKE '%EXPRESS%'
                 AND ISNULL([sqlLgcy].[ServiceName0], 0) NOT LIKE 'SQLBrowser'
-            GROUP BY 
+            GROUP BY
                 [VRS].[Netbios_Name0],
                 [sqlLgcy].[ServiceName0],
                 --[vrs].[company0],
@@ -406,14 +406,14 @@ WITH temp (
                 END
             ) AS 'Bitness'
         FROM temp
-        ORDER BY 
-            --temp.[Company], 
+        ORDER BY
+            --temp.[Company],
             Release,
             Edition,
             Bitness,
             Version,
             ComputerName;
-        
+
 /*##=============================================*/
 /*## END QUERY BODY                              */
 /*##=============================================*/
