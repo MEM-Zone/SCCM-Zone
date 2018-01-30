@@ -2042,7 +2042,7 @@ order by v_Collection_Alias.Name</CommandText>
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>Copyright © SCCMZone.ro</Value>
+                      <Value>Copyright © SCCM-Zone.com</Value>
                       <Style>
                         <FontFamily>Verdana</FontFamily>
                         <FontSize>9pt</FontSize>
