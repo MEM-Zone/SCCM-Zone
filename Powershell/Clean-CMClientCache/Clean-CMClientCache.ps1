@@ -546,6 +546,7 @@ Try {
 #  Write to log in case of failure
 Catch {
     Write-Host 'Getting SCCM Cache Info from WMI - Failed! Check if SCCM Client is Installed!'
+    Break
 }
 
 ## Call Remove-CachedApplications function
