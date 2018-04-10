@@ -74,18 +74,18 @@ Function Send-Mail {
 #>
     [CmdletBinding()]
     Param (
+        [Parameter(Mandatory=$true)]
+        [string]$From,
+        [Parameter(Mandatory=$true)]
+        [string]$To,
         [Parameter(Mandatory=$false)]
-        [string]$From = "SCCM Site Server <noreply@visma.com>",
-        [Parameter(Mandatory=$false)]
-        [string]$To = "SCCM Team <SCCM-Team@visma.com>",
-        [Parameter(Mandatory=$false)]
-        [string]$CC = "",
+        [string]$CC = '',
         [Parameter(Mandatory=$false)]
         [string]$Subject = "Info: Quality Check Needed!",
         [Parameter(Mandatory=$true)]
         [string]$Body,
-        [Parameter(Mandatory=$false)]
-        [string]$SMTPServer = "mail.datakraftverk.no",
+        [Parameter(Mandatory=$true)]
+        [string]$SMTPServer,
         [Parameter(Mandatory=$false)]
         [string]$SMTPPort = "25"
     )
@@ -116,7 +116,7 @@ Function Send-Mail {
 
     # RegEx pattern matching
     ForEach ($Item in 0..($NameArray.length -1)){
-        $SMDescription | Select-String -Pattern $PatternArray[$Item] -AllMatches | % { $InfoArray.($NameArray[$Item]) = $_.Matches.Value }
+        $SMDescription | Select-String -Pattern $PatternArray[$Item] -AllMatches | ForEach-Object { $InfoArray.($NameArray[$Item]) = $_.Matches.Value }
     }
 
     # Building object from result array
