@@ -112,21 +112,13 @@ Function Get-LocalGroupMemberLegacy {
             }
         }
         Catch {
-            Write-Error -Message "Group $GroupName was not found. $_" -Category 'ObjectNotFound'
+            Write-Error -Message "Group $GroupName was not found. `n$_" -Category 'ObjectNotFound'
             Break
         }
         Finally {
 
-            ## If we have anyting to return, sort object by Name else return $null
-            If ($GetLocalGroupMember.Count -gt '0') {
-                $GetLocalGroupMember = $GetLocalGroupMember | Sort-Object -Property 'Name'
-            }
-            Else {
-                $GetLocalGroupMember = $null
-            }
-
             ## Return $GetLocalGroupMember
-            Write-Output -InputObject $GetLocalGroupMember
+            Write-Output -InputObject $($GetLocalGroupMember | Sort-Object -Property 'Name')
         }
     }
     End {
