@@ -11,7 +11,7 @@
     </DataSource>
   </DataSources>
   <DataSets>
-    <DataSet Name="Dataset0">
+    <DataSet Name="DataSetComplianceData">
       <Query>
         <DataSourceName>DataSource</DataSourceName>
         <QueryParameters>
@@ -27,7 +27,7 @@
         </QueryParameters>
         <CommandText>/*
 *********************************************************************************************************
-* Created by Ioan Popovici   | Requires SQL, Collection, Configuration Baseline                         *
+* Created by Ioan Popovici   | Requires SQL, company AD attribute gathering, Configuration Baseline     *
 * ===================================================================================================== *
 * Modified by   |    Date    | Revision | Comments                                                      *
 * _____________________________________________________________________________________________________ *
@@ -39,7 +39,7 @@
 .SYNOPSIS
     This SQL Query is used to get the Compliance of a Configuration Baseline.
 .DESCRIPTION
-    This SQL Query is used to get the Compliance and Actual Values of a Configuration Baseline Result.
+    This SQL Query is used to get the Compliance of a Configuration Baseline Result.
 .NOTES
     Part of a report should not be run separately.
 .LINK
@@ -52,40 +52,32 @@
 /*##=============================================*/
 /* #region QueryBody */
 
-SELECT Distinct
-    SYS.Name0 AS 'Computer Name',
-    SNames.StateName AS 'Compliance State',
-    CCS.LastComplianceMessageTime as 'Last Compliance Evaluation',
-    SYS.User_Name0 as 'User Name',
-    OS.Caption0 as 'Operating System',
-    OS.InstallDate0 as 'Install Date',
-    STATUS.LastHWScan as 'Last HW Scan',
-    COMP.Model0 as 'Model',
-    CI.CIVersion AS 'Baseline Content Version',
-    CSCSD.CurrentValue,
-
-    /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
-    SYS.Company0 as 'Company'
-    --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([sys].[ResourceID]) ) AS [Company]
+SELECT DISTINCT
+    Computer.Name0 AS 'Computer Name',
+    StateName.StateName AS 'Compliance State',
+    ComplianceStatus.LastComplianceMessageTime as 'Last Compliance Evaluation',
+    Users.User_Name0 AS 'User Name',
+	  OperatingSystem.Caption0 AS 'Operating System',
+  	OperatingSystem.InstallDate0 AS 'Install Date',
+    ComputerStatus.LastHWScan AS 'Last HW Scan',
+	  Computer.Model0 AS 'Model',
+    ConfigurationItem.CIVersion AS 'Baseline Content Version'
 FROM
-    v_BaselineTargetedComputers BTC
-    INNER JOIN fn_rbac_R_System(@UserSIDs) as SYS ON SYS.ResourceID = BTC.ResourceID
-    LEFT OUTER JOIN v_ClientCollectionMembers c ON c.ResourceID = sys.ResourceID
-    INNER JOIN v_GS_COMPUTER_SYSTEM COMP on COMP.ResourceID = BTC.ResourceID
-    INNER JOIN v_GS_OPERATING_SYSTEM OS on OS.ResourceID = SYS.ResourceID
-    INNER JOIN v_ConfigurationItems CI ON CI.CI_ID = BTC.CI_ID
-    INNER JOIN v_CICurrentComplianceStatus CCS ON CCS.CI_ID = CI.CI_ID AND CCS.ResourceID = BTC.ResourceID
-    INNER JOIN v_CIComplianceStatusComplianceDetail CSCD ON CSCD.CI_ID = CI.CI_ID
-    INNER JOIN v_CICurrentSettingsComplianceStatusDetail CSCSD ON CSCSD.CI_ID = CSCD.Setting_CI_ID
-    INNER JOIN v_LocalizedCIProperties_SiteLoc CIProp ON CIProp.CI_ID = CI.CI_ID
-    INNER JOIN v_StateNames SNames ON CCS.ComplianceState = SNames.StateID
-    LEFT OUTER JOIN v_GS_WORKSTATION_STATUS STATUS on STATUS.ResourceID=SYS.ResourceID
-    LEFT OUTER JOIN v_R_User USR on USR.User_Name0 = SYS.User_Name0
+    v_BaselineTargetedComputers Baseline
+	INNER JOIN fn_rbac_R_System(@UserSIDs) AS Users ON Users.ResourceID = Baseline.ResourceID
+    LEFT OUTER JOIN v_ClientCollectionMembers AS Collections ON Collections.ResourceID = Users.ResourceID
+    INNER JOIN v_GS_COMPUTER_SYSTEM Computer ON Computer.ResourceID = Baseline.ResourceID
+	  INNER JOIN v_GS_OPERATING_SYSTEM AS OperatingSystem ON OperatingSystem.ResourceID = Users.ResourceID
+    INNER JOIN v_ConfigurationItems AS ConfigurationItem ON ConfigurationItem.CI_ID = Baseline.CI_ID
+    INNER JOIN v_CICurrentComplianceStatus AS ComplianceStatus ON ComplianceStatus.CI_ID = ConfigurationItem.CI_ID AND ComplianceStatus.ResourceID = Baseline.ResourceID
+    INNER JOIN v_LocalizedCIProperties_SiteLoc AS BaselineProperties ON BaselineProperties.CI_ID = ConfigurationItem.CI_ID
+    INNER JOIN v_StateNames AS StateName ON ComplianceStatus.ComplianceState = StateName.StateID
+    LEFT OUTER JOIN v_GS_WORKSTATION_STATUS AS ComputerStatus ON ComputerStatus.ResourceID = Users.ResourceID
 WHERE
-    CIProp.DisplayName = @BaselineName
-        AND SNames.TopicType = 401
-        AND c.CollectionID= @CollectionID
-ORDER BY SNames.StateName
+    BaselineProperties.DisplayName = @BaselineName
+        AND StateName.TopicType = 401
+        AND Collections.CollectionID= @CollectionID
+ORDER BY StateName.StateName
 
 /* #endregion */
 /*##=============================================*/
@@ -130,14 +122,6 @@ ORDER BY SNames.StateName
           <DataField>Baseline Content Version</DataField>
           <rd:TypeName>System.Int32</rd:TypeName>
         </Field>
-        <Field Name="CurrentValue">
-          <DataField>CurrentValue</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Company">
-          <DataField>Company</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
       </Fields>
     </DataSet>
     <DataSet Name="DataSetAdminID">
@@ -158,12 +142,12 @@ ORDER BY SNames.StateName
         </Field>
       </Fields>
     </DataSet>
-    <DataSet Name="Parameter_Baseline">
+    <DataSet Name="DataSetBaseline">
       <Query>
         <DataSourceName>DataSource</DataSourceName>
-        <CommandText>SELECT
+        <CommandText>SELECT 
 	CI.CI_ID,
-	CIProp.DisplayName
+	CIProp.DisplayName 
 FROM v_ConfigurationItems CI
 LEFT JOIN v_LocalizedCIProperties_SiteLoc CIProp ON CI.CI_ID=CIProp.CI_ID
 WHERE CI.CIType_ID=2</CommandText>
@@ -179,7 +163,7 @@ WHERE CI.CIType_ID=2</CommandText>
         </Field>
       </Fields>
     </DataSet>
-    <DataSet Name="Parameter_Collection">
+    <DataSet Name="DataSetCollection">
       <Query>
         <DataSourceName>DataSource</DataSourceName>
         <QueryParameters>
@@ -187,7 +171,7 @@ WHERE CI.CIType_ID=2</CommandText>
             <Value>=Parameters!UserSIDs.Value</Value>
           </QueryParameter>
         </QueryParameters>
-        <CommandText>SELECT DISTINCT
+        <CommandText>SELECT DISTINCT 
 	CollectionID,
 	Name
 FROM dbo.fn_rbac_collection(@UserSIDs)
@@ -215,71 +199,28 @@ ORDER BY Name</CommandText>
                 <TablixBody>
                   <TablixColumns>
                     <TablixColumn>
-                      <Width>38.42049mm</Width>
+                      <Width>40.07127mm</Width>
                     </TablixColumn>
                     <TablixColumn>
-                      <Width>37.02158mm</Width>
+                      <Width>61.87294mm</Width>
                     </TablixColumn>
                     <TablixColumn>
-                      <Width>64.11491mm</Width>
+                      <Width>41.1296mm</Width>
                     </TablixColumn>
                     <TablixColumn>
-                      <Width>32.78825mm</Width>
+                      <Width>26.59761mm</Width>
                     </TablixColumn>
                     <TablixColumn>
-                      <Width>23.54792mm</Width>
+                      <Width>47.21502mm</Width>
                     </TablixColumn>
                     <TablixColumn>
-                      <Width>68.52708mm</Width>
-                    </TablixColumn>
-                    <TablixColumn>
-                      <Width>44.16533mm</Width>
-                    </TablixColumn>
-                    <TablixColumn>
-                      <Width>46.01742mm</Width>
+                      <Width>49.06711mm</Width>
                     </TablixColumn>
                   </TablixColumns>
                   <TablixRows>
                     <TablixRow>
                       <Height>6.80433mm</Height>
                       <TablixCells>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C3R1_Header_ComputerName">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value>Computer Name</Value>
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontSize>11pt</FontSize>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>White</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style>
-                                    <TextAlign>Center</TextAlign>
-                                  </Style>
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#7292cc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#2b627f</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
                         <TablixCell>
                           <CellContents>
                             <Textbox Name="TAB_C4R1_Header_UserName">
@@ -430,43 +371,6 @@ ORDER BY Name</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="TAB_C8R1_Header_ActualValue">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value>Actual Value</Value>
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontSize>11pt</FontSize>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>White</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style>
-                                    <TextAlign>Center</TextAlign>
-                                  </Style>
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#7292cc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#2b627f</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
                             <Textbox Name="TAB_C9R1_Header_LastEvaluation">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
@@ -545,39 +449,6 @@ ORDER BY Name</CommandText>
                     <TablixRow>
                       <Height>6.80433mm</Height>
                       <TablixCells>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C3R2_ComputerName">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value>=Fields!Computer_Name.Value</Value>
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <Color>#4d4d4d</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e5e5e5</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#e1e1e1</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
                         <TablixCell>
                           <CellContents>
                             <Textbox Name="TAB_C4R2_UserName">
@@ -714,39 +585,6 @@ ORDER BY Name</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="TAB_C8R2_CurrentValue">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value>=Fields!CurrentValue.Value</Value>
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <Color>#4d4d4d</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e5e5e5</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#e1e1e1</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
                             <Textbox Name="TAB_C9R2_LastComplianceEvaluation">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
@@ -821,324 +659,6 @@ ORDER BY Name</CommandText>
                     <TablixRow>
                       <Height>6.80433mm</Height>
                       <TablixCells>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C3R3_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C4R3_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C5R3_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C6R3_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C7R3_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style>
-                                    <TextAlign>Center</TextAlign>
-                                  </Style>
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C8R3_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C9R3_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style>
-                                    <TextAlign>Center</TextAlign>
-                                  </Style>
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <VerticalAlign>Middle</VerticalAlign>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C10R3_CountComputerName">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value>=Count(Fields!Computer_Name.Value)</Value>
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#4c68a2</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style>
-                                    <TextAlign>Center</TextAlign>
-                                  </Style>
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#e6eefc</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#c6daf8</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                      </TablixCells>
-                    </TablixRow>
-                    <TablixRow>
-                      <Height>6.80433mm</Height>
-                      <TablixCells>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C3R4_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#465678</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#c6daf8</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#9eb6e4</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
                         <TablixCell>
                           <CellContents>
                             <Textbox Name="TAB_C4R4_NULL">
@@ -1279,40 +799,6 @@ ORDER BY Name</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="TAB_C8R4_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>#465678</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#c6daf8</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#9eb6e4</BackgroundColor>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
                             <Textbox Name="TAB_C9R4_NULL">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
@@ -1389,41 +875,6 @@ ORDER BY Name</CommandText>
                     <TablixRow>
                       <Height>6.80433mm</Height>
                       <TablixCells>
-                        <TablixCell>
-                          <CellContents>
-                            <Textbox Name="TAB_C3R5_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>White</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#9eb6e4</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#7292cc</BackgroundColor>
-                                <VerticalAlign>Middle</VerticalAlign>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
                         <TablixCell>
                           <CellContents>
                             <Textbox Name="TAB_C4R5_NULL">
@@ -1568,41 +1019,6 @@ ORDER BY Name</CommandText>
                         </TablixCell>
                         <TablixCell>
                           <CellContents>
-                            <Textbox Name="TAB_C8R5_NULL">
-                              <CanGrow>true</CanGrow>
-                              <KeepTogether>true</KeepTogether>
-                              <Paragraphs>
-                                <Paragraph>
-                                  <TextRuns>
-                                    <TextRun>
-                                      <Value />
-                                      <Style>
-                                        <FontFamily>Tahoma</FontFamily>
-                                        <FontWeight>Bold</FontWeight>
-                                        <Color>White</Color>
-                                      </Style>
-                                    </TextRun>
-                                  </TextRuns>
-                                  <Style />
-                                </Paragraph>
-                              </Paragraphs>
-                              <Style>
-                                <Border>
-                                  <Color>#9eb6e4</Color>
-                                  <Style>Solid</Style>
-                                </Border>
-                                <BackgroundColor>#7292cc</BackgroundColor>
-                                <VerticalAlign>Middle</VerticalAlign>
-                                <PaddingLeft>2pt</PaddingLeft>
-                                <PaddingRight>2pt</PaddingRight>
-                                <PaddingTop>2pt</PaddingTop>
-                                <PaddingBottom>2pt</PaddingBottom>
-                              </Style>
-                            </Textbox>
-                          </CellContents>
-                        </TablixCell>
-                        <TablixCell>
-                          <CellContents>
                             <Textbox Name="TAB_C9R5_NULL">
                               <CanGrow>true</CanGrow>
                               <KeepTogether>true</KeepTogether>
@@ -1687,15 +1103,13 @@ ORDER BY Name</CommandText>
                     <TablixMember />
                     <TablixMember />
                     <TablixMember />
-                    <TablixMember />
-                    <TablixMember />
                   </TablixMembers>
                 </TablixColumnHierarchy>
                 <TablixRowHierarchy>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>42.41909mm</Size>
+                        <Size>45.46878mm</Size>
                         <CellContents>
                           <Textbox Name="TAB_C1R1_Header_ComplianceState">
                             <CanGrow>true</CanGrow>
@@ -1735,16 +1149,16 @@ ORDER BY Name</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>46.68742mm</Size>
+                            <Size>49.73711mm</Size>
                             <CellContents>
-                              <Textbox Name="TAB_C2R1_Header_Company">
+                              <Textbox Name="TAB_C2R1_Header_ComputerName">
                                 <CanGrow>true</CanGrow>
                                 <KeepTogether>true</KeepTogether>
                                 <Paragraphs>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value>Company</Value>
+                                        <Value>Computer Name</Value>
                                         <Style>
                                           <FontFamily>Tahoma</FontFamily>
                                           <FontSize>11pt</FontSize>
@@ -1791,7 +1205,7 @@ ORDER BY Name</CommandText>
                         </SortExpression>
                       </SortExpressions>
                       <TablixHeader>
-                        <Size>42.41909mm</Size>
+                        <Size>45.46878mm</Size>
                         <CellContents>
                           <Textbox Name="TAB_C1R2_ComplianceState">
                             <CanGrow>true</CanGrow>
@@ -1827,27 +1241,27 @@ ORDER BY Name</CommandText>
                       </TablixHeader>
                       <TablixMembers>
                         <TablixMember>
-                          <Group Name="RG_Company">
+                          <Group Name="RG_ComputerName">
                             <GroupExpressions>
-                              <GroupExpression>=Fields!Company.Value</GroupExpression>
+                              <GroupExpression>=Fields!Computer_Name.Value</GroupExpression>
                             </GroupExpressions>
                           </Group>
                           <SortExpressions>
                             <SortExpression>
-                              <Value>=Fields!Company.Value</Value>
+                              <Value>=Fields!Computer_Name.Value</Value>
                             </SortExpression>
                           </SortExpressions>
                           <TablixHeader>
-                            <Size>46.68742mm</Size>
+                            <Size>49.73711mm</Size>
                             <CellContents>
-                              <Textbox Name="TAB_C2R2_Company">
+                              <Textbox Name="TAB_C2R2_ComputerName">
                                 <CanGrow>true</CanGrow>
                                 <KeepTogether>true</KeepTogether>
                                 <Paragraphs>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value>=Fields!Company.Value</Value>
+                                        <Value>=Fields!Computer_Name.Value</Value>
                                         <Style>
                                           <FontFamily>Tahoma</FontFamily>
                                           <FontWeight>Bold</FontWeight>
@@ -1873,16 +1287,7 @@ ORDER BY Name</CommandText>
                             </CellContents>
                           </TablixHeader>
                           <TablixMembers>
-                            <TablixMember>
-                              <Group Name="RG_Details" />
-                              <Visibility>
-                                <Hidden>true</Hidden>
-                                <ToggleItem>TAB_C2R2_Company</ToggleItem>
-                              </Visibility>
-                            </TablixMember>
-                            <TablixMember>
-                              <KeepWithGroup>Before</KeepWithGroup>
-                            </TablixMember>
+                            <TablixMember />
                           </TablixMembers>
                           <Visibility>
                             <Hidden>true</Hidden>
@@ -1891,7 +1296,7 @@ ORDER BY Name</CommandText>
                         </TablixMember>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>46.68742mm</Size>
+                            <Size>49.73711mm</Size>
                             <CellContents>
                               <Textbox Name="TAB_C2R2_Total">
                                 <CanGrow>true</CanGrow>
@@ -1931,7 +1336,7 @@ ORDER BY Name</CommandText>
                     </TablixMember>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>42.41909mm</Size>
+                        <Size>45.46878mm</Size>
                         <CellContents>
                           <Textbox Name="TAB_C1R3_Total">
                             <CanGrow>true</CanGrow>
@@ -1969,7 +1374,7 @@ ORDER BY Name</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>46.68742mm</Size>
+                            <Size>49.73711mm</Size>
                             <CellContents>
                               <Textbox Name="TAB_C2R3_Total">
                                 <CanGrow>true</CanGrow>
@@ -2010,11 +1415,11 @@ ORDER BY Name</CommandText>
                     </TablixMember>
                   </TablixMembers>
                 </TablixRowHierarchy>
-                <DataSetName>Dataset0</DataSetName>
+                <DataSetName>DataSetComplianceData</DataSetName>
                 <Top>12.70251mm</Top>
                 <Left>0mm</Left>
-                <Height>34.02165mm</Height>
-                <Width>443.70949mm</Width>
+                <Height>27.21732mm</Height>
+                <Width>361.15944mm</Width>
                 <Style>
                   <Border>
                     <Style>None</Style>
@@ -2046,7 +1451,7 @@ ORDER BY Name</CommandText>
                   </Paragraph>
                 </Paragraphs>
                 <Top>0.0925in</Top>
-                <Left>1.67004in</Left>
+                <Left>0.04504in</Left>
                 <Height>0.27083in</Height>
                 <Width>4.80825in</Width>
                 <ZIndex>1</ZIndex>
@@ -2076,8 +1481,8 @@ ORDER BY Name</CommandText>
               </Textbox>
             </ReportItems>
             <KeepTogether>true</KeepTogether>
-            <Height>1.84995in</Height>
-            <Width>17.46888in</Width>
+            <Height>1.6937in</Height>
+            <Width>14.36471in</Width>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -2111,9 +1516,9 @@ ORDER BY Name</CommandText>
                 </Style>
               </Paragraph>
             </Paragraphs>
-            <Top>1.90898in</Top>
+            <Top>1.77009in</Top>
             <Height>0.24271in</Height>
-            <Width>17.46888in</Width>
+            <Width>14.36471in</Width>
             <ZIndex>1</ZIndex>
             <Style>
               <Border>
@@ -2127,7 +1532,7 @@ ORDER BY Name</CommandText>
             </Style>
           </Textbox>
         </ReportItems>
-        <Height>2.20412in</Height>
+        <Height>2.05829in</Height>
         <Style>
           <Border>
             <Style>None</Style>
@@ -2135,7 +1540,7 @@ ORDER BY Name</CommandText>
           <BackgroundColor>#616161</BackgroundColor>
         </Style>
       </Body>
-      <Width>17.47929in</Width>
+      <Width>14.36471in</Width>
       <Page>
         <PageHeight>11.69in</PageHeight>
         <PageWidth>8.27in</PageWidth>
@@ -2184,7 +1589,7 @@ ORDER BY Name</CommandText>
       <Prompt>Collection</Prompt>
       <ValidValues>
         <DataSetReference>
-          <DataSetName>Parameter_Collection</DataSetName>
+          <DataSetName>DataSetCollection</DataSetName>
           <ValueField>CollectionID</ValueField>
           <LabelField>Name</LabelField>
         </DataSetReference>
@@ -2195,7 +1600,7 @@ ORDER BY Name</CommandText>
       <Prompt>Configuration Baseline Name</Prompt>
       <ValidValues>
         <DataSetReference>
-          <DataSetName>Parameter_Baseline</DataSetName>
+          <DataSetName>DataSetBaseline</DataSetName>
           <ValueField>DisplayName</ValueField>
           <LabelField>DisplayName</LabelField>
         </DataSetReference>

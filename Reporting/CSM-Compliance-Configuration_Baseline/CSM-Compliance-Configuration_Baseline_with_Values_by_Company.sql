@@ -36,10 +36,12 @@ SELECT DISTINCT
     ComputerStatus.LastHWScan AS 'Last HW Scan',
 	Computer.Model0 AS 'Model',
     ConfigurationItem.CIVersion AS 'Baseline Content Version',
-    CurrentComplianceDetails.CurrentValue,
+    CurrentComplianceDetails.CurrentValue
 
     /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
-    Users.Company0 AS 'Company'
+    -- ,Users.Company0 AS 'Company'
+
+    /* CUSTOM FUNCTION LEAVE DISABLED */
     --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Users].[ResourceID]) ) AS [Company]
 FROM
     v_BaselineTargetedComputers Baseline
