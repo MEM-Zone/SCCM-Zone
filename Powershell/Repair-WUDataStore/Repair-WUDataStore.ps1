@@ -5,6 +5,7 @@
 * Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
 * Ioan Popovici     | 2018-03-28 | v1.0     | First version                                             *
+* Ioan Popovici     | 2018-05-16 | v1.1     | Fixed logical bugs that forced a NULL return              *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -50,6 +51,14 @@ Param (
     [ValidateSet('DetectAndRepair','Detect','Repair')]
     [string]$Action = 'DetectAndRepair'
 )
+
+## Set EventLog variables
+$LogName = 'Application'
+$Source = 'ESENT'
+$EventID = '623'
+$EntryType = 'Error'
+$After = $((Get-Date).AddDays(-3))
+$Threshold = 3
 
 #endregion
 ##*=============================================
@@ -124,26 +133,32 @@ Function Backup-EventLog {
 
             If ($PowerShellVersion -eq 2) {
                 ## Get event log
-                $EventLog = Get-WmiObject -Class 'Win32_NtEventLogFile' -Filter "LogFileName = '$LogName'"
+                $EventLog = Get-WmiObject -Class 'Win32_NtEventLogFile' -Filter "LogFileName = '$LogName'" -ErrorAction 'SilentlyContinue'
+
+                If (-not $EventLog) {
+                    Throw 'EventLog not found.'
+                }
 
                 ## Backup event log
                 $BackUp = $EventLog | Invoke-WmiMethod -Name 'BackupEventLog' -ArgumentList $BackupArguments -ErrorAction 'SilentlyContinue'
 
-                # $BackUp = $EventLog | Invoke-CimMethod -Name 'BackupEventLog' -Arguments $BackupArguments -ErrorAction 'SilentlyContinue'
                 If ($BackUp.ReturnValue -ne 0) {
-                    Throw "Backup failed with $($BackUp.ReturnValue)"
+                    Throw "Backup retuned $($BackUp.ReturnValue)."
                 }
             }
             ElseIf ($PowerShellVersion -ge 3) {
                 ## Get event log
-                $EventLog = Get-CimInstance -ClassName 'Win32_NtEventLogFile' -Filter "LogFileName = '$LogName'"
+                $EventLog = Get-CimInstance -ClassName 'Win32_NtEventLogFile' -Filter "LogFileName = '$LogName'" -ErrorAction 'SilentlyContinue'
+
+                If (-not $EventLog) {
+                    Throw 'EventLog not found.'
+                }
 
                 ## Backup event log
                 $BackUp = $EventLog | Invoke-CimMethod -Name 'BackupEventLog' -Arguments $BackupArguments -ErrorAction 'SilentlyContinue'
 
-                # $BackUp = $EventLog | Invoke-CimMethod -Name 'BackupEventLog' -Arguments $BackupArguments -ErrorAction 'SilentlyContinue'
                 If ($BackUp.ReturnValue -ne 0) {
-                    Throw "Backup failed with $($BackUp.ReturnValue)"
+                    Throw "Backup retuned $($BackUp.ReturnValue)."
                 }
             }
             Else {
@@ -151,8 +166,7 @@ Function Backup-EventLog {
             }
         }
         Catch {
-            Write-Output -InputObject "Failed to query EventLog [$LogName]. `n$_"
-            Break
+            Write-Output -InputObject "Backup EventLog [$LogName] error. $_"
         }
     }
     End {
@@ -218,42 +232,32 @@ Function Test-EventLogCompliance {
         [Int16]$Threshold
     )
 
-    Begin {
+    Try {
 
-        ## Setting Variables
-        $ErrorMessage = $null
-    }
-    Process {
-        Try {
-            $Events = Get-EventLog -LogName $LogName -Source $Source -EntryType $EntryType -After $After -ErrorAction 'Stop' | Where-Object { $_.EventID -eq $EventID }
-        }
-        Catch [System.ArgumentException] {
+        ## Get events and test treshold
+        $Events = Get-EventLog -ComputerName $env:COMPUTERNAME -LogName $LogName -Source $Source -EntryType $EntryType -After $After -ErrorAction 'Stop' | Where-Object { $_.EventID -eq $EventID }
 
-            $ErrorMessage = $_.Exception
-
-            ## Continue if no matches are found
-            If ($ErrorMessage -match 'No matches found') {
-                Write-Output -InputObject 'Compliant'
-                Continue
-            }
-            Else {
-                Throw $ErrorMessage
-            }
+        If ($Events.Count -ge $Threshold) {
+            $Compliance = 'Non-Compliant'
         }
-        Catch {
-            $ErrorMessage = $_.Exception.Message
-            Throw $ErrorMessage
-        }
-        Finally {
-            If ($Events.Count -ge $Threshold) {
-                Write-Output -InputObject 'Non-Compliant'
-            }
-            ElseIf (-not $ErrorMessage) {
-                Write-Output -InputObject 'Compliant'
-            }
+        Else {
+            $Compliance = 'Compliant'
         }
     }
-    End {
+    Catch {
+
+        ## Set result as 'Compliant' if no matches are found
+        If ($($_.Exception.Message) -match 'No matches found') {
+            $Compliance =  'Compliant'
+        }
+        Else {
+            $Compliance = "Eventlog [$EventLog] compliance test error. $($_.Exception.Message)"
+        }
+    }
+    Finally {
+
+        ## Return Compliance result
+        Write-Output -InputObject $Compliance
     }
 }
 #endregion
@@ -283,65 +287,52 @@ Function Repair-WUDataStore {
     Repair
 #>
 
-    Begin {
+    Try {
 
-        ## Setting Variables
-        $ErrorMessage = $null
         #  Setting Paths
         $PathRegsvr = (Join-Path -Path $Env:SystemRoot -ChildPath '\System32\Regsvr32.exe')
         $PathDataStore = (Join-Path -Path $Env:SystemRoot -ChildPath '\SoftwareDistribution\DataStore')
-    }
-    Process {
-        Try {
 
-            ## Re-register wuauend.dll
-            Start-Process -FilePath $PathRegsvr -ArgumentList '/s Wuaueng.dll' -Wait
+        ## Re-register wuauend.dll
+        $null = Start-Process -FilePath $PathRegsvr -ArgumentList '/s Wuaueng.dll' -Wait -ErrorAction 'SilentlyContinue'
 
-            ## Stop the windows update service
-            Stop-Service -Name 'wuauserv' -Force -ErrorAction 'SilentlyContinue'
+        ## Stop the windows update service
+        $null = Stop-Service -Name 'wuauserv' -Force -ErrorAction 'SilentlyContinue'
 
-            ## Wait for the windows update service to stop
-            #  Setting Loop index to 12 (one minute)
-            $Loop = 1
-            While ($StatusWuaService -ne 'Stopped') {
+        ## Wait for the windows update service to stop
+        #  Setting Loop index to 12 (one minute)
+        $Loop = 1
+        While ($StatusWuaService -ne 'Stopped') {
 
-                #  Waiting 5 seconds
-                Start-Sleep -Seconds 5
-                $StatusWuaService =  (Get-Service -Name 'wuauserv').Status
+            #  Waiting 5 seconds
+            $null = Start-Sleep -Seconds 5
+            $StatusWuaService =  (Get-Service -Name 'wuauserv').Status
 
-                #  Incrementing loop index
-                $Loop++
+            #  Incrementing loop index
+            $Loop++
 
-                #  Throw error if service has not stopped within 1 minute
-                If ($Loop -gt 7) {
-                    Throw 'Timeout occured while waiting for Windows Update Service to stop'
-                }
-            }
-
-            ## Remove the Windows update DataStore
-            Remove-Item -Path $PathDataStore -Recurse -Force | Out-Null
-        }
-        Catch {
-            $ErrorMessage = $_.Exception.Message
-            Throw $ErrorMessage
-        }
-        Finally {
-            If (-not $ErrorMessage) {
-                Write-Output -InputObject 'Remediated'
-
+            #  Exit script if service has not stopped within 5 minutes
+            If ($Loop -gt 35) {
+                Throw 'Failed to stop WuaService within 5 minutes'
             }
         }
-    }
-    End {
-        Try {
 
-            ## Start the windows update service
-            Start-Service -Name 'wuauserv' -ErrorAction 'Stop'
-        }
-        Catch {
-            $ErrorMessage = $_.Exception.Message
-            Throw $ErrorMessage
-        }
+        ## Remove the Windows update DataStore
+        $null = Remove-Item -Path $PathDataStore -Recurse -Force -ErrorAction 'Stop' | Out-Null
+
+        ## Set result to 'Remediated'
+        $RepairWuDatastore = 'Remediated'
+    }
+    Catch {
+        $RepairWuDatastore = "WUDataStore repair error [$($_.Exception.Message)]."
+    }
+    Finally {
+
+        ## Start the windows update service
+        $null = Start-Service -Name 'wuauserv' -ErrorAction 'SilentlyContinue'
+
+        ## Return result
+        Write-Output -InputObject $RepairWuDatastore
     }
 }
 #endregion
@@ -358,24 +349,54 @@ Function Repair-WUDataStore {
 
 Switch ($Action) {
     'DetectAndRepair' {
-        $ESENTError623 = Test-EventLogCompliance -LogName 'Application' -Source 'ESENT' -EventID '623' -EntryType 'Error' -After $((Get-Date).AddDays(-3)) -Threshold 3
-        Write-Output -InputObject $ESENTError623
 
+        ## Get machine compliance
+        $ESENTError623 = Test-EventLogCompliance -LogName $LogName -Source $Source -EventID $EventID -EntryType $EntryType -After $After -Threshold $Threshold
+
+        ## Start processing if compliance test returns 'Non-Compliant'
         If ($ESENTError623 -eq 'Non-Compliant') {
-            Repair-WUDataStore
-            Backup-EventLog -LogName 'Application'
-            Clear-EventLog -LogName 'Application'
+
+            #  Backup EventLog
+            $null = Backup-EventLog -LogName $LogName -ErrorAction 'SilentlyContinue'
+
+            Try {
+
+                #  Clear EventLog
+                $null = Clear-EventLog -LogName $LogName -ErrorAction 'Stop'
+
+                #  Repair DataStore if clear eventlog is succesful
+                Repair-WUDataStore
+            }
+            Catch {
+                Write-Output -InputObject "No repair possible. Clear EventLog [$LogName] error. $($_.Exception.Message)"
+            }
+        }
+        Else {
+            Write-Output -InputObject $ESENTError623
         }
     }
     'Detect' {
-        $ESENTError623 = Test-EventLogCompliance -LogName 'Application' -Source 'ESENT' -EventID '623' -EntryType 'Error' -After $((Get-Date).AddDays(-3)) -Threshold 3
+
+        ## Get machine compliance and return it
+        $ESENTError623 = Test-EventLogCompliance -LogName $LogName -Source $Source -EventID $EventID -EntryType $EntryType -After $After -Threshold $Threshold
         Write-Output -InputObject $ESENTError623
     }
     'Repair' {
-        Write-Output -InputObject 'Reparing without checking compliance'
-        Repair-WUDataStore
-        Backup-EventLog -LogName 'Application'
-        Clear-EventLog -LogName 'Application'
+
+        ## Backup EventLog
+        $null = Backup-EventLog -LogName $LogName -ErrorAction 'SilentlyContinue'
+
+        Try {
+
+            ## Clear EventLog
+            $null = Clear-EventLog -LogName $LogName -ErrorAction 'Stop'
+
+            ##  Repair DataStore if clear eventlog is succesful
+            Repair-WUDataStore
+        }
+        Catch {
+            Write-Output -InputObject "No repair possible. Clear EventLog [$LogName] error. $($_.Exception.Message)"
+        }
     }
 }
 
