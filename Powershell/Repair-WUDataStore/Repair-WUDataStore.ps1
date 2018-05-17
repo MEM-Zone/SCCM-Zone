@@ -23,10 +23,10 @@
     Defaults are configured for the ESENT '623' error.
 .PARAMETER Action
     Specifies the action to be performed. Available actions are: ('DetectAndRepair', 'Detect', 'Repair','RepairStandalone').
-    'DetectAndRepair' - Performs detection and then performs repairs if necessary.
-    'Detect'          - Perfroms detection and returns the result.
-    'Repair'          - Performs repairs and flushes the specified EventLog.
-    'RepairStandalone - Performs repairs only.
+    'DetectAndRepair'  - Performs detection and then performs repairs if necessary.
+    'Detect'           - Perfroms detection and returns the result.
+    'Repair'           - Performs repairs and flushes the specified EventLog.
+    'RepairStandalone' - Performs repairs only.
 .PARAMETER LogName
     Specifies the LogName to search. Default is: 'Application'
 .PARAMETER Source
