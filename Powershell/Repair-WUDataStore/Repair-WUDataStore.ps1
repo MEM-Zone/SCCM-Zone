@@ -7,6 +7,7 @@
 * Ioan Popovici     | 2018-03-28 | v1.0     | First version                                             *
 * Ioan Popovici     | 2018-05-16 | v1.1     | Fixed logical bugs that forced a NULL return              *
 * Ioan Popovici     | 2018-05-17 | v1.2     | Generalized so it can be used for multiple error cases    *
+* Ioan Popovici     | 2018-05-17 | v1.3     | Added standalone repair option to use without detection   *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -21,7 +22,11 @@
     The backup of the specified eventlog is stored in 'SystemRoot\Temp' folder.
     Defaults are configured for the ESENT '623' error.
 .PARAMETER Action
-    Specifies the action to be performed. Available actions are: ('DetectAndRepair', 'Detect', 'Repair').
+    Specifies the action to be performed. Available actions are: ('DetectAndRepair', 'Detect', 'Repair','RepairStandalone').
+    'DetectAndRepair' - Performs detection and then performs repairs if necessary.
+    'Detect'          - Perfroms detection and returns the result.
+    'Repair'          - Performs repairs and flushes the specified EventLog.
+    'RepairStandalone - Performs repairs only.
 .PARAMETER LogName
     Specifies the LogName to search. Default is: 'Application'
 .PARAMETER Source
@@ -61,7 +66,7 @@
 Param (
     [Parameter(Mandatory=$true,Position=0)]
     [ValidateNotNullorEmpty()]
-    [ValidateSet('DetectAndRepair','Detect','Repair')]
+    [ValidateSet('DetectAndRepair','Detect','Repair','RepairStandalone')]
     [string]$Action,
     [Parameter(Mandatory=$false,Position=1)]
     [ValidateNotNullorEmpty()]
@@ -340,7 +345,7 @@ Function Repair-WUDataStore {
 
             #  Exit script if service has not stopped within 5 minutes
             If ($Loop -gt 35) {
-                Throw 'Failed to stop WuaService within 5 minutes'
+                Throw 'Failed to stop WuaService within 5 minutes.'
             }
         }
 
@@ -351,7 +356,7 @@ Function Repair-WUDataStore {
         [string]$RepairWuDatastore = 'Remediated'
     }
     Catch {
-        [string]$RepairWuDatastore = "WUDataStore repair error [$($_.Exception.Message)]."
+        [string]$RepairWuDatastore = "WUDataStore repair error. $($_.Exception.Message)"
     }
     Finally {
 
@@ -424,6 +429,11 @@ Switch ($Action) {
         Catch {
             Write-Output -InputObject "No repair possible. Clear EventLog [$LogName] error. $($_.Exception.Message)"
         }
+    }
+    'RepairStandalone' {
+
+        ##  Repair DataStore
+        Repair-WUDataStore -ErrorAction 'SilentlyContinue'
     }
 }
 
