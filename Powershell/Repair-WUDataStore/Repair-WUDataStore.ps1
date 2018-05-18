@@ -24,7 +24,7 @@
 .PARAMETER Action
     Specifies the action to be performed. Available actions are: ('DetectAndRepair', 'Detect', 'Repair','RepairStandalone').
     'DetectAndRepair'  - Performs detection and then performs repairs if necessary.
-    'Detect'           - Perfroms detection and returns the result.
+    'Detect'           - Performs detection and returns the result.
     'Repair'           - Performs repairs and flushes the specified EventLog.
     'RepairStandalone' - Performs repairs only.
 .PARAMETER LogName
@@ -350,7 +350,10 @@ Function Repair-WUDataStore {
         }
 
         ## Remove the Windows update DataStore
-        $null = Remove-Item -Path $PathDataStore -Recurse -Force -ErrorAction 'Stop' | Out-Null
+        Remove-Item -Path $PathDataStore -Recurse -Force -ErrorAction 'Stop' | Out-Null
+
+        ## Start the windows update service
+        Start-Service -Name 'wuauserv' -ErrorAction 'SilentlyContinue'
 
         ## Set result to 'Remediated'
         [string]$RepairWuDatastore = 'Remediated'
@@ -359,9 +362,6 @@ Function Repair-WUDataStore {
         [string]$RepairWuDatastore = "WUDataStore repair error. $($_.Exception.Message)"
     }
     Finally {
-
-        ## Start the windows update service
-        $null = Start-Service -Name 'wuauserv' -ErrorAction 'SilentlyContinue'
 
         ## Return result
         Write-Output -InputObject $RepairWuDatastore
