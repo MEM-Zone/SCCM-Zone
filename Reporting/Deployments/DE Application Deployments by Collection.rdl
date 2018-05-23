@@ -263,6 +263,9 @@ DROP TABLE #CollectionMembers;
           <QueryParameter Name="@CollectionType">
             <Value>=Parameters!CollectionType.Value</Value>
           </QueryParameter>
+          <QueryParameter Name="@CollectionID">
+            <Value>=Parameters!CollectionID.Value</Value>
+          </QueryParameter>
         </QueryParameters>
         <CommandText>IF @CollectionType = 1
     SELECT
@@ -270,6 +273,7 @@ DROP TABLE #CollectionMembers;
         Name
     FROM dbo.fn_rbac_Collection(@UserSIDs)
     WHERE CollectionType = 1
+        AND CollectionID = @CollectionID
     ORDER BY
         Name;
 IF @CollectionType = 2
@@ -278,6 +282,7 @@ IF @CollectionType = 2
         Name
     FROM dbo.fn_rbac_Collection(@UserSIDs)
     WHERE CollectionType = 2
+        AND CollectionID = @CollectionID
     ORDER BY
         Name;</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
@@ -3271,7 +3276,7 @@ IF @CollectionType = 2
               </ReportItems>
               <KeepTogether>true</KeepTogether>
               <Top>0in</Top>
-              <Left>0.06062cm</Left>
+              <Left>0.06063cm</Left>
               <Height>0.54847in</Height>
               <Width>18.93722in</Width>
               <Style>
