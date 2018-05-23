@@ -1582,7 +1582,7 @@ IF @CollectionType = 2
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=SrsResources.Localization.GetStateMessage(1702, Fields!LastStateName.Value, User!Language)</Value>
+                                                    <Value>=Fields!LastStateName.Value</Value>
                                                     <Style>
                                                       <FontFamily>Tahoma</FontFamily>
                                                       <FontWeight>Bold</FontWeight>
@@ -3187,7 +3187,7 @@ IF @CollectionType = 2
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=SrsResources.Localization.GetStateMessage(1702, Fields!LastStateName.Value, User!Language)</Value>
+                                                    <Value>=Fields!LastStateName.Value</Value>
                                                     <Style>
                                                       <FontFamily>Tahoma</FontFamily>
                                                       <FontWeight>Bold</FontWeight>
@@ -3213,6 +3213,7 @@ IF @CollectionType = 2
                                               <PaddingBottom>2pt</PaddingBottom>
                                             </Style>
                                           </Textbox>
+                                          <rd:Selected>true</rd:Selected>
                                         </CellContents>
                                       </TablixHeader>
                                       <TablixMembers>
