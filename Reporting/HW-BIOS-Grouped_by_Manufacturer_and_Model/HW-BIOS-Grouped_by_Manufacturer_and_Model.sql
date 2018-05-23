@@ -1,4 +1,3 @@
-
 /*
 *********************************************************************************************************
 * Requires        | SQL, company AD attribute, Wi32_Computer_System_Product WMI class gathering         *
