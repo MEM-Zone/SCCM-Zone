@@ -1,13 +1,14 @@
 <#
 *********************************************************************************************************
-* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
+* Requires          | Requires PowerShell 3.0                                                           *
 * ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
+* Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2017-07-10 | v1.0     | First version                                                 *
-* Ioan Popovici | 2017-07-10 | v2.0     | Vastly improved                                               *
-* Ioan Popovici | 2017-07-14 | v2.1     | Bug fixes and improvements                                    *
-* Andrew Reiter | 2017-09-07 | v2.2     | Fix Copy-Item Bug                                             *
+* Ioan Popovici     | 2017-07-10 | v1.0     | First version                                             *
+* Ioan Popovici     | 2017-07-10 | v2.0     | Vastly improved                                           *
+* Ioan Popovici     | 2017-07-14 | v2.1     | Bug fixes and improvements                                *
+* Andrew Reiter     | 2017-09-07 | v2.2     | Fix Copy-Item Bug                                         *
+* Ioan Popovici     | 2018-05-24 | v2.3     | Fix Windows 10 1803 bigger image after cleanup            *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -119,6 +120,12 @@ Function Start-Cleanup {
                 Write-Host 'Path Not Found! Skipping...' -ForegroundColor 'Red' -BackgroundColor 'Black'
             }
         }
+        'volShadowCleanup' {
+
+            #  Start Volume Cache Cleanup
+            Write-Host 'Performing Volume Shadow Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+            Start-Process -FilePath 'vssadmin.exe' -ArgumentList 'Delete Shadows /All' -Wait
+        }
         'updCacheCleanup' {
 
             #  Start Update Cache Cleanup
@@ -155,7 +162,7 @@ If ($MachineOS) {
             Start-Cleanup ('comCacheRepair','comCacheCleanup','volCacheCleanup','updCacheCleanup')
         }
         'Windows 10' {
-            Start-Cleanup ('comCacheRepair','volCacheCleanup','updCacheCleanup','comCacheCleanup')
+            Start-Cleanup ('comCacheRepair','volCacheCleanup','updCacheCleanup','comCacheCleanup','volShadowCleanup')
         }
         'Windows Server 2008 R2' {
             Start-Cleanup ('volCacheCleanup','updCacheCleanup')
