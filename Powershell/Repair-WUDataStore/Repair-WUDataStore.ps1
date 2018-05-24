@@ -8,6 +8,7 @@
 * Ioan Popovici     | 2018-05-16 | v1.1     | Fixed logical bugs that forced a NULL return              *
 * Ioan Popovici     | 2018-05-17 | v1.2     | Generalized so it can be used for multiple error cases    *
 * Ioan Popovici     | 2018-05-17 | v1.3     | Added standalone repair option to use without detection   *
+* Ioan Popovici     | 2018-05-24 | v1.4     | Added kill windows update service by PID                  *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -336,17 +337,43 @@ Function Repair-WUDataStore {
         [int]$Loop = 1
         While ($StatusWuaService -ne 'Stopped') {
 
-            #  Waiting 5 seconds
-            $null = Start-Sleep -Seconds 5
+            #  Waiting 10 seconds
+            $null = Start-Sleep -Seconds 10
+
+            #  Get windows update service status
             [string]$StatusWuaService =  (Get-Service -Name 'wuauserv').Status
+
+            #  Try to kill process if service has not stopped within 4 minutes
+            If ($Loop -eq 24) {
+
+                #  Use powershell legacy
+                If ($PowerShellVersion -eq 2) {
+                    #  Get update service PID
+                    [string]$PID = Get-WmiObject -Class 'Win32_Service' -Filter "Name = 'wuauserv'" | Select-Object -ExpandProperty 'ProcessId' -ErrorAction 'SilentlyContinue'
+                    #  Kill process if PID is found
+                    If ($PID -and $PID -ne '0') {
+                        Start-Process -FilePath 'taskkill.exe' -ArgumentList "/f /pid $PID" -Wait -ErrorAction 'SilentlyContinue'
+                    }
+                }
+
+                #  Use current powershell
+                ElseIf ($PowerShellVersion -ge 3) {
+                    #  Get update service PID
+                    [string]$PID = Get-CimInstance -ClassName 'Win32_Service' -Filter "Name = 'wuauserv'" | Select-Object -ExpandProperty 'ProcessId' -ErrorAction 'SilentlyContinue'
+                    #  Kill process if PID is found
+                    If ($PID -and $PID -ne '0') {
+                        Stop-Process -ID $PID -Force -ErrorAction 'SilentlyContinue'
+                    }
+                }
+            }
+
+            #  Throw error if service has not stopped within 5 minutes
+            If ($Loop -ge 30) {
+                Throw 'Failed to stop WuaService within 5 minutes.'
+            }
 
             #  Incrementing loop index
             $Loop++
-
-            #  Exit script if service has not stopped within 5 minutes
-            If ($Loop -gt 35) {
-                Throw 'Failed to stop WuaService within 5 minutes.'
-            }
         }
 
         ## Remove the Windows update DataStore
