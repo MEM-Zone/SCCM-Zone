@@ -228,9 +228,9 @@ drop table #uct</CommandText>
         <CommandText>select CI_ID,title
 FROM 
 v_AuthListInfo
-where 
-title like '%required%'
-and title not like '%office%'
+--where 
+--title like '%required%'
+--and title not like '%office%'
 --and title not like '%pilot%'</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
