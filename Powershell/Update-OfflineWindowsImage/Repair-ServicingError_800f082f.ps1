@@ -85,7 +85,7 @@ Param (
     [Alias('Pr')]
     [Array]$Privilege
 )
-    $Definition = @'
+    $Definition = @' 
         using System;
         using System.Runtime.InteropServices;
         public class AdjPriv {
@@ -120,7 +120,7 @@ Param (
                 return retVal;
             }
         }
-    '@
+'@
 
     ## Get process pandle
     $ProcessHandle = (Get-Process -id $pid).Handle
