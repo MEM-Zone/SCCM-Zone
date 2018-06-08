@@ -13,12 +13,12 @@ JOIN fn_rbac_AuthListInfo(@lcid, @UserSIDs) ugi ON ugi.CI_ID = atg.AssignedUpdat
 JOIN v_CIAssignment cia ON atg.AssignmentID = cia.AssignmentID
 
 -- Software update Goup Config Item ID for testing
-WHERE CI_ID IN (17143786,
-                17152698,
-                17159821)
+--WHERE CI_ID IN (17143786,
+--                17152698,
+--                17159821)
 
 -- Report Usage
-   -- CI_ID in (@SUGS)
+   CI_ID in (@SUGS)
 
 -- Getting Updates States for updates in selected Update Groups
     SELECT uc.ResourceID,
