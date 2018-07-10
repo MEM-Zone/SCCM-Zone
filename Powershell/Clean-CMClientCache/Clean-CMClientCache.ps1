@@ -17,6 +17,7 @@
 * Walker            | 2017-08-08 | v2.6     | Fixed first time run logging bug                             *
 * Ioan Popovici     | 2018-07-05 | v3.0     | Completely re-written, and optimized se notes                *
 * Ioan Popovici     | 2018-07-09 | v3.0     | Added ReferencedThreshold, squashed lots of bugs             *
+* Ioan Popovici     | 2018-07-10 | v3.1     | Fixed should run bug                                         *
 * ======================================================================================================== *
 *                                                                                                          *
 ************************************************************************************************************
@@ -24,24 +25,24 @@
 .SYNOPSIS
     Cleans the configuration manager client cache.
 .DESCRIPTION
-    Cleans the configuration manager client cache of all unneeded with the option to delete persistent content.
+    Cleans the configuration manager client cache of all unneeded with the option to delete persisted content.
 .PARAMETER CleanupActions
-    Specifies cleanup action to perform. ('All', 'Applications','Packages','Updates','Orphaned'). Default is: 'All'.
+    Specifies cleanup action to perform. ('All', 'Applications', 'Packages', 'Updates', 'Orphaned'). Default is: 'All'.
     If it's set to 'All' all cleaning actions will be performed.
 .PARAMETER LowDiskSpaceThreshold
-    Specifies the low disk space threshold percentage after which the cache is cleaned. Default is: '10'.
+    Specifies the low disk space threshold percentage after which the cache is cleaned. Default is: '100'.
     If it's set to '100' Free Space Threshold Percentage is ignored.
 .PARAMETER ReferencedThreshold
     Specifies to remove cache element only if it has not been referenced in specified number of days. Default is: 0.
     If it's set to '0' Last Referenced Time is ignored.
 .PARAMETER LoggingOptions
-    Specifies logging options: ('Host', 'File', 'EventLog','None'). Default is: ('Host', 'File', 'EventLog').
+    Specifies logging options: ('Host', 'File', 'EventLog', 'None'). Default is: ('Host', 'File', 'EventLog').
 .PARAMETER SkipSuperPeer
-    This switch specifies to run even if the client is a super peer (Peer Cache). Default us: $false
+    This switch specifies to skip cleaning if the client is a super peer (Peer Cache). Default is: $false.
 .PARAMETER RemovePersisted
-    This switch specifies to remove persistent content.
+    This switch specifies to remove content even if it's persisted. Default is: $false
 .EXAMPLE
-    PowerShell.exe .\Clean-CMClientCache -CleanupActions "Applications, Packages, Updates, Orphaned" -RemovePersisted -LoggingOptions 'Host' -LowDiskSpaceThreshold '100' -ReferencedThreshold 30 -SkipSuperPeer -Verbose -Debug
+    PowerShell.exe .\Clean-CMClientCache -CleanupActions "Applications, Packages, Updates, Orphaned" -LoggingOptions 'Host' -LowDiskSpaceThreshold '100' -ReferencedThreshold '30' -SkipSuperPeer -RemovePersisted  -Verbose -Debug
 .INPUTS
     None
 .OUTPUTS
@@ -79,21 +80,21 @@
 ## Get script parameters
 Param (
     [Parameter(Mandatory=$false,Position=0)]
-    [ValidateSet('All','Applications','Packages','Updates','Orphaned')]
+    [ValidateSet('All', 'Applications', 'Packages', 'Updates', 'Orphaned')]
     [Alias('Action')]
     [string[]]$CleanupActions = 'All',
     [Parameter(Mandatory=$false,Position=1)]
     [ValidateNotNullorEmpty()]
     [Alias('FreeSpace')]
-    [int16]$LowDiskSpaceThreshold = 10,
+    [int16]$LowDiskSpaceThreshold = '100',
     [Parameter(Mandatory=$false,Position=2)]
     [ValidateNotNullorEmpty()]
     [Alias('OlderThan')]
-    [int16]$ReferencedThreshold = 30,
+    [int16]$ReferencedThreshold = '0',
     [Parameter(Mandatory=$false,Position=3)]
-    [ValidateSet('Host', 'File', 'EventLog','None')]
+    [ValidateSet('Host', 'File', 'EventLog', 'None')]
     [Alias('Logging')]
-    [string[]]$LoggingOptions = @('Host', 'File','EventLog'),
+    [string[]]$LoggingOptions = @('Host', 'File', 'EventLog'),
     [Parameter(Mandatory=$false,Position=4)]
     [switch]$SkipSuperPeer = $false,
     [Parameter(Mandatory=$false,Position=5)]
@@ -106,8 +107,8 @@ Param (
 ## Set script variables
 $script:LoggingOptions = $LoggingOptions
 $script:ReferencedThreshold = $ReferencedThreshold
-#  Initialize ShouldRun with false. It will be checked in the script body
-[boolean]$ShouldRun = $false
+#  Initialize ShouldRun with true. It will be checked in the script body
+[boolean]$ShouldRun = $true
 
 #endregion
 ##*=============================================
@@ -318,7 +319,7 @@ Function Write-Log {
 .PARAMETER LogType
     Choose whether to write a CMTrace.exe compatible log file or a Legacy text log file.
 .PARAMETER LoggingOptions
-    Choose where to log 'Console', 'File', 'Eventlog' or 'None'. You can choose multiple options.
+    Choose where to log 'Console', 'File', 'EventLog' or 'None'. You can choose multiple options.
 .PARAMETER LogFileDirectory
     Set the directory where the log file will be saved.
 .PARAMETER LogFileName
@@ -369,7 +370,7 @@ Function Write-Log {
         [ValidateSet('CMTrace','Legacy')]
         [string]$LogType = 'CMTrace',
         [Parameter(Mandatory=$false,Position=5)]
-        [ValidateSet('Host', 'File', 'EventLog','None')]
+        [ValidateSet('Host', 'File', 'EventLog', 'None')]
         [string[]]$LoggingOptions = $script:LoggingOptions,
         [Parameter(Mandatory=$false,Position=6)]
         [ValidateNotNullorEmpty()]
@@ -1542,7 +1543,7 @@ Try {
     }
     Else {
         Write-Log -Message 'Should Run test failed.' -Severity '3' -Source $ScriptSource
-        Write-Log -Message "FreeSpace [$DriveFreeSpacePercentage] | Threshold [$LowDiskSpaceThreshold] | IsSuperPeer [$CanBeSuperPeer]" -DebugMessage -Source $ScriptSource
+        Write-Log -Message "FreeSpace/Threshold [$DriveFreeSpacePercentage`/$LowDiskSpaceThreshold] | IsSuperPeer/SkipSuperPeer [$CanBeSuperPeer`/$SkipSuperPeer]" -DebugMessage -Source $ScriptSource
         Write-Log -Message 'Stop' -VerboseMessage -Source $ScriptSource
 
         ## Stop execution
