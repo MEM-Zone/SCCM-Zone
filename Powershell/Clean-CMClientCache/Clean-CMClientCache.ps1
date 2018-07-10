@@ -1090,7 +1090,7 @@ Function Remove-CCMCacheElement {
             }
         }
         Catch {
-            Write-Log -Message "Could not delete cache element [$($CacheItem.CacheElementID)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Could not delete cache element [$($CacheItem.CacheElementID)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Could not delete cache element [$($CacheItem.CacheElementID)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1148,7 +1148,7 @@ Function Remove-CCMCachedApplications {
             [psobject]$RemovedApplications = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -1181,7 +1181,7 @@ Function Remove-CCMCachedApplications {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached application [$($Application.Name)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached application [$($Application.Name)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Could not remove cached application [$($Application.Name)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1239,7 +1239,7 @@ Function Remove-CCMCachedPackages {
             [psobject]$RemovePackages = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -1280,7 +1280,7 @@ Function Remove-CCMCachedPackages {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Could not remove cached package [$($Package.Name)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1372,7 +1372,7 @@ Function Remove-CCMCachedUpdates {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Could not remove cached update [$($Update.Title)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1430,7 +1430,7 @@ Function Remove-CCMOrphanedCache {
             [psobject]$RemoveOrphaned = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -1469,7 +1469,7 @@ Function Remove-CCMOrphanedCache {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached item [$($CacheElementPath)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached item [$($CacheElementPath)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Could not remove cached item [$($CacheElementPath)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1551,7 +1551,7 @@ Try {
     Write-Log -Message 'Stop' -Source $ScriptSource -VerboseMessage
 }
 Catch {
-    Write-Log -Message "Script initialization failed. `n$(Resolve-Error)" -Severity '3' -WriteHost $false -Source $ScriptSource
+    Write-Log -Message "Script initialization failed. `n$(Resolve-Error)" -Severity '3' -Source $ScriptSource
     Throw "Script initialization failed. $($_.Exception.Message)"
 }
 Try {
@@ -1602,10 +1602,10 @@ Finally {
     If (-not $TotalDeletedSize) { $TotalDeletedSize = 0 }
 
     ## Assemble output result
-    $OuputResult = $($CleanupResult | Format-List -Property FullName, Name, Location, LastReferenceTime, 'Size(MB)', Status | Out-String) + "TotalDeletedSize:" + $TotalDeletedSize
+    $OutputResult = $($CleanupResult | Format-List -Property FullName, Name, Location, LastReferenceTime, 'Size(MB)', Status | Out-String) + "TotalDeletedSize:" + $TotalDeletedSize
 
-    ## Write output to log, eventlog and console and status
-    Write-Log -Message $OuputResult -Source $ScriptSource
+    ## Write output to log, event log and console and status
+    Write-Log -Message $OutputResult -Source $ScriptSource
 
     ## Write verbose stop
     Write-Log -Message 'Stop' -VerboseMessage -Source $ScriptSource
