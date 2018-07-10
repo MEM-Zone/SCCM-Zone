@@ -859,7 +859,7 @@ Function Get-CCMCachedPackages {
             }
         }
         Catch {
-            Write-Log -Message "Could not get cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Could not get cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Could not get cached package [$($Package.Name)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -960,7 +960,7 @@ Function Get-CCMCachedUpdates {
             }
         }
         Catch {
-            Write-Log -Message "Could not get cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Could not get cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
             Throw "Could not get cached update [$($Update.Title)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1048,7 +1048,7 @@ Function Remove-CCMCacheElement {
                     #  Delete only if the $ReferencedThreshold is respected
                     If ([datetime]($CacheItem.LastReferenceTime) -le $OlderThan) {
                         #  Call the remove cache item method
-                       # $null = $CCMComObject.GetCacheInfo().DeleteCacheElementEx([string]$($CacheItem.CacheElementID), [bool]$RemovePersisted)
+                        $null = $CCMComObject.GetCacheInfo().DeleteCacheElementEx([string]$($CacheItem.CacheElementID), [bool]$RemovePersisted)
                     }
                     Else {
                         $AboveReferencedThreshold = $true
