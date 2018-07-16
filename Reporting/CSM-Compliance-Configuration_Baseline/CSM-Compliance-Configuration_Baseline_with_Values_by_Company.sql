@@ -6,6 +6,7 @@
 * _____________________________________________________________________________________________________ *
 * Ioan Popovici | 2017-09-22 | v1.0     | First version                                                 *
 * Ioan Popovici | 2018-01-17 | v1.1     | Fixed: Actual Value is NULL compliance is not displayed       *
+* Ioan Popovici | 2018-06-21 | v2.0     | Completly re-written to optimize speed                        *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -26,41 +27,77 @@
 /*##=============================================*/
 /* #region QueryBody */
 
-SELECT DISTINCT
-    Computer.Name0 AS 'Computer Name',
-    StateName.StateName AS 'Compliance State',
-    ComplianceStatus.LastComplianceMessageTime as 'Last Compliance Evaluation',
-    Users.User_Name0 AS 'User Name',
-	OperatingSystem.Caption0 AS 'Operating System',
-	OperatingSystem.InstallDate0 AS 'Install Date',
-    ComputerStatus.LastHWScan AS 'Last HW Scan',
-	Computer.Model0 AS 'Model',
-    ConfigurationItem.CIVersion AS 'Baseline Content Version',
-    CurrentComplianceDetails.CurrentValue
+/* Remove previous temporary table if exists */
+IF OBJECT_ID (N'TempDB.DBO.#CIComplianceStatusDetails') IS NOT NULL
+    BEGIN
+        DROP TABLE #CIComplianceStatusDetails;
+    END;
 
-    /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
-    -- ,Users.Company0 AS 'Company'
+/* Get Configuration Item Current Value */
+WITH CTE
+    AS (
+        SELECT
+            CIComplianceStatusDetails.ResourceID,
+            CIComplianceStatusDetails.CurrentValue,
+            CIComplianceStatusDetails.LastComplianceMessageTime,
+            RN = ROW_NUMBER()
+            OVER (
+                PARTITION BY CIComplianceStatusDetails.Netbios_Name0 ORDER BY CIComplianceStatusDetails.LastComplianceMessageTime DESC
+            )
+        FROM dbo.fn_rbac_CICurrentSettingsComplianceStatusDetail(@UserSIDs) AS CIComplianceStatusDetails
+        WHERE CIComplianceStatusDetails.CI_ID
+            IN (
+                SELECT ReferencedCI_ID
+                FROM dbo.fn_rbac_CIRelation_All(@UserSIDs)
+                WHERE CI_ID = @BaselineID
+                    AND RelationType NOT IN ('7', '0') --Exlude itself and no relation
+            )
+    )
+SELECT
+    ResourceID,
+    CurrentValue,
+    LastComplianceMessageTime
+INTO #CIComplianceStatusDetails
+FROM CTE
+WHERE RN = 1
+ORDER BY ResourceID;
 
-    /* CUSTOM FUNCTION LEAVE DISABLED */
-    --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Users].[ResourceID]) ) AS [Company]
-FROM
-    v_BaselineTargetedComputers Baseline
-	INNER JOIN fn_rbac_R_System(@UserSIDs) AS Users ON Users.ResourceID = Baseline.ResourceID
-    LEFT OUTER JOIN v_ClientCollectionMembers AS Collections ON Collections.ResourceID = Users.ResourceID
-    INNER JOIN v_GS_COMPUTER_SYSTEM Computer ON Computer.ResourceID = Baseline.ResourceID
-	INNER JOIN v_GS_OPERATING_SYSTEM AS OperatingSystem ON OperatingSystem.ResourceID = Users.ResourceID
-    INNER JOIN v_ConfigurationItems AS ConfigurationItem ON ConfigurationItem.CI_ID = Baseline.CI_ID
-    INNER JOIN v_CICurrentComplianceStatus AS ComplianceStatus ON ComplianceStatus.CI_ID = ConfigurationItem.CI_ID AND ComplianceStatus.ResourceID = Baseline.ResourceID
-	INNER JOIN v_CIComplianceStatusComplianceDetail AS ComplianceDetails ON ComplianceDetails.CI_ID = ConfigurationItem.CI_ID
-	LEFT  JOIN v_CICurrentSettingsComplianceStatusDetail AS CurrentComplianceDetails ON CurrentComplianceDetails.CI_ID = ComplianceDetails.Setting_CI_ID
-    INNER JOIN v_LocalizedCIProperties_SiteLoc AS BaselineProperties ON BaselineProperties.CI_ID = ConfigurationItem.CI_ID
-    INNER JOIN v_StateNames AS StateName ON ComplianceStatus.ComplianceState = StateName.StateID
-    LEFT OUTER JOIN v_GS_WORKSTATION_STATUS AS ComputerStatus ON ComputerStatus.ResourceID = Users.ResourceID
-WHERE
-    BaselineProperties.DisplayName = @BaselineName
-        AND StateName.TopicType = 401
-        AND Collections.CollectionID= @CollectionID
-ORDER BY StateName.StateName
+SELECT
+
+/* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
+--Users.Company0 AS 'Company',
+
+/* CUSTOM FUNCTION LEAVE DISABLED */
+    ( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Users].[ResourceID]) ) AS [Company],
+
+    CIComplianceState.DisplayName,
+    CIComplianceState.ComplianceStateName AS ComplianceState,
+    Computer.Name0 AS DeviceName,
+    Users.User_Name0 AS UserName,
+    OperatingSystem.Caption0 AS OperatingSystem,
+    Computer.Model0 AS [Model],
+    CIComplianceState.CIVersion,
+    CIComplianceStatusDetails.CurrentValue,
+    CIComplianceStatusDetails.LastComplianceMessageTime AS LastEvaluation,
+    ComputerStatus.LastHWScan AS LastHWScan
+FROM v_BaselineTargetedComputers Baseline
+    JOIN dbo.fn_rbac_R_System(@UserSIDs) AS Users ON Users.ResourceID = Baseline.ResourceID
+    JOIN v_ClientCollectionMembers AS Collections ON Collections.ResourceID = Users.ResourceID
+    JOIN v_GS_COMPUTER_SYSTEM Computer ON Computer.ResourceID = Users.ResourceID
+    JOIN v_GS_OPERATING_SYSTEM AS OperatingSystem ON OperatingSystem.ResourceID = Users.ResourceID
+    JOIN dbo.fn_rbac_CIRelation_All(@UserSIDs) AS BaselineCIs ON BaselineCIs.CI_ID = @BaselineID
+        AND BaselineCIs.RelationType NOT IN ('7', '0') --Exlude itself and no relation
+    JOIN dbo.fn_rbac_ConfigurationItems(@UserSIDs) CIInfo ON CIInfo.CI_ID = BaselineCIs.ReferencedCI_ID
+    JOIN dbo.fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = BaselineCIs.ReferencedCI_ID
+        AND CIComplianceState.ResourceID = Users.ResourceID
+    JOIN v_GS_WORKSTATION_STATUS AS ComputerStatus ON ComputerStatus.ResourceID = Users.ResourceID
+    LEFT OUTER JOIN #CIComplianceStatusDetails AS CIComplianceStatusDetails ON CIComplianceStatusDetails.ResourceID = Baseline.ResourceID
+WHERE Collections.CollectionID = @CollectionID
+    AND Baseline.CI_ID = @BaselineID
+ORDER BY
+	Company,
+	DisplayName,
+	ComplianceStateName
 
 /* #endregion */
 /*##=============================================*/
