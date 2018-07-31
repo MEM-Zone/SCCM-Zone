@@ -1,6 +1,6 @@
 <#
 *********************************************************************************************************
-* Requires          | Requires PowerShell 3.0                                                           *
+* Requires          | PowerShell 3.0                                                                    *
 * ===================================================================================================== *
 * Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
@@ -9,7 +9,8 @@
 * Ioan Popovici     | 2017-07-14 | v2.1     | Bug fixes and improvements                                *
 * Andrew Reiter     | 2017-09-07 | v2.2     | Fix Copy-Item Bug                                         *
 * Ioan Popovici     | 2018-05-24 | v2.3     | Fix Windows 10 1803 bigger image after cleanup            *
-* Matthew Hilton    | 2018-07-27 | v2.4     | Added Progress bars, fixed Erroraction to stop MDT Errors *
+* Matthew Hilton    | 2018-07-27 | v2.4     | Added Progress bars, fixed ErrorAction to stop MDT Errors *
+* Ioan Popovici     | 2018-08-31 | v2.5     | Minor formatting, switched to CIM cmdlets                 *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -38,8 +39,8 @@
 
 ## Variables: Get Machine Operating System
 [String]$RegExPattern = '(Windows\ (?:7|8\.1|8|10|Server\ (?:2008\ R2|2012\ R2|2012|2016)))'
-[String]$MachineOS = (Get-WmiObject -Class Win32_OperatingSystem -ComputerName $Env:ComputerName | Select-Object Caption | `
-        Select-String -AllMatches -Pattern $RegExPattern | Select-Object -ExpandProperty Matches).Value
+[String]$MachineOS = (Get-CimInstance -ClassName Win32_OperatingSystem | Select-Object -ExpandProperty Caption | `
+    Select-String -AllMatches -Pattern $RegExPattern | Select-Object -ExpandProperty Matches).Value
 ## Variables: Get Volume Caches registry paths
 [String]$regVolumeCachesRootPath = 'HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches'
 [Array]$regVolumeCachesPaths = Get-ChildItem -Path $regVolumeCachesRootPath | Select-Object -ExpandProperty Name
@@ -61,7 +62,7 @@
 
 #region Function Start-Cleanup
 Function Start-Cleanup {
-    <#
+<#
 .SYNOPSIS
     Cleans volume caches, update backups and update caches.
 .DESCRIPTION
@@ -76,6 +77,7 @@ Function Start-Cleanup {
     https://sccm-zone.com
     https://github.com/JhonnyTerminus/SCCM
 #>
+    [CmdletBinding()]
     Param (
         [Parameter(Mandatory = $true, Position = 0)]
         [Alias('cOptions')]
@@ -87,25 +89,34 @@ Function Start-Cleanup {
     ## Perform Cleanup Actions
     Switch ($CleanupOptions) {
         'comCacheRepair' {
+
+            #  Write progress
             $i++
             $Taskname = 'Component Cache Repair'
             Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
+
             #  Start Component Cache Repair
             Write-Host 'Performing Component Cache Repair...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
             Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /RestoreHealth' -Wait
         }
         'comCacheCleanup' {
+
+            #  Write progress
             $i++
             $Taskname = 'Component Cache Cleanup'
             Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
+
             #  Start Component Cache Cleanup
             Write-Host 'Performing Component Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
             Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /StartComponentCleanup /ResetBase' -Wait
         }
         'volCacheCleanup' {
+
+            #  Write progress
             $i++
             $Taskname = 'Volume Cache Cleanup'
             Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
+
             #  If Volume Cache Paths exist add registry entries required by CleanMgr
             If ($regVolumeCachesPaths) {
                 Write-Host "Adding $regName to the following Registry Paths:" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
@@ -129,22 +140,28 @@ Function Start-Cleanup {
             }
         }
         'volShadowCleanup' {
+
+            #  Write progress
             $i++
             $Taskname = 'Volume Shadow Cleanup'
             Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
+
             #  Start Volume Cache Cleanup
             Write-Host 'Performing Volume Shadow Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
             Start-Process -FilePath 'vssadmin.exe' -ArgumentList 'Delete Shadows /All /force' -Wait
         }
         'updCacheCleanup' {
+
+            #  Write progress
             $i++
             $Taskname = 'Update Cache Cleanup'
             Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
+
             #  Start Update Cache Cleanup
             Write-Host 'Performing Update Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
-            Stop-Service -Name 'wuauserv' -ErrorAction:SilentlyContinue | Out-Null
+            Stop-Service -Name 'wuauserv' -ErrorAction 'SilentlyContinue' | Out-Null
             Remove-Item -Path 'C:\Windows\SoftwareDistribution\' -Recurse -Force | Out-Null
-            Start-Service -Name 'wuauserv' -ErrorAction:SilentlyContinue | Out-Null
+            Start-Service -Name 'wuauserv' -ErrorAction 'SilentlyContinue' | Out-Null
         }
     }
 }
