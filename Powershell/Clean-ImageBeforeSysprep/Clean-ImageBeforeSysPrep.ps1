@@ -9,6 +9,7 @@
 * Ioan Popovici     | 2017-07-14 | v2.1     | Bug fixes and improvements                                *
 * Andrew Reiter     | 2017-09-07 | v2.2     | Fix Copy-Item Bug                                         *
 * Ioan Popovici     | 2018-05-24 | v2.3     | Fix Windows 10 1803 bigger image after cleanup            *
+* Matthew Hilton    | 2018-07-27 | v2.4     | Added Progress bars, fixed Erroraction to stop MDT Errors *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -36,15 +37,15 @@
 #region VariableDeclaration
 
 ## Variables: Get Machine Operating System
-[String]$RegExPattern =  '(Windows\ (?:7|8\.1|8|10|Server\ (?:2008\ R2|2012\ R2|2012|2016)))'
+[String]$RegExPattern = '(Windows\ (?:7|8\.1|8|10|Server\ (?:2008\ R2|2012\ R2|2012|2016)))'
 [String]$MachineOS = (Get-WmiObject -Class Win32_OperatingSystem -ComputerName $Env:ComputerName | Select-Object Caption | `
-    Select-String -AllMatches -Pattern $RegExPattern | Select-Object -ExpandProperty Matches).Value
+        Select-String -AllMatches -Pattern $RegExPattern | Select-Object -ExpandProperty Matches).Value
 ## Variables: Get Volume Caches registry paths
 [String]$regVolumeCachesRootPath = 'HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches'
 [Array]$regVolumeCachesPaths = Get-ChildItem -Path $regVolumeCachesRootPath | Select-Object -ExpandProperty Name
 ## Variables: CleanMgr cleanup settings
 [String]$regSageSet = '5432'
-[String]$regName = 'StateFlags'+$regSageSet
+[String]$regName = 'StateFlags' + $regSageSet
 [String]$regValue = '00000002'
 [String]$regType = 'DWORD'
 
@@ -60,7 +61,7 @@
 
 #region Function Start-Cleanup
 Function Start-Cleanup {
-<#
+    <#
 .SYNOPSIS
     Cleans volume caches, update backups and update caches.
 .DESCRIPTION
@@ -76,28 +77,35 @@ Function Start-Cleanup {
     https://github.com/JhonnyTerminus/SCCM
 #>
     Param (
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [Alias('cOptions')]
         [Array]$CleanupOptions
     )
 
     Write-Host "$MachineOS Detected. Starting Cleanup... `n" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+    $i = 0
     ## Perform Cleanup Actions
     Switch ($CleanupOptions) {
         'comCacheRepair' {
-
+            $i++
+            $Taskname = 'Component Cache Repair'
+            Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
             #  Start Component Cache Repair
             Write-Host 'Performing Component Cache Repair...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
             Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /RestoreHealth' -Wait
         }
         'comCacheCleanup' {
-
+            $i++
+            $Taskname = 'Component Cache Cleanup'
+            Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
             #  Start Component Cache Cleanup
             Write-Host 'Performing Component Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
             Start-Process -FilePath 'DISM.exe' -ArgumentList '/Online /Cleanup-Image /StartComponentCleanup /ResetBase' -Wait
         }
         'volCacheCleanup' {
-
+            $i++
+            $Taskname = 'Volume Cache Cleanup'
+            Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
             #  If Volume Cache Paths exist add registry entries required by CleanMgr
             If ($regVolumeCachesPaths) {
                 Write-Host "Adding $regName to the following Registry Paths:" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
@@ -121,18 +129,22 @@ Function Start-Cleanup {
             }
         }
         'volShadowCleanup' {
-
+            $i++
+            $Taskname = 'Volume Shadow Cleanup'
+            Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
             #  Start Volume Cache Cleanup
             Write-Host 'Performing Volume Shadow Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
-            Start-Process -FilePath 'vssadmin.exe' -ArgumentList 'Delete Shadows /All' -Wait
+            Start-Process -FilePath 'vssadmin.exe' -ArgumentList 'Delete Shadows /All /force' -Wait
         }
         'updCacheCleanup' {
-
+            $i++
+            $Taskname = 'Update Cache Cleanup'
+            Write-Progress -Activity 'Performing Cleanup before Sysprep' -Status ('Processing Task {0}' -f $Taskname) -PercentComplete ($i / $CleanupOptions.count * 100)
             #  Start Update Cache Cleanup
             Write-Host 'Performing Update Cache Cleanup...' -ForegroundColor 'Yellow' -BackgroundColor 'Black'
-            Stop-Service -Name 'wuauserv' | Out-Null
+            Stop-Service -Name 'wuauserv' -ErrorAction:SilentlyContinue | Out-Null
             Remove-Item -Path 'C:\Windows\SoftwareDistribution\' -Recurse -Force | Out-Null
-            Start-Service -Name 'wuauserv'
+            Start-Service -Name 'wuauserv' -ErrorAction:SilentlyContinue | Out-Null
         }
     }
 }
@@ -153,28 +165,28 @@ Function Start-Cleanup {
 If ($MachineOS) {
     Switch ($MachineOS) {
         'Windows 7' {
-            Start-Cleanup ('volCacheCleanup','updCacheCleanup')
+            Start-Cleanup ('volCacheCleanup', 'updCacheCleanup')
         }
         'Windows 8' {
-            Start-Cleanup ('comCacheRepair','comCacheCleanup','volCacheCleanup','updCacheCleanup')
+            Start-Cleanup ('comCacheRepair', 'comCacheCleanup', 'volCacheCleanup', 'updCacheCleanup')
         }
         'Windows 8.1' {
-            Start-Cleanup ('comCacheRepair','comCacheCleanup','volCacheCleanup','updCacheCleanup')
+            Start-Cleanup ('comCacheRepair', 'comCacheCleanup', 'volCacheCleanup', 'updCacheCleanup')
         }
         'Windows 10' {
-            Start-Cleanup ('comCacheRepair','volCacheCleanup','updCacheCleanup','comCacheCleanup','volShadowCleanup')
+            Start-Cleanup ('comCacheRepair', 'volCacheCleanup', 'updCacheCleanup', 'comCacheCleanup', 'volShadowCleanup')
         }
         'Windows Server 2008 R2' {
-            Start-Cleanup ('volCacheCleanup','updCacheCleanup')
+            Start-Cleanup ('volCacheCleanup', 'updCacheCleanup')
         }
         'Windows Server 2012' {
-            Start-Cleanup ('comCacheRepair','comCacheCleanup','updCacheCleanup')
+            Start-Cleanup ('comCacheRepair', 'comCacheCleanup', 'updCacheCleanup')
         }
         'Windows Server 2012 R2' {
-            Start-Cleanup ('comCacheRepair','comCacheCleanup','updCacheCleanup')
+            Start-Cleanup ('comCacheRepair', 'comCacheCleanup', 'updCacheCleanup')
         }
         'Windows Server 2016' {
-            Start-Cleanup ('updCacheCleanup','comCacheCleanup')
+            Start-Cleanup ('updCacheCleanup', 'comCacheCleanup')
         }
         Default {
             Write-Host "Unknown Operating System, Skipping Cleanup! `n" -ForegroundColor 'Red' -BackgroundColor 'Black'
