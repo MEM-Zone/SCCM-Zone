@@ -107,14 +107,14 @@ IF @CollectionType = 1
                 WHEN '32' THEN 'Detachable'
 				ELSE 'Undefinded'
 			END AS ChassisType,
+            SE.SerialNumber0 AS SerialNumber,
             CASE
                 WHEN CIA.DesiredConfigType = 1
                 THEN 'Install'
                 ELSE 'Remove'
             END AS Purpose,
             AD.UserName AS InstalledBy,
-            Dbo.fn_GetAppState(AD.ComplianceState, AD.EnforcementState, CIA.OfferTypeID, 1, AD.DesiredState, AD.IsApplicable) AS EnforcementState,
-			SE.SerialNumber0 AS SerialNumber
+            Dbo.fn_GetAppState(AD.ComplianceState, AD.EnforcementState, CIA.OfferTypeID, 1, AD.DesiredState, AD.IsApplicable) AS EnforcementState
         FROM fn_rbac_CollectionExpandedUserMembers(@UserSIDs) AS CM
             INNER JOIN fn_rbac_R_User(@UserSIDs) AS UD ON UD.ResourceID = CM.UserItemKey
             INNER JOIN fn_rbac_DeploymentSummary(Dbo.FnlShortNameToLCID(@Locale), @UserSIDs) AS DS ON DS.CollectionID = CM.SiteID
