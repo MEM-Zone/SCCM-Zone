@@ -7,6 +7,7 @@
 * Ioan Popovici     | 2018-07-16 | v1.0     | First version                                             *
 * Ioan Popovici     | 2018-08-06 | v1.1     | Fixed empty software name                                 *
 * Ioan Popovici     | 2018-08-06 | v1.2     | Added computer service tag and type information           *
+* Ioan Popovici     | 2018-08-06 | v1.3     | Fixed empty or NULL publisher                             *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -45,7 +46,12 @@ SELECT DISTINCT
         ELSE 'Unknown'
     END AS ComputerType,
     SE.SerialNumber0 AS SerialNumber,
-    SW.Publisher0 AS Publisher,
+    CASE
+        WHEN SW.Publisher0 IS NULL THEN '<No Publisher>'
+        WHEN SW.Publisher0 = '' THEN '<No Publisher>'
+        WHEN SW.Publisher0 = '<no manufacturer>' THEN '<No Publisher>'
+        ELSE SW.Publisher0
+    END AS Publisher,
     SW.DisplayName0 AS Software,
     SW.Version0 AS Version,
     SYS.Resource_Domain_OR_Workgr0 AS DomainOrWorkgroup,
@@ -61,7 +67,7 @@ WHERE COL.CollectionID = @CollectionID
     AND SW.DisplayName0 LIKE '%'+@SoftwareName+'%'
     AND SW.DisplayName0 != ''
 ORDER BY SYS.Netbios_Name0,
-    SW.Publisher0,
+    Publisher,
     SW.DisplayName0,
     SW.Version0;
 
