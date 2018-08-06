@@ -1,10 +1,12 @@
 /*
 *********************************************************************************************************
-* Created by Ioan Popovici   | Requires SQL                                                             *
+* Requires          | Requires SQL, Cofiguration Manager DB                                             *
 * ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
+* Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2018-07-16 | v1.0     | First version                                                 *
+* Ioan Popovici     | 2018-07-16 | v1.0     | First version                                             *
+* Ioan Popovici     | 2018-08-06 | v1.1     | Fixed empty software name                                 *
+* Ioan Popovici     | 2018-08-06 | v1.2     | Added computer service tag and type information           *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -34,6 +36,15 @@ IF OBJECT_ID (N'TempDB.DBO.#InstalledSoftware') IS NOT NULL
 /* Get installed software */
 SELECT DISTINCT
     SYS.Netbios_Name0 AS Computer,
+    SE.Manufacturer0 AS Manufacturer,
+    CASE
+        WHEN SE.ChassisTypes0 IN (8 , 9, 10, 11, 12, 14, 18, 21, 31, 32) THEN 'Laptop'
+        WHEN SE.ChassisTypes0 IN (3, 4, 5, 6, 7, 15, 16) THEN 'Desktop'
+        WHEN SE.ChassisTypes0 IN (17, 23, 28, 29) THEN 'Servers'
+        WHEN SE.ChassisTypes0 = '30' THEN 'Tablet'
+        ELSE 'Unknown'
+    END AS ComputerType,
+    SE.SerialNumber0 AS SerialNumber,
     SW.Publisher0 AS Publisher,
     SW.DisplayName0 AS Software,
     SW.Version0 AS Version,
@@ -45,8 +56,10 @@ FROM fn_rbac_Add_Remove_Programs(@UserSIDs) SW
     JOIN fn_rbac_R_System(@UserSIDs) SYS ON SW.ResourceID = SYS.ResourceID
     JOIN v_ClientCollectionMembers COL ON COL.ResourceID = SYS.ResourceID
     JOIN v_GS_OPERATING_SYSTEM OS ON OS.ResourceID = SYS.ResourceID
+    LEFT JOIN v_GS_SYSTEM_ENCLOSURE SE ON SE.ResourceID = SYS.ResourceID
 WHERE COL.CollectionID = @CollectionID
     AND SW.DisplayName0 LIKE '%'+@SoftwareName+'%'
+    AND SW.DisplayName0 != ''
 ORDER BY SYS.Netbios_Name0,
     SW.Publisher0,
     SW.DisplayName0,
@@ -57,6 +70,9 @@ IF @SoftwareNameNotLike != ''
 BEGIN
     SELECT
         Computer,
+        Manufacturer,
+        ComputerType,
+        SerialNumber,
         Publisher,
         Software,
         Version,
@@ -72,6 +88,9 @@ IF @SoftwareNameNotLike = ''
 BEGIN
     SELECT
         Computer,
+        Manufacturer,
+        ComputerType,
+        SerialNumber,
         Publisher,
         Software,
         Version,
