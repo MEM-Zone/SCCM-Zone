@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
-  <Description>Deployment - Package Deployments by Device or User Collections</Description>
+  <Description>Lists package deployments by computer or user for collection. All deployments for the computer or user will be listed together with the deployment collection.</Description>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
     <DataSource Name="AutoGen__5C6358F2_4BB6_4a1b_A16E_8D96795D8602_">
@@ -342,7 +342,7 @@ WHERE Name = @ReportName</CommandText>
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.71978cm</Width>
+                  <Width>1.85207cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -365,6 +365,7 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=SrsResources.Localization.GetString("Total", User!Language)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
+                                    <FontSize>11pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
                                     <Color>White</Color>
                                   </Style>
@@ -407,8 +408,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=CountDistinct(Fields!PackageName.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -449,8 +448,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=CountDistinct(Fields!ProgramName.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -491,8 +488,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=CountDistinct(Fields!CollectionName.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -533,8 +528,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value />
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -576,7 +569,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -629,6 +621,7 @@ WHERE Name = @ReportName</CommandText>
                                 <Value>=SrsResources.Localization.GetString("Computer", User!Language)</Value>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
+                                  <FontSize>11pt</FontSize>
                                   <FontWeight>Bold</FontWeight>
                                   <Color>White</Color>
                                 </Style>
@@ -657,7 +650,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>3.28172cm</Size>
+                        <Size>3.50631cm</Size>
                         <CellContents>
                           <Textbox Name="MTH_Manufacturer">
                             <CanGrow>true</CanGrow>
@@ -673,6 +666,7 @@ WHERE Name = @ReportName</CommandText>
                                     <Value>=SrsResources.Localization.GetString("Manufacturer", User!Language)</Value>
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
+                                      <FontSize>11pt</FontSize>
                                       <FontWeight>Bold</FontWeight>
                                       <Color>White</Color>
                                     </Style>
@@ -717,6 +711,7 @@ WHERE Name = @ReportName</CommandText>
                                         <Value>=SrsResources.Localization.GetString("Type", User!Language)</Value>
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
+                                          <FontSize>11pt</FontSize>
                                           <FontWeight>Bold</FontWeight>
                                           <Color>White</Color>
                                         </Style>
@@ -761,6 +756,7 @@ WHERE Name = @ReportName</CommandText>
                                             <Value>=SrsResources.Localization.GetString("Chassis", User!Language)</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
+                                              <FontSize>11pt</FontSize>
                                               <FontWeight>Bold</FontWeight>
                                               <Color>White</Color>
                                             </Style>
@@ -805,6 +801,7 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value>=SrsResources.Localization.GetString("SerialNumber", User!Language)</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
+                                                  <FontSize>11pt</FontSize>
                                                   <FontWeight>Bold</FontWeight>
                                                   <Color>White</Color>
                                                 </Style>
@@ -849,6 +846,7 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value>=SrsResources.Localization.GetString("Package", User!Language)</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
+                                                      <FontSize>11pt</FontSize>
                                                       <FontWeight>Bold</FontWeight>
                                                       <Color>White</Color>
                                                     </Style>
@@ -893,6 +891,7 @@ WHERE Name = @ReportName</CommandText>
                                                         <Value>=SrsResources.Localization.GetString("Program", User!Language)</Value>
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
+                                                          <FontSize>11pt</FontSize>
                                                           <FontWeight>Bold</FontWeight>
                                                           <Color>White</Color>
                                                         </Style>
@@ -937,6 +936,7 @@ WHERE Name = @ReportName</CommandText>
                                                             <Value>=SrsResources.Localization.GetString("Colection", User!Language)</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
+                                                              <FontSize>11pt</FontSize>
                                                               <FontWeight>Bold</FontWeight>
                                                               <Color>White</Color>
                                                             </Style>
@@ -980,6 +980,7 @@ WHERE Name = @ReportName</CommandText>
                                                                 <Value>=SrsResources.Localization.GetString("Purpose", User!Language)</Value>
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
+                                                                  <FontSize>11pt</FontSize>
                                                                   <FontWeight>Bold</FontWeight>
                                                                   <Color>White</Color>
                                                                 </Style>
@@ -1008,7 +1009,7 @@ WHERE Name = @ReportName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.24912cm</Size>
+                                                        <Size>3.62495cm</Size>
                                                         <CellContents>
                                                           <Textbox Name="MTH_LastStateName">
                                                             <CanGrow>true</CanGrow>
@@ -1023,6 +1024,7 @@ WHERE Name = @ReportName</CommandText>
                                                                     <Value>=SrsResources.Localization.GetString("State", User!Language)</Value>
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
+                                                                      <FontSize>11pt</FontSize>
                                                                       <FontWeight>Bold</FontWeight>
                                                                       <Color>White</Color>
                                                                     </Style>
@@ -1106,8 +1108,6 @@ WHERE Name = @ReportName</CommandText>
                                 <Value>=Fields!MachineName.Value</Value>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
-                                  <FontWeight>Bold</FontWeight>
-                                  <Color>#4c68a2</Color>
                                 </Style>
                               </TextRun>
                             </TextRuns>
@@ -1132,7 +1132,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>3.28172cm</Size>
+                        <Size>3.50631cm</Size>
                         <CellContents>
                           <Textbox Name="MTV_Manufacturer">
                             <CanGrow>true</CanGrow>
@@ -1144,8 +1144,6 @@ WHERE Name = @ReportName</CommandText>
                                     <Value>=Fields!Manufacturer.Value</Value>
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
-                                      <FontWeight>Bold</FontWeight>
-                                      <Color>#4c68a2</Color>
                                     </Style>
                                   </TextRun>
                                 </TextRuns>
@@ -1182,8 +1180,6 @@ WHERE Name = @ReportName</CommandText>
                                         <Value>=Fields!ComputerType.Value</Value>
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                          <Color>#4c68a2</Color>
                                         </Style>
                                       </TextRun>
                                     </TextRuns>
@@ -1220,8 +1216,6 @@ WHERE Name = @ReportName</CommandText>
                                             <Value>=Fields!ChassisType.Value</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                              <Color>#4c68a2</Color>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
@@ -1258,8 +1252,6 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value>=Fields!SerialNumber.Value</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                  <Color>#4c68a2</Color>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
@@ -1296,8 +1288,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value />
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>#465678</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -1335,8 +1325,6 @@ WHERE Name = @ReportName</CommandText>
                                                         <Value />
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
-                                                          <FontWeight>Bold</FontWeight>
-                                                          <Color>#465678</Color>
                                                         </Style>
                                                       </TextRun>
                                                     </TextRuns>
@@ -1374,8 +1362,6 @@ WHERE Name = @ReportName</CommandText>
                                                             <Value />
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
-                                                              <FontWeight>Bold</FontWeight>
-                                                              <Color>#465678</Color>
                                                             </Style>
                                                           </TextRun>
                                                         </TextRuns>
@@ -1413,8 +1399,6 @@ WHERE Name = @ReportName</CommandText>
                                                                 <Value />
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
-                                                                  <FontWeight>Bold</FontWeight>
-                                                                  <Color>#465678</Color>
                                                                 </Style>
                                                               </TextRun>
                                                             </TextRuns>
@@ -1442,7 +1426,7 @@ WHERE Name = @ReportName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.24912cm</Size>
+                                                        <Size>3.62495cm</Size>
                                                         <CellContents>
                                                           <Textbox Name="Textbox928">
                                                             <CanGrow>true</CanGrow>
@@ -1454,8 +1438,6 @@ WHERE Name = @ReportName</CommandText>
                                                                     <Value />
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
-                                                                      <FontWeight>Bold</FontWeight>
-                                                                      <Color>#465678</Color>
                                                                     </Style>
                                                                   </TextRun>
                                                                 </TextRuns>
@@ -1517,8 +1499,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value>=Fields!PackageName.Value</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>#4c68a2</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -1555,8 +1535,6 @@ WHERE Name = @ReportName</CommandText>
                                                         <Value />
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
-                                                          <FontWeight>Bold</FontWeight>
-                                                          <Color>#4c68a2</Color>
                                                         </Style>
                                                       </TextRun>
                                                     </TextRuns>
@@ -1594,8 +1572,6 @@ WHERE Name = @ReportName</CommandText>
                                                             <Value />
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
-                                                              <FontWeight>Bold</FontWeight>
-                                                              <Color>#4c68a2</Color>
                                                             </Style>
                                                           </TextRun>
                                                         </TextRuns>
@@ -1633,8 +1609,6 @@ WHERE Name = @ReportName</CommandText>
                                                                 <Value />
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
-                                                                  <FontWeight>Bold</FontWeight>
-                                                                  <Color>#4c68a2</Color>
                                                                 </Style>
                                                               </TextRun>
                                                             </TextRuns>
@@ -1662,7 +1636,7 @@ WHERE Name = @ReportName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.24912cm</Size>
+                                                        <Size>3.62495cm</Size>
                                                         <CellContents>
                                                           <Textbox Name="Textbox929">
                                                             <CanGrow>true</CanGrow>
@@ -1674,8 +1648,6 @@ WHERE Name = @ReportName</CommandText>
                                                                     <Value />
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
-                                                                      <FontWeight>Bold</FontWeight>
-                                                                      <Color>#4c68a2</Color>
                                                                     </Style>
                                                                   </TextRun>
                                                                 </TextRuns>
@@ -1714,7 +1686,7 @@ WHERE Name = @ReportName</CommandText>
                                         <TablixMember>
                                           <Group Name="MProgramName">
                                             <GroupExpressions>
-                                              <GroupExpression>=Fields!CollectionName.Value</GroupExpression>
+                                              <GroupExpression>=Fields!ProgramName.Value</GroupExpression>
                                             </GroupExpressions>
                                           </Group>
                                           <SortExpressions>
@@ -1735,8 +1707,6 @@ WHERE Name = @ReportName</CommandText>
                                                         <Value>=Fields!ProgramName.Value</Value>
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
-                                                          <FontWeight>Bold</FontWeight>
-                                                          <Color>#4c68a2</Color>
                                                         </Style>
                                                       </TextRun>
                                                     </TextRuns>
@@ -1773,8 +1743,6 @@ WHERE Name = @ReportName</CommandText>
                                                             <Value />
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
-                                                              <FontWeight>Bold</FontWeight>
-                                                              <Color>#4c68a2</Color>
                                                             </Style>
                                                           </TextRun>
                                                         </TextRuns>
@@ -1814,8 +1782,6 @@ WHERE Name = @ReportName</CommandText>
                                                                 <Value />
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
-                                                                  <FontWeight>Bold</FontWeight>
-                                                                  <Color>#4c68a2</Color>
                                                                 </Style>
                                                               </TextRun>
                                                             </TextRuns>
@@ -1843,7 +1809,7 @@ WHERE Name = @ReportName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.24912cm</Size>
+                                                        <Size>3.62495cm</Size>
                                                         <CellContents>
                                                           <Textbox Name="Textbox930">
                                                             <CanGrow>true</CanGrow>
@@ -1855,8 +1821,6 @@ WHERE Name = @ReportName</CommandText>
                                                                     <Value />
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
-                                                                      <FontWeight>Bold</FontWeight>
-                                                                      <Color>#4c68a2</Color>
                                                                     </Style>
                                                                   </TextRun>
                                                                 </TextRuns>
@@ -1914,8 +1878,6 @@ WHERE Name = @ReportName</CommandText>
                                                             <Value>=Fields!CollectionName.Value</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
-                                                              <FontWeight>Bold</FontWeight>
-                                                              <Color>#4c68a2</Color>
                                                             </Style>
                                                           </TextRun>
                                                         </TextRuns>
@@ -1967,8 +1929,6 @@ WHERE Name = @ReportName</CommandText>
                                                                 <Value>=Fields!Purpose.Value</Value>
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
-                                                                  <FontWeight>Bold</FontWeight>
-                                                                  <Color>#4c68a2</Color>
                                                                 </Style>
                                                               </TextRun>
                                                             </TextRuns>
@@ -1995,7 +1955,7 @@ WHERE Name = @ReportName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.24912cm</Size>
+                                                        <Size>3.62495cm</Size>
                                                         <CellContents>
                                                           <Textbox Name="MTV_LastStateName">
                                                             <CanGrow>true</CanGrow>
@@ -2007,8 +1967,6 @@ WHERE Name = @ReportName</CommandText>
                                                                     <Value>=Fields!LastStateName.Value</Value>
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
-                                                                      <FontWeight>Bold</FontWeight>
-                                                                      <Color>#4c68a2</Color>
                                                                     </Style>
                                                                   </TextRun>
                                                                 </TextRuns>
@@ -2081,7 +2039,6 @@ WHERE Name = @ReportName</CommandText>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
                                   <FontWeight>Bold</FontWeight>
-                                  <Color>White</Color>
                                 </Style>
                               </TextRun>
                             </TextRuns>
@@ -2106,7 +2063,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>3.28172cm</Size>
+                        <Size>3.50631cm</Size>
                         <CellContents>
                           <Textbox Name="Textbox10">
                             <CanGrow>true</CanGrow>
@@ -2118,8 +2075,6 @@ WHERE Name = @ReportName</CommandText>
                                     <Value />
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
-                                      <FontWeight>Bold</FontWeight>
-                                      <Color>White</Color>
                                     </Style>
                                   </TextRun>
                                 </TextRuns>
@@ -2157,8 +2112,6 @@ WHERE Name = @ReportName</CommandText>
                                         <Value />
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                          <Color>White</Color>
                                         </Style>
                                       </TextRun>
                                     </TextRuns>
@@ -2196,8 +2149,6 @@ WHERE Name = @ReportName</CommandText>
                                             <Value />
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                              <Color>White</Color>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
@@ -2235,8 +2186,6 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value />
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                  <Color>White</Color>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
@@ -2274,8 +2223,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value />
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>White</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -2313,8 +2260,6 @@ WHERE Name = @ReportName</CommandText>
                                                         <Value />
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
-                                                          <FontWeight>Bold</FontWeight>
-                                                          <Color>White</Color>
                                                         </Style>
                                                       </TextRun>
                                                     </TextRuns>
@@ -2352,8 +2297,6 @@ WHERE Name = @ReportName</CommandText>
                                                             <Value />
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
-                                                              <FontWeight>Bold</FontWeight>
-                                                              <Color>White</Color>
                                                             </Style>
                                                           </TextRun>
                                                         </TextRuns>
@@ -2391,8 +2334,6 @@ WHERE Name = @ReportName</CommandText>
                                                                 <Value />
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
-                                                                  <FontWeight>Bold</FontWeight>
-                                                                  <Color>White</Color>
                                                                 </Style>
                                                               </TextRun>
                                                             </TextRuns>
@@ -2420,7 +2361,7 @@ WHERE Name = @ReportName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.24912cm</Size>
+                                                        <Size>3.62495cm</Size>
                                                         <CellContents>
                                                           <Textbox Name="Textbox932">
                                                             <CanGrow>true</CanGrow>
@@ -2432,8 +2373,6 @@ WHERE Name = @ReportName</CommandText>
                                                                     <Value />
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
-                                                                      <FontWeight>Bold</FontWeight>
-                                                                      <Color>White</Color>
                                                                     </Style>
                                                                   </TextRun>
                                                                 </TextRuns>
@@ -2487,7 +2426,7 @@ WHERE Name = @ReportName</CommandText>
             <Top>1.16946cm</Top>
             <Left>0.127cm</Left>
             <Height>3.6cm</Height>
-            <Width>47.02699cm</Width>
+            <Width>48.75969cm</Width>
             <Visibility>
               <Hidden>=IIF(Parameters!CollectionType.Value = 2, False, True)</Hidden>
             </Visibility>
@@ -2502,7 +2441,7 @@ WHERE Name = @ReportName</CommandText>
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>2.5cm</Width>
+                  <Width>1.85207cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -2525,6 +2464,7 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=SrsResources.Localization.GetString("Total", User!Language)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
+                                    <FontSize>11pt</FontSize>
                                     <FontWeight>Bold</FontWeight>
                                     <Color>White</Color>
                                   </Style>
@@ -2567,8 +2507,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=CountDistinct(Fields!PackageName.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -2609,8 +2547,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=CountDistinct(Fields!ProgramName.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -2651,8 +2587,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value>=CountDistinct(Fields!CollectionName.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -2693,8 +2627,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Value />
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -2736,7 +2668,6 @@ WHERE Name = @ReportName</CommandText>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontWeight>Bold</FontWeight>
-                                    <Color>#465678</Color>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -2789,6 +2720,7 @@ WHERE Name = @ReportName</CommandText>
                                 <Value>=SrsResources.Localization.GetString("UserName", User!Language)</Value>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
+                                  <FontSize>11pt</FontSize>
                                   <FontWeight>Bold</FontWeight>
                                   <Color>White</Color>
                                 </Style>
@@ -2817,7 +2749,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>11.82682cm</Size>
+                        <Size>13.0039cm</Size>
                         <CellContents>
                           <Textbox Name="UTH_PackageName">
                             <CanGrow>true</CanGrow>
@@ -2833,6 +2765,7 @@ WHERE Name = @ReportName</CommandText>
                                     <Value>=SrsResources.Localization.GetString("Package", User!Language)</Value>
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
+                                      <FontSize>11pt</FontSize>
                                       <FontWeight>Bold</FontWeight>
                                       <Color>White</Color>
                                     </Style>
@@ -2877,6 +2810,7 @@ WHERE Name = @ReportName</CommandText>
                                         <Value>=SrsResources.Localization.GetString("Program", User!Language)</Value>
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
+                                          <FontSize>11pt</FontSize>
                                           <FontWeight>Bold</FontWeight>
                                           <Color>White</Color>
                                         </Style>
@@ -2905,7 +2839,7 @@ WHERE Name = @ReportName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>7.87167cm</Size>
+                                <Size>9.15459cm</Size>
                                 <CellContents>
                                   <Textbox Name="UTH_CollectionName">
                                     <CanGrow>true</CanGrow>
@@ -2921,6 +2855,7 @@ WHERE Name = @ReportName</CommandText>
                                             <Value>=SrsResources.Localization.GetString("Collection", User!Language)</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
+                                              <FontSize>11pt</FontSize>
                                               <FontWeight>Bold</FontWeight>
                                               <Color>White</Color>
                                             </Style>
@@ -2964,6 +2899,7 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value>=SrsResources.Localization.GetString("Purpose", User!Language)</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
+                                                  <FontSize>11pt</FontSize>
                                                   <FontWeight>Bold</FontWeight>
                                                   <Color>White</Color>
                                                 </Style>
@@ -2992,7 +2928,7 @@ WHERE Name = @ReportName</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>3.70433cm</Size>
+                                        <Size>3.62495cm</Size>
                                         <CellContents>
                                           <Textbox Name="UTH_LastStateName">
                                             <CanGrow>true</CanGrow>
@@ -3007,6 +2943,7 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value>=SrsResources.Localization.GetString("State", User!Language)</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
+                                                      <FontSize>11pt</FontSize>
                                                       <FontWeight>Bold</FontWeight>
                                                       <Color>White</Color>
                                                     </Style>
@@ -3070,8 +3007,6 @@ WHERE Name = @ReportName</CommandText>
                                 <Value>=Fields!UserName.Value</Value>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
-                                  <FontWeight>Bold</FontWeight>
-                                  <Color>#4c68a2</Color>
                                 </Style>
                               </TextRun>
                             </TextRuns>
@@ -3096,7 +3031,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>11.82682cm</Size>
+                        <Size>13.0039cm</Size>
                         <CellContents>
                           <Textbox Name="Textbox911">
                             <CanGrow>true</CanGrow>
@@ -3108,8 +3043,6 @@ WHERE Name = @ReportName</CommandText>
                                     <Value />
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
-                                      <FontWeight>Bold</FontWeight>
-                                      <Color>#465678</Color>
                                     </Style>
                                   </TextRun>
                                 </TextRuns>
@@ -3147,8 +3080,6 @@ WHERE Name = @ReportName</CommandText>
                                         <Value />
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                          <Color>#465678</Color>
                                         </Style>
                                       </TextRun>
                                     </TextRuns>
@@ -3174,7 +3105,7 @@ WHERE Name = @ReportName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>7.87167cm</Size>
+                                <Size>9.15459cm</Size>
                                 <CellContents>
                                   <Textbox Name="Textbox909">
                                     <CanGrow>true</CanGrow>
@@ -3186,8 +3117,6 @@ WHERE Name = @ReportName</CommandText>
                                             <Value />
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                              <Color>#465678</Color>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
@@ -3225,8 +3154,6 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value />
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                  <Color>#465678</Color>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
@@ -3254,7 +3181,7 @@ WHERE Name = @ReportName</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>3.70433cm</Size>
+                                        <Size>3.62495cm</Size>
                                         <CellContents>
                                           <Textbox Name="Textbox931">
                                             <CanGrow>true</CanGrow>
@@ -3266,8 +3193,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value />
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>#465678</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -3317,7 +3242,7 @@ WHERE Name = @ReportName</CommandText>
                         </SortExpression>
                       </SortExpressions>
                       <TablixHeader>
-                        <Size>11.82682cm</Size>
+                        <Size>13.0039cm</Size>
                         <CellContents>
                           <Textbox Name="UTV_PackageName">
                             <CanGrow>true</CanGrow>
@@ -3329,8 +3254,6 @@ WHERE Name = @ReportName</CommandText>
                                     <Value>=Fields!PackageName.Value</Value>
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
-                                      <FontWeight>Bold</FontWeight>
-                                      <Color>#4c68a2</Color>
                                     </Style>
                                   </TextRun>
                                 </TextRuns>
@@ -3367,8 +3290,6 @@ WHERE Name = @ReportName</CommandText>
                                         <Value />
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                          <Color>#4c68a2</Color>
                                         </Style>
                                       </TextRun>
                                     </TextRuns>
@@ -3394,7 +3315,7 @@ WHERE Name = @ReportName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>7.87167cm</Size>
+                                <Size>9.15459cm</Size>
                                 <CellContents>
                                   <Textbox Name="Textbox913">
                                     <CanGrow>true</CanGrow>
@@ -3406,8 +3327,6 @@ WHERE Name = @ReportName</CommandText>
                                             <Value />
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                              <Color>#4c68a2</Color>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
@@ -3445,8 +3364,6 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value />
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                  <Color>#4c68a2</Color>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
@@ -3474,7 +3391,7 @@ WHERE Name = @ReportName</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>3.70433cm</Size>
+                                        <Size>3.62495cm</Size>
                                         <CellContents>
                                           <Textbox Name="Textbox933">
                                             <CanGrow>true</CanGrow>
@@ -3486,8 +3403,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value />
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>#4c68a2</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -3547,8 +3462,6 @@ WHERE Name = @ReportName</CommandText>
                                         <Value>=Fields!ProgramName.Value</Value>
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                          <Color>#4c68a2</Color>
                                         </Style>
                                       </TextRun>
                                     </TextRuns>
@@ -3573,7 +3486,7 @@ WHERE Name = @ReportName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>7.87167cm</Size>
+                                <Size>9.15459cm</Size>
                                 <CellContents>
                                   <Textbox Name="Textbox40">
                                     <CanGrow>true</CanGrow>
@@ -3585,8 +3498,6 @@ WHERE Name = @ReportName</CommandText>
                                             <Value />
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                              <Color>#4c68a2</Color>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
@@ -3626,8 +3537,6 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value />
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                  <Color>#4c68a2</Color>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
@@ -3655,7 +3564,7 @@ WHERE Name = @ReportName</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>3.70433cm</Size>
+                                        <Size>3.62495cm</Size>
                                         <CellContents>
                                           <Textbox Name="Textbox934">
                                             <CanGrow>true</CanGrow>
@@ -3667,8 +3576,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value />
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>#4c68a2</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -3714,7 +3621,7 @@ WHERE Name = @ReportName</CommandText>
                                 </SortExpression>
                               </SortExpressions>
                               <TablixHeader>
-                                <Size>7.87167cm</Size>
+                                <Size>9.15459cm</Size>
                                 <CellContents>
                                   <Textbox Name="UTV_MachineName">
                                     <CanGrow>true</CanGrow>
@@ -3726,8 +3633,6 @@ WHERE Name = @ReportName</CommandText>
                                             <Value>=Fields!CollectionName.Value</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                              <Color>#4c68a2</Color>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
@@ -3770,8 +3675,6 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value>=Fields!Purpose.Value</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                  <Color>#4c68a2</Color>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
@@ -3798,7 +3701,7 @@ WHERE Name = @ReportName</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>3.70433cm</Size>
+                                        <Size>3.62495cm</Size>
                                         <CellContents>
                                           <Textbox Name="UTV_LastStateName">
                                             <CanGrow>true</CanGrow>
@@ -3810,8 +3713,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value>=Fields!LastStateName.Value</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>#4c68a2</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -3876,7 +3777,6 @@ WHERE Name = @ReportName</CommandText>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
                                   <FontWeight>Bold</FontWeight>
-                                  <Color>White</Color>
                                 </Style>
                               </TextRun>
                             </TextRuns>
@@ -3901,7 +3801,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>11.82682cm</Size>
+                        <Size>13.0039cm</Size>
                         <CellContents>
                           <Textbox Name="Textbox902">
                             <CanGrow>true</CanGrow>
@@ -3913,8 +3813,6 @@ WHERE Name = @ReportName</CommandText>
                                     <Value />
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
-                                      <FontWeight>Bold</FontWeight>
-                                      <Color>White</Color>
                                     </Style>
                                   </TextRun>
                                 </TextRuns>
@@ -3952,8 +3850,6 @@ WHERE Name = @ReportName</CommandText>
                                         <Value />
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                          <Color>White</Color>
                                         </Style>
                                       </TextRun>
                                     </TextRuns>
@@ -3979,7 +3875,7 @@ WHERE Name = @ReportName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>7.87167cm</Size>
+                                <Size>9.15459cm</Size>
                                 <CellContents>
                                   <Textbox Name="Textbox904">
                                     <CanGrow>true</CanGrow>
@@ -3991,8 +3887,6 @@ WHERE Name = @ReportName</CommandText>
                                             <Value />
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                              <Color>White</Color>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
@@ -4030,8 +3924,6 @@ WHERE Name = @ReportName</CommandText>
                                                 <Value />
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                  <Color>White</Color>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
@@ -4059,7 +3951,7 @@ WHERE Name = @ReportName</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>3.70433cm</Size>
+                                        <Size>3.62495cm</Size>
                                         <CellContents>
                                           <Textbox Name="Textbox935">
                                             <CanGrow>true</CanGrow>
@@ -4071,8 +3963,6 @@ WHERE Name = @ReportName</CommandText>
                                                     <Value />
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                      <Color>White</Color>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
@@ -4118,7 +4008,7 @@ WHERE Name = @ReportName</CommandText>
             <Top>4.8429cm</Top>
             <Left>0.127cm</Left>
             <Height>3.6cm</Height>
-            <Width>47.02699cm</Width>
+            <Width>48.75969cm</Width>
             <ZIndex>1</ZIndex>
             <Visibility>
               <Hidden>=IIF(Parameters!CollectionType.Value = 1, False, True)</Hidden>
@@ -4133,10 +4023,10 @@ WHERE Name = @ReportName</CommandText>
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>3.3002in</Width>
+                  <Width>1.47018in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>15.22686in</Width>
+                  <Width>8.30122in</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -4232,7 +4122,7 @@ WHERE Name = @ReportName</CommandText>
             <Top>0in</Top>
             <Left>0.127cm</Left>
             <Height>0.4in</Height>
-            <Width>18.52706in</Width>
+            <Width>9.7714in</Width>
             <ZIndex>2</ZIndex>
             <Style>
               <Border>
@@ -4244,7 +4134,7 @@ WHERE Name = @ReportName</CommandText>
             <Top>0.41621in</Top>
             <Left>0.05in</Left>
             <Height>0in</Height>
-            <Width>18.51456in</Width>
+            <Width>19.19673in</Width>
             <ZIndex>3</ZIndex>
             <Style>
               <Border>
@@ -4283,7 +4173,7 @@ WHERE Name = @ReportName</CommandText>
           <BackgroundColor>#6e7b8b</BackgroundColor>
         </Style>
       </Body>
-      <Width>47.3292cm</Width>
+      <Width>49.05074cm</Width>
       <Page>
         <PageHeader>
           <Height>2.53768cm</Height>
@@ -4308,7 +4198,7 @@ WHERE Name = @ReportName</CommandText>
               <Top>0.59736in</Top>
               <Left>0.05in</Left>
               <Height>0in</Height>
-              <Width>18.51456in</Width>
+              <Width>19.19673in</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <Border>
@@ -4362,7 +4252,7 @@ WHERE Name = @ReportName</CommandText>
               <Top>1.579cm</Top>
               <Left>0.127cm</Left>
               <Height>0.89817cm</Height>
-              <Width>46.99524cm</Width>
+              <Width>24.81935cm</Width>
               <ZIndex>2</ZIndex>
               <Style>
                 <Border>
@@ -4534,6 +4424,6 @@ WHERE Name = @ReportName</CommandText>
     <CodeModule>SrsResources, culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
-  <rd:ReportServerUrl></rd:ReportServerUrl>
+  <rd:ReportServerUrl>http://resscmp02/ReportServer</rd:ReportServerUrl>
   <rd:ReportID>6fbd236a-d836-4950-8788-14b828deb616</rd:ReportID>
 </Report>
