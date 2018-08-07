@@ -18,6 +18,7 @@
 * Ioan Popovici     | 2018-07-05 | v3.0     | Completely re-written, and optimized se notes                *
 * Ioan Popovici     | 2018-07-09 | v3.0     | Added ReferencedThreshold, squashed lots of bugs             *
 * Ioan Popovici     | 2018-07-10 | v3.1     | Fixed should run bug                                         *
+* Ioan Popovici     | 2018-08-07 | v3.2     | Fixed division by 0 and added basic debug info               *
 * ======================================================================================================== *
 *                                                                                                          *
 ************************************************************************************************************
@@ -739,6 +740,8 @@ Function Get-CCMCachedApplications {
 
                     ## If the application is in the cache, assemble properties and add it to the result object
                     If (($AppCacheInfo.ContentSize) -gt 0) {
+                        #  Set content size to 0 if null to avoid division by 0
+                        If (-not $AppCacheInfo.ContentSize) { $ContentSize = 0 }
                         #  Assemble result object props
                         $CachedAppProps = [ordered]@{
                             Name = $($Application.Name)
@@ -835,8 +838,17 @@ Function Get-CCMCachedPackages {
                 $ProgressCounter++
                 Write-Progress -Activity 'Processing Packages' -CurrentOperation $($Package.FullName) -PercentComplete $(($ProgressCounter / $PackageCount) * 100)
 
+                ## Debug info
+                Write-Log -Message "PowerShell version: $($PSVersionTable.PSVersion | Out-String)" -DebugMessage -Source ${CmdletName}
+                Write-Log -Message "CacheInfo: `n $($CacheInfo | Out-String)" -DebugMessage -Source ${CmdletName}
+                Write-Log -Message "CurentPackage: `n $($Package | Out-String)" -DebugMessage -Source ${CmdletName}
+                Write-Log -Message "Size: `n $($PkgCacheInfo.ContentSize | Out-String)" -DebugMessage -Source ${CmdletName}
+
                 ## Get the cache info for the package using the ContentID
                 $PkgCacheInfo = $CacheInfo | Where-Object { $_.ContentID -eq  $Package.PackageID }
+
+                ## Debug info
+                Write-Log -Message "CachedInfo: `n $($PkgCacheInfo | Out-String)" -DebugMessage -Source ${CmdletName}
 
                 ## If the package is in the cache, assemble properties and add it to the result object
                 If (($PkgCacheInfo.ContentSize) -gt 0) {
@@ -1603,7 +1615,7 @@ Finally {
     If (-not $TotalDeletedSize) { $TotalDeletedSize = 0 }
 
     ## Assemble output result
-    $OutputResult = $($CleanupResult | Format-List -Property FullName, Name, Location, LastReferenceTime, 'Size(MB)', Status | Out-String) + "TotalDeletedSize:" + $TotalDeletedSize
+    $OutputResult = $($CleanupResult | Format-List -Property FullName, Name, Location, LastReferenceTime, 'Size(MB)', Status | Out-String) + "TotalDeletedSize: " + $TotalDeletedSize
 
     ## Write output to log, event log and console and status
     Write-Log -Message $OutputResult -Source $ScriptSource
