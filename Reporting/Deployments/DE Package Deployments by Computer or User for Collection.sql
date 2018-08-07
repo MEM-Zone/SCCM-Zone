@@ -102,7 +102,7 @@ IF @CollectionType = 2
             SYS.Netbios_Name0 AS MachineName,
 			SE.Manufacturer0 AS Manufacturer,
             CASE
-                WHEN SE.ChassisTypes0 IN (8 , 9, 10, 11, 12, 14, 18, 21, 31, 32) THEN 'Laptop'
+                WHEN SE.ChassisTypes0 IN (8, 9, 10, 11, 12, 14, 18, 21, 31, 32) THEN 'Laptop'
                 WHEN SE.ChassisTypes0 IN (3, 4, 5, 6, 7, 15, 16) THEN 'Desktop'
                 WHEN SE.ChassisTypes0 IN (17, 23, 28, 29) THEN 'Servers'
                 WHEN SE.ChassisTypes0 = '30' THEN 'Tablet'
