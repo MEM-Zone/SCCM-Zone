@@ -12,9 +12,9 @@
 *********************************************************************************************************
 
 .SYNOPSIS
-    This SQL Query is used to get the Compliance of a Configuration Baseline.
+    This SQL Query is used to get the Compliance of a Configuration Baseline by Company.
 .DESCRIPTION
-    This SQL Query is used to get the Compliance and Actual Values of a Configuration Baseline Result.
+    This SQL Query is used to get the Compliance by Company and Actual Values of a Configuration Baseline Result.
 .NOTES
     Part of a report should not be run separately.
 .LINK
