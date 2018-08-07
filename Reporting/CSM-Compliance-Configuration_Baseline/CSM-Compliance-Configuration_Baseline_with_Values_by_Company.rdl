@@ -2206,6 +2206,6 @@ ORDER BY Name</CommandText>
     <CodeModule>SrsResources, culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Inch</rd:ReportUnitType>
-  <rd:ReportServerUrl>http://resscmp02/ReportServer</rd:ReportServerUrl>
+  <rd:ReportServerUrl></rd:ReportServerUrl>
   <rd:ReportID>1fab2b54-57de-49d3-aea2-75b9febeb7dc</rd:ReportID>
 </Report>
