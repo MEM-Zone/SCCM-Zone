@@ -64,11 +64,11 @@ ORDER BY ResourceID;
 
 SELECT
 
-/* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
---Users.Company0 AS 'Company',
+    /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
+    Users.Company0 AS 'Company',
 
-/* CUSTOM FUNCTION LEAVE DISABLED */
-    ( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Users].[ResourceID]) ) AS [Company],
+    /* CUSTOM FUNCTION LEAVE DISABLED */
+    --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Users].[ResourceID]) ) AS [Company],
 
     CIComplianceState.DisplayName,
     CIComplianceState.ComplianceStateName AS ComplianceState,
