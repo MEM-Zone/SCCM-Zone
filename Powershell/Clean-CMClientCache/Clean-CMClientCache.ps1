@@ -13,12 +13,13 @@
 * Ioan Popovici     | 2016-02-20 | v2.3     | Added check for not downloaded Cache Items, improved logging *
 * Ioan Popovici     | 2017-04-26 | v2.4     | Basic error management, formatting cleanup                   *
 * Ioan Popovici     | 2017-04-26 | v2.5     | Orphaned cache cleanup, null ContentID fix, improved logging *
-* Ioan Popovici     | 2017-05-02 | v2.5     | Basic error Management                                       *
-* Walker            | 2017-08-08 | v2.6     | Fixed first time run logging bug                             *
+* Ioan Popovici     | 2017-05-02 | v2.6     | Basic error Management                                       *
+* Walker            | 2017-08-08 | v2.7     | Fixed first time run logging bug                             *
+* Christopher Winney| 2018-05-10 | v2.8     | Fixed remove package bug, better logging                     *
 * Ioan Popovici     | 2018-07-05 | v3.0     | Completely re-written, and optimized se notes                *
-* Ioan Popovici     | 2018-07-09 | v3.0     | Added ReferencedThreshold, squashed lots of bugs             *
-* Ioan Popovici     | 2018-07-10 | v3.1     | Fixed should run bug                                         *
-* Ioan Popovici     | 2018-08-07 | v3.2     | Fixed division by 0 and added basic debug info               *
+* Ioan Popovici     | 2018-07-09 | v3.1     | Added ReferencedThreshold, squashed lots of bugs             *
+* Ioan Popovici     | 2018-07-10 | v3.2     | Fixed should run bug                                         *
+* Ioan Popovici     | 2018-08-07 | v3.3     | Fixed division by 0 and added basic debug info               *
 * ======================================================================================================== *
 *                                                                                                          *
 ************************************************************************************************************
