@@ -211,33 +211,6 @@ ORDER BY UserName;</CommandText>
         </Field>
       </Fields>
     </DataSet>
-    <DataSet Name="UserDisplayName">
-      <Query>
-        <DataSourceName>AutoGen__5C6358F2_4BB6_4a1b_A16E_8D96795D8602_</DataSourceName>
-        <QueryParameters>
-          <QueryParameter Name="@UserSIDs">
-            <Value>=Parameters!UserSIDs.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@UserName">
-            <Value>=Parameters!UserName.Value</Value>
-          </QueryParameter>
-        </QueryParameters>
-        <CommandText>/* UserDisplayName Dataset */
-SELECT DISTINCT
-    AttributeValue AS UserDisplayName
-FROM fn_rbac_StatMsgAttributes(@UserSIDs)
-WHERE
-    AttributeID = 403 -- Users only
-    AND AttributeValue = @UserName</CommandText>
-        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
-      </Query>
-      <Fields>
-        <Field Name="UserDisplayName">
-          <DataField>UserDisplayName</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-      </Fields>
-    </DataSet>
     <DataSet Name="ReportDescription">
       <Query>
         <DataSourceName>AutoGen__5C6358F2_4BB6_4a1b_A16E_8D96795D8602_</DataSourceName>
@@ -1319,10 +1292,10 @@ WHERE Name = @ReportName</CommandText>
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>2.03646in</Width>
+                  <Width>1.47018in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>13.96312in</Width>
+                  <Width>8.28982in</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -1418,7 +1391,7 @@ WHERE Name = @ReportName</CommandText>
             <Top>0.00278in</Top>
             <Left>0.12284cm</Left>
             <Height>0.4in</Height>
-            <Width>15.99958in</Width>
+            <Width>9.76in</Width>
             <ZIndex>1</ZIndex>
             <Style>
               <Border>
@@ -1472,7 +1445,7 @@ WHERE Name = @ReportName</CommandText>
       <Width>40.86761cm</Width>
       <Page>
         <PageHeader>
-          <Height>2.60136cm</Height>
+          <Height>2.54668cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -1548,7 +1521,7 @@ WHERE Name = @ReportName</CommandText>
               <Top>1.64851cm</Top>
               <Left>0.12284cm</Left>
               <Height>0.89817cm</Height>
-              <Width>40.63894cm</Width>
+              <Width>24.7904cm</Width>
               <ZIndex>2</ZIndex>
               <Style>
                 <Border>
@@ -1708,6 +1681,6 @@ WHERE Name = @ReportName</CommandText>
     <CodeModule>SrsResources, culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
-  <rd:ReportServerUrl>http://resscmp02/ReportServer</rd:ReportServerUrl>
+  <rd:ReportServerUrl></rd:ReportServerUrl>
   <rd:ReportID>6fbd236a-d836-4950-8788-14b828deb616</rd:ReportID>
 </Report>
