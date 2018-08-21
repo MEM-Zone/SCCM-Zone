@@ -33,6 +33,7 @@
 * _____________________________________________________________________________________________________ *
 * Octavian Cordos   | 2018-01-18 | First version                                                        *
 * Ioan Popovici     | 2018-08-08 | Added localizations, sorting, new template, element naming           *
+* Ioan Popovici     | 2018-08-21 | Fixed duplicates minor formating fixes                               *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -52,7 +53,7 @@
 /*## QUERY BODY                                  */
 /*##=============================================*/
 
-SELECT
+SELECT DISTINCT
 
     /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
     --System.Company0 as 'Company',
@@ -1806,7 +1807,6 @@ WHERE Name = @ReportName</CommandText>
                           <PaddingBottom>2pt</PaddingBottom>
                         </Style>
                       </Textbox>
-                      <rd:Selected>true</rd:Selected>
                     </CellContents>
                   </TablixHeader>
                   <TablixMembers>
@@ -2024,7 +2024,7 @@ WHERE Name = @ReportName</CommandText>
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>HardwareData</DataSetName>
-            <Top>13.39607mm</Top>
+            <Top>13.71357mm</Top>
             <Left>0.9525mm</Left>
             <Height>33.56732mm</Height>
             <Width>495.86286mm</Width>
@@ -2180,7 +2180,7 @@ WHERE Name = @ReportName</CommandText>
             </Style>
           </Line>
         </ReportItems>
-        <Height>6.10116cm</Height>
+        <Height>4.85761cm</Height>
         <Style>
           <Border>
             <Style>None</Style>

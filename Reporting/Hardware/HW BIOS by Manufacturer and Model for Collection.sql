@@ -25,7 +25,7 @@
 /*## QUERY BODY                                  */
 /*##=============================================*/
 
-SELECT
+SELECT DISTINCT
     System.Manufacturer0 AS Manufacturer,
     CASE
         WHEN System.Model0 LIKE '10AA%' THEN 'ThinkCentre M93p'

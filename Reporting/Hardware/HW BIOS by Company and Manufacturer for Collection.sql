@@ -6,6 +6,7 @@
 * _____________________________________________________________________________________________________ *
 * Octavian Cordos   | 2018-01-18 | First version                                                        *
 * Ioan Popovici     | 2018-08-08 | Added localizations, sorting, new template, element naming, version  *
+* Ioan Popovici     | 2018-08-21 | Fixed duplicates minor formating fixes                               *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -25,7 +26,7 @@
 /*## QUERY BODY                                  */
 /*##=============================================*/
 
-SELECT
+SELECT DISTINCT
 
     /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
     --System.Company0 as 'Company',
