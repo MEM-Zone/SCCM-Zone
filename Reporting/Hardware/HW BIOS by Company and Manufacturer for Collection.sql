@@ -29,10 +29,10 @@
 SELECT DISTINCT
 
     /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
-    --System.Company0 as 'Company',
+    System.Company0 as 'Company',
 
     /* CUSTOM FUNCTION LEAVE DISABLED */
-    ( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([System].[ResourceID]) ) AS [Company],
+    --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([System].[ResourceID]) ) AS [Company],
 
     System.Manufacturer0 AS Manufacturer,
     CASE

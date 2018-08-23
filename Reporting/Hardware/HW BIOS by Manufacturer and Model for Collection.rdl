@@ -27,12 +27,12 @@
         </QueryParameters>
         <CommandText>/*
 *********************************************************************************************************
-* Requires          | SQL, company AD attribute, Wi32_Computer_System_Product WMI class gathering       *
+* Requires          | SQL, Wi32_Computer_System_Product WMI class gathering                             *
 * ===================================================================================================== *
 * Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
 * Octavian Cordos   | 2018-01-18 | First version                                                        *
-* Ioan Popovici     | 2018-08-08 | Added localizations, sorting, new template, element naming           *
+* Ioan Popovici     | 2018-08-08 | Added localizations, sorting, new template, element naming, version  *
 * Ioan Popovici     | 2018-08-21 | Fixed duplicates minor formating fixes                               *
 * ===================================================================================================== *
 *                                                                                                       *
@@ -54,13 +54,6 @@
 /*##=============================================*/
 
 SELECT DISTINCT
-
-    /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
-    --System.Company0 as 'Company',
-
-    /* CUSTOM FUNCTION LEAVE DISABLED */
-    ( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([System].[ResourceID]) ) AS [Company],
-
     System.Manufacturer0 AS Manufacturer,
     CASE
         WHEN System.Model0 LIKE '10AA%' THEN 'ThinkCentre M93p'
@@ -108,10 +101,6 @@ ORDER BY
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
-        <Field Name="Company">
-          <DataField>Company</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
         <Field Name="Manufacturer">
           <DataField>Manufacturer</DataField>
           <rd:TypeName>System.String</rd:TypeName>
@@ -1209,7 +1198,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox84">
+                        <Textbox Name="TV_Computers">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -1226,7 +1215,6 @@ WHERE Name = @ReportName</CommandText>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox79</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>#e6eefc</Color>
@@ -1356,7 +1344,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="BIOS_Name_0">
+                        <Textbox Name="Textbox81">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -1372,6 +1360,7 @@ WHERE Name = @ReportName</CommandText>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
+                          <rd:DefaultName>Textbox80</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>#e6eefc</Color>
@@ -1501,7 +1490,7 @@ WHERE Name = @ReportName</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="BIOS_Name_3">
+                        <Textbox Name="Textbox84">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -1517,6 +1506,7 @@ WHERE Name = @ReportName</CommandText>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
+                          <rd:DefaultName>Textbox83</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>#9eb6e4</Color>
@@ -1807,6 +1797,7 @@ WHERE Name = @ReportName</CommandText>
                           <PaddingBottom>2pt</PaddingBottom>
                         </Style>
                       </Textbox>
+                      <rd:Selected>true</rd:Selected>
                     </CellContents>
                   </TablixHeader>
                   <TablixMembers>
@@ -1912,7 +1903,7 @@ WHERE Name = @ReportName</CommandText>
                       <TablixHeader>
                         <Size>37.57083mm</Size>
                         <CellContents>
-                          <Textbox Name="BIOS_Name_2">
+                          <Textbox Name="TV_Models">
                             <CanGrow>true</CanGrow>
                             <KeepTogether>true</KeepTogether>
                             <Paragraphs>
@@ -1987,7 +1978,7 @@ WHERE Name = @ReportName</CommandText>
                       <TablixHeader>
                         <Size>37.57083mm</Size>
                         <CellContents>
-                          <Textbox Name="Model_01">
+                          <Textbox Name="Textbox85">
                             <CanGrow>true</CanGrow>
                             <KeepTogether>true</KeepTogether>
                             <Paragraphs>
@@ -2003,6 +1994,7 @@ WHERE Name = @ReportName</CommandText>
                                 <Style />
                               </Paragraph>
                             </Paragraphs>
+                            <rd:DefaultName>Textbox83</rd:DefaultName>
                             <Style>
                               <Border>
                                 <Color>#9eb6e4</Color>
