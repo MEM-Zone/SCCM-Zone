@@ -12,6 +12,7 @@
 
 * Localizations
 * Interactive sorting
+* Windows 10 version
 
 ### Fixed
 
@@ -27,3 +28,9 @@
 
 * Duplicates
 * Formating issues
+
+## 1.3 - 2018-08-28
+
+### Fixed
+
+* Removed company query in non company report

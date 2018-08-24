@@ -4,9 +4,9 @@
 * ===================================================================================================== *
 * Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
-* Octavian Cordos   | 2018-01-18 | First version                                                        *
-* Ioan Popovici     | 2018-08-08 | Added localizations, sorting, new template, element naming, version  *
-* Ioan Popovici     | 2018-08-21 | Fixed duplicates minor formating fixes                               *
+* Octavian Cordos   | 2018-01-18 | v1.0     | First version                                             *
+* Ioan Popovici     | 2018-08-08 | v1.1     | Added localizations, sorting, template, element naming    *
+* Ioan Popovici     | 2018-08-21 | v1.2     | Fixed duplicates minor formating fixes                    *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
