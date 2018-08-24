@@ -16,11 +16,11 @@
 *********************************************************************************************************
 
 .SYNOPSIS
-    This PowerShell script is used shrink the image before SysPrep.
+    This PowerShell script is used clean the image before SysPrep.
 .DESCRIPTION
     This PowerShell script is used shrink the image before SysPrep by removing volume caches, update backups and update caches.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Clean-ImageBeforeSysPrep.ps1
+    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Clean-Image.ps1
 .NOTES
     Credit for the original VBScript to: @mikael_nystrom https://deploymentbunny.com
 .NOTES
