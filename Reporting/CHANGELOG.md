@@ -22,6 +22,8 @@
 
 * Get the application and package deployments for a device or user collection
 
+<br>
+
 </details>
 
 <details><summary>HW BIOS by Company or Manufacturer</summary>
@@ -61,6 +63,8 @@
 
 * Get the Hardware info of a Computer Collection
 
+<br>
+
 </details>
 
 <details><summary>SW Installed Software by Computer or Publisher</summary>
@@ -91,5 +95,7 @@
 ### First version
 
 * Get installed software by collection and software name
+
+<br>
 
 </details>
