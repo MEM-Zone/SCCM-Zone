@@ -1,12 +1,12 @@
 /*
 *********************************************************************************************************
-* Created by Ioan Popovici   | Requires SQL, company AD attribute gathering, Configuration Baseline     *
+* Requires          | SQL, company AD attribute gathering, Configuration Baseline                       *
 * ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
+* Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2017-09-22 | v1.0     | First version                                                 *
-* Ioan Popovici | 2018-01-17 | v1.1     | Fixed: Actual Value is NULL compliance is not displayed       *
-* Ioan Popovici | 2018-06-21 | v2.0     | Completly re-written to optimize speed                        *
+* Ioan Popovici     | 2017-09-22 | v1.0     | First version                                             *
+* Ioan Popovici     | 2018-01-17 | v1.1     | Fixed: Actual Value is NULL compliance is not displayed   *
+* Ioan Popovici     | 2018-06-21 | v2.0     | Completely re-written to optimize speed                   *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
