@@ -2,6 +2,8 @@
 
 <details><summary>DE Application or Package Deployments</summary>
 
+## DE Application or Package Deployments
+
 ## 1.2 - 2018-08-03
 
 ### Changed
