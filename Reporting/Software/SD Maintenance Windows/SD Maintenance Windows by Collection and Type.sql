@@ -1,11 +1,11 @@
 /*
 *********************************************************************************************************
-* Requires          | SQL, SCCM DB      															    *
+* Requires          | SQL, SCCM DB                                                                      *
 * ===================================================================================================== *
 * Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
-* Ioan Popovici     | 2016-05-16 | First version    						        					*
-* Ioan Popovici     | 2018-08-21 | Added localizations, interactive sorting, updated template    		*
+* Ioan Popovici     | 2016-05-16 | First version                                                        *
+* Ioan Popovici     | 2018-08-21 | Added localizations, interactive sorting, updated template           *
 * Ioan Popovici     | 2018-08-24 | Added filters for collection name and maintenance window name        *
 * ===================================================================================================== *
 *                                                                                                       *
