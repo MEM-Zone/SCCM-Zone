@@ -81,7 +81,7 @@ ORDER BY
 * Ioan Popovici     | 2018-07-16 | v1.0     | First version                                             *
 * Ioan Popovici     | 2018-08-06 | v1.1     | Fixed empty software name                                 *
 * Ioan Popovici     | 2018-08-06 | v1.2     | Added computer service tag and type information           *
-* Ioan Popovici     | 2018-08-06 | v1.3     | Fixed emprty publisher                                    *
+* Ioan Popovici     | 2018-08-06 | v1.3     | Fixed empty or NULL publisher, updated report template    *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************

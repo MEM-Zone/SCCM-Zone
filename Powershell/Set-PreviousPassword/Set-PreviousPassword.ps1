@@ -551,7 +551,7 @@ Function Get-RandomPassword() {
 .PARAMETER passLength
     The generated password length.
 .PARAMETER passSource
-    The character source used for passowrd generation.
+    The character source used for password generation.
 .EXAMPLE
     Get-RandomPassword -passLength '20'
 .NOTES
@@ -572,7 +572,7 @@ Function Get-RandomPassword() {
         [Alias('pSource')]
         [string[]]$passSource = $(
             $ascii=$NULL
-            For ($a=33; $a –le 126; $a++) { $ascii +=, [char][byte]$a }
+            For ($a=33; $a -le 126; $a++) { $ascii +=, [char][byte]$a }
             Write-Output $ascii
         )
     )
