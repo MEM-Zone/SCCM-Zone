@@ -1,4 +1,4 @@
-# SD Maintenance Windows by Collection and Type release history
+# SD Maintenance Windows by Collection release history
 
 ## 1.1 - 2018-08-24
 
