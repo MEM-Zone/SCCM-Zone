@@ -1,12 +1,14 @@
 /*
 *********************************************************************************************************
-* Requires          | SQL, Wi32_Computer_System_Product WMI class gathering                             *
+* Requires          | SQL, company AD attribute, Wi32_Computer_System_Product WMI class gathering       *
 * ===================================================================================================== *
 * Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
 * Octavian Cordos   | 2018-01-18 | v1.0     | First version                                             *
-* Ioan Popovici     | 2018-08-08 | v1.1     | Added localizations, sorting, template, element naming    *
+* Ioan Popovici     | 2018-08-08 | v1.1     | Added localizations, interactive sorting, new template,   *
+*                   |            |          | element naming, windows 10 version                        *
 * Ioan Popovici     | 2018-08-21 | v1.2     | Fixed duplicates minor formating fixes                    *
+* Ioan Popovici     | 2018-08-23 | v1.3     | Removed company query                                     *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -27,6 +29,13 @@
 /*##=============================================*/
 
 SELECT DISTINCT
+
+    /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
+    System.Company0 as 'Company',
+
+    /* CUSTOM FUNCTION LEAVE DISABLED */
+    --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([System].[ResourceID]) ) AS [Company],
+
     System.Manufacturer0 AS Manufacturer,
     CASE
         WHEN System.Model0 LIKE '10AA%' THEN 'ThinkCentre M93p'
