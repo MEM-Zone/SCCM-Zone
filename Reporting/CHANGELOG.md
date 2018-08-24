@@ -1,3 +1,5 @@
+[caca](https://github.com/JhonnyTerminus/SCCMZone/blob/master/Reporting/CHANGELOG.md#HW BIOS by Company or Manufacturer)
+
 # Reports release history
 
 <details><summary>DE Application or Package Deployments</summary>
