@@ -2,26 +2,11 @@
 ************************************************************************************************************
 * Requires          | Requires PowerShell 3.0                                                              *
 * ======================================================================================================== *
-* Modified by       |    Date    | Revision | Comments                                                     *
+* Created by        |    Date    | Comments                                                                *
 * ________________________________________________________________________________________________________ *
-* Ioan Popovici     | 2015-11-13 | v1.0     | First version                                                *
-* Ioan Popovici     | 2015-11-16 | v1.1     | Improved logging                                             *
-* Ioan Popovici     | 2015-11-17 | v1.2     | Vastly improved                                              *
-* Ioan Popovici     | 2016-02-03 | v2.0     | Vastly improved                                              *
-* Ioan Popovici     | 2016-02-04 | v2.1     | Fixed TotalSize decimals                                     *
-* Ioan Popovici     | 2016-02-19 | v2.2     | EventLog logging support                                     *
-* Ioan Popovici     | 2016-02-20 | v2.3     | Added check for not downloaded Cache Items, improved logging *
-* Ioan Popovici     | 2017-04-26 | v2.4     | Basic error management, formatting cleanup                   *
-* Ioan Popovici     | 2017-04-26 | v2.5     | Orphaned cache cleanup, null ContentID fix, improved logging *
-* Ioan Popovici     | 2017-05-02 | v2.6     | Basic error Management                                       *
-* Walker            | 2017-08-08 | v2.7     | Fixed first time run logging bug                             *
-* Christopher Winney| 2018-05-10 | v2.8     | Fixed remove package bug, better logging                     *
-* Ioan Popovici     | 2018-07-05 | v3.0     | Completely re-written, and optimized se notes                *
-* Ioan Popovici     | 2018-07-09 | v3.1     | Added ReferencedThreshold, squashed lots of bugs             *
-* Ioan Popovici     | 2018-07-10 | v3.2     | Fixed should run bug                                         *
-* Ioan Popovici     | 2018-08-07 | v3.3     | Fixed division by 0 and added basic debug info               *
+* Ioan Popovici     | 2015-11-13 | First version                                                           *
 * ======================================================================================================== *
-*                                                                                                          *
+* Release info moved separate markdown file, see notes.                                                    *
 ************************************************************************************************************
 
 .SYNOPSIS
@@ -37,41 +22,32 @@
 .PARAMETER ReferencedThreshold
     Specifies to remove cache element only if it has not been referenced in specified number of days. Default is: 0.
     If it's set to '0' Last Referenced Time is ignored.
-.PARAMETER LoggingOptions
-    Specifies logging options: ('Host', 'File', 'EventLog', 'None'). Default is: ('Host', 'File', 'EventLog').
 .PARAMETER SkipSuperPeer
     This switch specifies to skip cleaning if the client is a super peer (Peer Cache). Default is: $false.
 .PARAMETER RemovePersisted
-    This switch specifies to remove content even if it's persisted. Default is: $false
+    This switch specifies to remove content even if it's persisted. Default is: $false.
+.PARAMETER LoggingOptions
+    Specifies logging options: ('Host', 'File', 'EventLog', 'None'). Default is: ('Host', 'File', 'EventLog').
+.PARAMETER LogName
+    Specifies log folder name and event log name. Default is: 'Configuration Manager'.
+.PARAMETER LogSource
+    Specifies log file name and event source name. Default is: 'Clean-CMClientCache'.
+.PARAMETER LogDebugMessages
+    This switch specifies to log debug messages. Default is: $false.
 .EXAMPLE
-    PowerShell.exe .\Clean-CMClientCache -CleanupActions "Applications, Packages, Updates, Orphaned" -LoggingOptions 'Host' -LowDiskSpaceThreshold '100' -ReferencedThreshold '30' -SkipSuperPeer -RemovePersisted  -Verbose -Debug
+    PowerShell.exe .\Clean-CMClientCache -CleanupActions "Applications, Packages, Updates, Orphaned" -LoggingOptions 'Host' -LowDiskSpaceThreshold '100' -ReferencedThreshold '30' -SkipSuperPeer -RemovePersisted -Verbose -Debug
 .INPUTS
     None
 .OUTPUTS
     System.Management.Automation.PSObject
 .NOTES
-    ## Improvements
-        * Added better logging and logging options by adapting the PADT logging cmdlet. (Slightly modified version)
-        * Added support for verbose and debug to the PADT logging cmdlet.
-        * Added more cleaning options.
-        * Added LowDiskSpaceThreshold option to only clean cache when there is not enough space on the disk.
-        * Added SkipSuperPeer, for Peer Cache 'Hosts'.
-        * Added ReferencedThreshold, for skipping cache younger than specified number of days.
-    ## Fixes
-        * Fixed persisted cache cleaning, it's not removed without the RemovePersisted switch.
-        * Fixed orphaned cache cleaning and it's not a hack anymore.
-        * Fixed error reporting.
-    ## Optimizations
-        * Speed.
-        * The functionality is now split correctly in functions.
-        * Script is now ConfigurationItem friendly.
-        * Cmdlets are now module friendly.
-        * Moved file log in $Env:WinDir\Logs\Clean-CMClientCache.
-    ## For issue reporting please use github
-        [MyGithub](https://github.com/JhonnyTerminus/SCCMZone/issues)
+    Release notes
+        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Powershell/Clean-CMClientCache/CHANGELOG.md
+    For issue reporting please use github
+        https://github.com/JhonnyTerminus/SCCMZone/issues
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================
@@ -81,26 +57,32 @@
 
 ## Get script parameters
 Param (
-    [Parameter(Mandatory=$false,Position=0)]
+    [Parameter(Mandatory = $false, Position = 0)]
     [ValidateSet('All', 'Applications', 'Packages', 'Updates', 'Orphaned')]
     [Alias('Action')]
     [string[]]$CleanupActions = 'All',
-    [Parameter(Mandatory=$false,Position=1)]
+    [Parameter(Mandatory = $false, Position = 1)]
     [ValidateNotNullorEmpty()]
     [Alias('FreeSpace')]
     [int16]$LowDiskSpaceThreshold = '100',
-    [Parameter(Mandatory=$false,Position=2)]
+    [Parameter(Mandatory = $false, Position = 2)]
     [ValidateNotNullorEmpty()]
     [Alias('OlderThan')]
     [int16]$ReferencedThreshold = '0',
-    [Parameter(Mandatory=$false,Position=3)]
+    [Parameter(Mandatory = $false, Position = 3)]
+    [switch]$SkipSuperPeer = $false,
+    [Parameter(Mandatory = $false, Position = 4)]
+    [switch]$RemovePersisted = $false,
+    [Parameter(Mandatory = $false, Position = 5)]
     [ValidateSet('Host', 'File', 'EventLog', 'None')]
     [Alias('Logging')]
     [string[]]$LoggingOptions = @('Host', 'File', 'EventLog'),
-    [Parameter(Mandatory=$false,Position=4)]
-    [switch]$SkipSuperPeer = $false,
-    [Parameter(Mandatory=$false,Position=5)]
-    [switch]$RemovePersisted = $false
+    [Parameter(Mandatory = $false, Position = 6)]
+    [string]$LogName = 'Configuration Manager',
+    [Parameter(Mandatory = $false, Position = 7)]
+    [string]$LogSource = 'Clean-CMClientCache',
+    [Parameter(Mandatory = $false, Position = 8)]
+    [switch]$LogDebugMessages = $false
 )
 
 ## Initialize result variable
@@ -108,7 +90,11 @@ Param (
 
 ## Set script variables
 $script:LoggingOptions = $LoggingOptions
+$script:LogName = $LogName
+$script:LogSource = $LogSource
+$script:LogDebugMessages = $LogDebugMessages
 $script:ReferencedThreshold = $ReferencedThreshold
+
 #  Initialize ShouldRun with true. It will be checked in the script body
 [boolean]$ShouldRun = $true
 
@@ -157,19 +143,19 @@ Function Resolve-Error {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory = $false, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [AllowEmptyCollection()]
         [array]$ErrorRecord,
-        [Parameter(Mandatory=$false,Position=1)]
+        [Parameter(Mandatory = $false, Position = 1)]
         [ValidateNotNullorEmpty()]
-        [string[]]$Property = ('Message','InnerException','FullyQualifiedErrorId','ScriptStackTrace','PositionMessage'),
-        [Parameter(Mandatory=$false,Position=2)]
+        [string[]]$Property = ('Message', 'InnerException', 'FullyQualifiedErrorId', 'ScriptStackTrace', 'PositionMessage'),
+        [Parameter(Mandatory = $false, Position = 2)]
         [switch]$GetErrorRecord = $true,
-        [Parameter(Mandatory=$false,Position=3)]
+        [Parameter(Mandatory = $false, Position = 3)]
         [switch]$GetErrorInvocation = $true,
-        [Parameter(Mandatory=$false,Position=4)]
+        [Parameter(Mandatory = $false, Position = 4)]
         [switch]$GetErrorException = $true,
-        [Parameter(Mandatory=$false,Position=5)]
+        [Parameter(Mandatory = $false, Position = 5)]
         [switch]$GetErrorInnerException = $true
     )
 
@@ -188,10 +174,10 @@ Function Resolve-Error {
         ## Allows selecting and filtering the properties on the error object if they exist
         [scriptblock]$SelectProperty = {
             Param (
-                [Parameter(Mandatory=$true)]
+                [Parameter(Mandatory = $true)]
                 [ValidateNotNullorEmpty()]
                 $InputObject,
-                [Parameter(Mandatory=$true)]
+                [Parameter(Mandatory = $true)]
                 [ValidateNotNullorEmpty()]
                 [string[]]$Property
             )
@@ -355,51 +341,51 @@ Function Write-Log {
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [AllowEmptyCollection()]
         [Alias('Text')]
         [string[]]$Message,
-        [Parameter(Mandatory=$false,Position=1)]
-        [ValidateRange(1,3)]
+        [Parameter(Mandatory = $false, Position = 1)]
+        [ValidateRange(1, 3)]
         [int16]$Severity = 1,
-        [Parameter(Mandatory=$false,Position=2)]
-        [ValidateNotNull()]
-        [string]$Source = 'Unknown',
-        [Parameter(Mandatory=$false,Position=3)]
+        [Parameter(Mandatory = $false, Position = 2)]
+        [ValidateNotNullorEmpty()]
+        [string]$Source = $script:LogSource,
+        [Parameter(Mandatory = $false, Position = 3)]
         [ValidateNotNullorEmpty()]
         [string]$ScriptSection = $script:RunPhase,
-        [Parameter(Mandatory=$false,Position=4)]
-        [ValidateSet('CMTrace','Legacy')]
+        [Parameter(Mandatory = $false, Position = 4)]
+        [ValidateSet('CMTrace', 'Legacy')]
         [string]$LogType = 'CMTrace',
-        [Parameter(Mandatory=$false,Position=5)]
+        [Parameter(Mandatory = $false, Position = 5)]
         [ValidateSet('Host', 'File', 'EventLog', 'None')]
         [string[]]$LoggingOptions = $script:LoggingOptions,
-        [Parameter(Mandatory=$false,Position=6)]
+        [Parameter(Mandatory = $false, Position = 6)]
         [ValidateNotNullorEmpty()]
-        [string]$LogFileDirectory = $(Join-Path -Path $Env:WinDir -ChildPath '\Logs\Clean-CMClientCache'),
-        [Parameter(Mandatory=$false,Position=7)]
+        [string]$LogFileDirectory = $(Join-Path -Path $Env:WinDir -ChildPath $('\Logs\' + $script:LogName)),
+        [Parameter(Mandatory = $false, Position = 7)]
         [ValidateNotNullorEmpty()]
-        [string]$LogFileName = 'Clean-CMClientCache.log',
-        [Parameter(Mandatory=$false,Position=8)]
+        [string]$LogFileName = $($script:LogSource + '.log'),
+        [Parameter(Mandatory = $false, Position = 8)]
         [ValidateNotNullorEmpty()]
         [int]$MaxLogFileSizeMB = '4',
-        [Parameter(Mandatory=$false,Position=9)]
+        [Parameter(Mandatory = $false, Position = 9)]
         [ValidateNotNullorEmpty()]
-        [string]$LogName = 'Configuration Manager',
-        [Parameter(Mandatory=$false,Position=10)]
+        [string]$LogName = $script:LogSource,
+        [Parameter(Mandatory = $false, Position = 10)]
         [ValidateNotNullorEmpty()]
         [int32]$EventID = 1,
-        [Parameter(Mandatory=$false,Position=11)]
+        [Parameter(Mandatory = $false, Position = 11)]
         [ValidateNotNullorEmpty()]
         [boolean]$ContinueOnError = $false,
-        [Parameter(Mandatory=$false,Position=12)]
+        [Parameter(Mandatory = $false, Position = 12)]
         [switch]$PassThru = $false,
-        [Parameter(Mandatory=$false,Position=13)]
+        [Parameter(Mandatory = $false, Position = 13)]
         [switch]$VerboseMessage = $false,
-        [Parameter(Mandatory=$false,Position=14)]
+        [Parameter(Mandatory = $false, Position = 14)]
         [switch]$DebugMessage = $false,
-        [Parameter(Mandatory=$false,Position=15)]
-        [boolean]$LogDebugMessage = $false
+        [Parameter(Mandatory = $false, Position = 15)]
+        [boolean]$LogDebugMessage = $script:LogDebugMessages
     )
 
     Begin {
@@ -408,8 +394,8 @@ Function Write-Log {
 
         ## Logging Variables
         #  Log file date/time
-        [string]$LogTime = (Get-Date -Format 'HH:mm:ss.fff').ToString()
-        [string]$LogDate = (Get-Date -Format 'dd-MM-yyyy').ToString()
+        [string]$LogTime = (Get-Date -Format 'HH:mm:ss.fff-').ToString()
+        [string]$LogDate = (Get-Date -Format 'MM-dd-yyyy').ToString()
         If (-not (Test-Path -LiteralPath 'variable:LogTimeZoneBias')) { [int32]$script:LogTimeZoneBias = [timezone]::CurrentTimeZone.GetUtcOffset([datetime]::Now).TotalMinutes }
         [string]$LogTimePlusBias = $LogTime + $script:LogTimeZoneBias
         #  Initialize variables
@@ -424,18 +410,8 @@ Function Write-Log {
         If ('None' -in $LoggingOptions) { $DisableLogging = $true }
         #  Check if the script section is defined
         [boolean]$ScriptSectionDefined = [boolean](-not [string]::IsNullOrEmpty($ScriptSection))
-        #  Get the file name of the source script
-        Try {
-            If ($script:MyInvocation.Value.ScriptName) {
-                [string]$ScriptSource = Split-Path -Path $script:MyInvocation.Value.ScriptName -Leaf -ErrorAction 'Stop'
-            }
-            Else {
-                [string]$ScriptSource = Split-Path -Path $script:MyInvocation.MyCommand.Definition -Leaf -ErrorAction 'Stop'
-            }
-        }
-        Catch {
-            $ScriptSource = ''
-        }
+        #  Check if the source is defined
+        [boolean]$SourceDefined = [boolean](-not [string]::IsNullOrEmpty($Source))
         #  Check if the event log and event source exit
         [boolean]$LogNameNotExists = (-not [System.Diagnostics.EventLog]::Exists($LogName))
         [boolean]$LogSourceNotExists = (-not [System.Diagnostics.EventLog]::SourceExists($Source))
@@ -447,7 +423,7 @@ Function Write-Log {
                 [string]$lSource,
                 [int16]$lSeverity
             )
-            "<![LOG[$lMessage]LOG]!>" + "<time=`"$LogTimePlusBias`" " + "date=`"$LogDate`" " + "component=`"$lSource`" " + "context=`"$([Security.Principal.WindowsIdentity]::GetCurrent().Name)`" " + "type=`"$lSeverity`" " + "thread=`"$PID`" " + "file=`"$ScriptSource`">"
+            "<![LOG[$lMessage]LOG]!>" + "<time=`"$LogTimePlusBias`" " + "date=`"$LogDate`" " + "component=`"$lSource`" " + "context=`"$([Security.Principal.WindowsIdentity]::GetCurrent().Name)`" " + "type=`"$lSeverity`" " + "thread=`"$PID`" " + "file=`"$Source`">"
         }
 
         ## Create script block for writing log entry to the console
@@ -500,6 +476,21 @@ Function Write-Log {
                     2 { 'Warning' }
                     1 { 'Information' }
                 }
+
+                If ($LogNameNotExists -and (-not $LogSourceNotExists)) {
+                    Try {
+                        #  Delete event source if the log does not exist
+                        $null = [System.Diagnostics.EventLog]::DeleteEventSource($Source)
+                        $LogSourceNotExists = $true
+                    }
+                    Catch {
+                        [boolean]$ExitLoggingFunction = $true
+                        #  If error deleting event source, write message to console
+                        If (-not $ContinueOnError) {
+                            Write-Host -Object "[$LogDate $LogTime] [${CmdletName}] $ScriptSection :: Failed to create the event log source [$Source]. `n$(Resolve-Error)" -ForegroundColor 'Red'
+                        }
+                    }
+                }
                 If ($LogNameNotExists -or $LogSourceNotExists) {
                     Try {
                         #  Create event log
@@ -507,7 +498,7 @@ Function Write-Log {
                     }
                     Catch {
                         [boolean]$ExitLoggingFunction = $true
-                        #  If error creating directory, write message to console
+                        #  If error creating event log, write message to console
                         If (-not $ContinueOnError) {
                             Write-Host -Object "[$LogDate $LogTime] [${CmdletName}] $ScriptSection :: Failed to create the event log [$LogName`:$Source]. `n$(Resolve-Error)" -ForegroundColor 'Red'
                         }
@@ -515,7 +506,7 @@ Function Write-Log {
                 }
                 Try {
                     #  Write to event log
-                    Write-EventLog -LogName $LogName -Source $Source -EventId $EventID -EntryType $EventType -Message $ConsoleLogLine -ErrorAction 'Stop'
+                    Write-EventLog -LogName $LogName -Source $Source -EventId $EventID -EntryType $EventType -Category '0' -Message $ConsoleLogLine -ErrorAction 'Stop'
                 }
                 Catch {
                     [boolean]$ExitLoggingFunction = $true
@@ -632,7 +623,7 @@ Function Write-Log {
         Try {
             If ((-not $ExitLoggingFunction) -and (-not $DisableLogging)) {
                 [IO.FileInfo]$LogFile = Get-ChildItem -LiteralPath $LogFilePath -ErrorAction 'Stop'
-                [decimal]$LogFileSizeMB = $LogFile.Length/1MB
+                [decimal]$LogFileSizeMB = $LogFile.Length / 1MB
                 If (($LogFileSizeMB -gt $MaxLogFileSizeMB) -and ($MaxLogFileSizeMB -gt 0)) {
                     ## Change the file extension to "lo_"
                     [string]$ArchivedOutLogFile = [IO.Path]::ChangeExtension($LogFilePath, 'lo_')
@@ -673,21 +664,20 @@ Function Get-CCMCachedApplications {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param ()
     Begin {
         Try {
 
-            ## Set script phase for logging
-            $script:RunPhase = 'Processing'
-
             ## Get the name of this function and write verbose header
             [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            #  Set script phase for logging
+            $script:RunPhase = ${CmdletName}
             #  Write verbose header
-            Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message 'Start' -VerboseMessage
 
             ## Initialize the CCM resource manager com object
             [__comobject]$CCMComObject = New-Object -ComObject 'UIResource.UIResourceMgr'
@@ -708,7 +698,7 @@ Function Get-CCMCachedApplications {
             [psobject]$CachedApps = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3'
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -730,14 +720,14 @@ Function Get-CCMCachedApplications {
                     #  Assemble Invoke-Method arguments
                     $Arguments = [hashtable]@{
                         'AppDeliveryTypeID' = [string]$($DeploymentType.ID)
-                        'Revision' = [UINT32]$($DeploymentType.Revision)
-                        'ActionType' = 'Install'
+                        'Revision'          = [UINT32]$($DeploymentType.Revision)
+                        'ActionType'        = 'Install'
                     }
                     #  Get app content ID via GetContentInfo wmi method
                     $AppContentID = (Invoke-CimMethod -Namespace 'Root\ccm\cimodels' -ClassName 'CCM_AppDeliveryType' -MethodName 'GetContentInfo' -Arguments $Arguments -Verbose:$false).ContentID
 
                     ## Get the cache info for the application using the ContentID
-                    $AppCacheInfo = $CacheInfo | Where-Object { $_.ContentID -eq  $AppContentID }
+                    $AppCacheInfo = $CacheInfo | Where-Object { $_.ContentID -eq $AppContentID }
 
                     ## If the application is in the cache, assemble properties and add it to the result object
                     If (($AppCacheInfo.ContentSize) -gt 0) {
@@ -745,16 +735,16 @@ Function Get-CCMCachedApplications {
                         If (-not $AppCacheInfo.ContentSize) { $ContentSize = 0 }
                         #  Assemble result object props
                         $CachedAppProps = [ordered]@{
-                            Name = $($Application.Name)
-                            DeploymentType = $($DeploymentType.Name)
-                            InstallState = $($Application.InstallState)
-                            ContentID = $($AppCacheInfo.ContentID)
-                            ContentVersion = $($AppCacheInfo.ContentVersion)
-                            ReferenceCount = $($AppCacheInfo.ReferenceCount)
+                            Name              = $($Application.Name)
+                            DeploymentType    = $($DeploymentType.Name)
+                            InstallState      = $($Application.InstallState)
+                            ContentID         = $($AppCacheInfo.ContentID)
+                            ContentVersion    = $($AppCacheInfo.ContentVersion)
+                            ReferenceCount    = $($AppCacheInfo.ReferenceCount)
                             LastReferenceTime = $($AppCacheInfo.LastReferenceTime)
-                            Location = $($AppCacheInfo.Location)
-                            'Size(MB)' = '{0:N2}' -f $($AppCacheInfo.ContentSize / 1KB)
-                            CacheElementID = $($AppCacheInfo.CacheElementID)
+                            Location          = $($AppCacheInfo.Location)
+                            'Size(MB)'        = '{0:N2}' -f $($AppCacheInfo.ContentSize / 1KB)
+                            CacheElementID    = $($AppCacheInfo.CacheElementID)
                         }
                         #  Add items to result object
                         $CachedApps += New-Object 'PSObject' -Property $CachedAppProps
@@ -763,7 +753,7 @@ Function Get-CCMCachedApplications {
             }
         }
         Catch {
-            Write-Log -Message "Could not get cached application [$($Application.Name)].  `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not get cached application [$($Application.Name)].  `n$(Resolve-Error)" -Severity '3'
             Throw "Could not get cached application [$($Application.Name)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -773,7 +763,7 @@ Function Get-CCMCachedApplications {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
@@ -790,21 +780,20 @@ Function Get-CCMCachedPackages {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param ()
     Begin {
         Try {
 
-            ## Set script phase for logging
-            $script:RunPhase = 'Processing'
-
             ## Get the name of this function and write verbose header
-		    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            #  Set script phase for logging
+            $script:RunPhase = ${CmdletName}
             #  Write verbose header
-            Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message 'Start' -VerboseMessage
 
             ## Initialize the CCM resource manager com object
             [__comobject]$CCMComObject = New-Object -ComObject 'UIResource.UIResourceMgr'
@@ -825,7 +814,7 @@ Function Get-CCMCachedPackages {
             [psobject]$CachedPkgs = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -840,32 +829,32 @@ Function Get-CCMCachedPackages {
                 Write-Progress -Activity 'Processing Packages' -CurrentOperation $($Package.FullName) -PercentComplete $(($ProgressCounter / $PackageCount) * 100)
 
                 ## Debug info
-                Write-Log -Message "PowerShell version: $($PSVersionTable.PSVersion | Out-String)" -DebugMessage -Source ${CmdletName}
-                Write-Log -Message "CacheInfo: `n $($CacheInfo | Out-String)" -DebugMessage -Source ${CmdletName}
-                Write-Log -Message "CurentPackage: `n $($Package | Out-String)" -DebugMessage -Source ${CmdletName}
-                Write-Log -Message "Size: `n $($PkgCacheInfo.ContentSize | Out-String)" -DebugMessage -Source ${CmdletName}
+                Write-Log -Message "PowerShell version: $($PSVersionTable.PSVersion | Out-String)" -DebugMessage
+                Write-Log -Message "CacheInfo: `n $($CacheInfo | Out-String)" -DebugMessage
+                Write-Log -Message "CurentPackage: `n $($Package | Out-String)" -DebugMessage
+                Write-Log -Message "Size: `n $($PkgCacheInfo.ContentSize | Out-String)" -DebugMessage
 
                 ## Get the cache info for the package using the ContentID
-                $PkgCacheInfo = $CacheInfo | Where-Object { $_.ContentID -eq  $Package.PackageID }
+                $PkgCacheInfo = $CacheInfo | Where-Object { $_.ContentID -eq $Package.PackageID }
 
                 ## Debug info
-                Write-Log -Message "CachedInfo: `n $($PkgCacheInfo | Out-String)" -DebugMessage -Source ${CmdletName}
+                Write-Log -Message "CachedInfo: `n $($PkgCacheInfo | Out-String)" -DebugMessage
 
                 ## If the package is in the cache, assemble properties and add it to the result object
                 If (($PkgCacheInfo.ContentSize) -gt 0) {
                     #  Assemble result object props
                     $CachedPkgProps = [ordered]@{
-                        Name = $($Package.FullName)
-                        Program = $($Package.Name)
-                        LastRunStatus = $($Package.LastRunStatus)
+                        Name              = $($Package.FullName)
+                        Program           = $($Package.Name)
+                        LastRunStatus     = $($Package.LastRunStatus)
                         RepeatRunBehavior = $($Package.RepeatRunBehavior)
-                        ContentID = $($PkgCacheInfo.ContentID)
-                        ContentVersion = $($PkgCacheInfo.ContentVersion)
-                        ReferenceCount = $($PkgCacheInfo.ReferenceCount)
+                        ContentID         = $($PkgCacheInfo.ContentID)
+                        ContentVersion    = $($PkgCacheInfo.ContentVersion)
+                        ReferenceCount    = $($PkgCacheInfo.ReferenceCount)
                         LastReferenceTime = $($PkgCacheInfo.LastReferenceTime)
-                        Location = $($PkgCacheInfo.Location)
-                        'Size(MB)' = '{0:N2}' -f $($PkgCacheInfo.ContentSize / 1KB)
-                        CacheElementID = $($PkgCacheInfo.CacheElementID)
+                        Location          = $($PkgCacheInfo.Location)
+                        'Size(MB)'        = '{0:N2}' -f $($PkgCacheInfo.ContentSize / 1KB)
+                        CacheElementID    = $($PkgCacheInfo.CacheElementID)
                     }
                     #  Add items to result object
                     $CachedPkgs += New-Object 'PSObject' -Property $CachedPkgProps
@@ -873,7 +862,7 @@ Function Get-CCMCachedPackages {
             }
         }
         Catch {
-            Write-Log -Message "Could not get cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not get cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity '3'
             Throw "Could not get cached package [$($Package.Name)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -883,7 +872,7 @@ Function Get-CCMCachedPackages {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
@@ -900,8 +889,8 @@ Function Get-CCMCachedUpdates {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
     [CmdletBinding()]
@@ -909,13 +898,12 @@ Function Get-CCMCachedUpdates {
     Begin {
         Try {
 
-            ## Set script phase for logging
-            $script:RunPhase = 'Processing'
-
             ## Get the name of this function and write verbose header
-		    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            #  Set script phase for logging
+            $script:RunPhase = ${CmdletName}
             #  Write verbose header
-            Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message 'Start' -VerboseMessage
 
             ## Initialize the CCM resource manager com object
             [__comobject]$CCMComObject = New-Object -ComObject 'UIResource.UIResourceMgr'
@@ -936,7 +924,7 @@ Function Get-CCMCachedUpdates {
             [psobject]$CachedUpdates = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -951,22 +939,22 @@ Function Get-CCMCachedUpdates {
                 Write-Progress -Activity 'Processing Updates' -CurrentOperation $Update.FullName -PercentComplete (($ProgressCounter / $UpdateCount) * 100)
 
                 ## Get the cache info for the update using the ContentID
-                $UpdateCacheInfo = $CacheInfo | Where-Object { $_.ContentID -eq  $Update.UniqueID }
+                $UpdateCacheInfo = $CacheInfo | Where-Object { $_.ContentID -eq $Update.UniqueID }
 
                 ## If the update is in the cache, assemble properties and add it to the result object
                 If (($UpdateCacheInfo.ContentSize) -gt 0) {
                     #  Assemble result object props
                     $CachedUpdateProps = [ordered]@{
-                        Name = $($Update.Title)
-                        Article = $($Update.Article)
-                        Status = $($Update.Status)
-                        ContentID = $($UpdateCacheInfo.ContentID)
-                        ContentVersion = $($UpdateCacheInfo.ContentVersion)
-                        ReferenceCount = $($UpdateCacheInfo.ReferenceCount)
+                        Name              = $($Update.Title)
+                        Article           = $($Update.Article)
+                        Status            = $($Update.Status)
+                        ContentID         = $($UpdateCacheInfo.ContentID)
+                        ContentVersion    = $($UpdateCacheInfo.ContentVersion)
+                        ReferenceCount    = $($UpdateCacheInfo.ReferenceCount)
                         LastReferenceTime = $($UpdateCacheInfo.LastReferenceTime)
-                        Location = $($UpdateCacheInfo.Location)
-                        'Size(MB)' = '{0:N2}' -f $($UpdateCacheInfo.ContentSize / 1KB)
-                        CacheElementID = $($UpdateCacheInfo.CacheElementID)
+                        Location          = $($UpdateCacheInfo.Location)
+                        'Size(MB)'        = '{0:N2}' -f $($UpdateCacheInfo.ContentSize / 1KB)
+                        CacheElementID    = $($UpdateCacheInfo.CacheElementID)
                     }
                     #  Add items to result object
                     $CachedUpdates += New-Object 'PSObject' -Property $CachedUpdateProps
@@ -974,7 +962,7 @@ Function Get-CCMCachedUpdates {
             }
         }
         Catch {
-            Write-Log -Message "Could not get cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not get cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity '3'
             Throw "Could not get cached update [$($Update.Title)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -984,7 +972,7 @@ Function Get-CCMCachedUpdates {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
@@ -1008,20 +996,20 @@ Function Remove-CCMCacheElement {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory = $true, Position = 0)]
         [ValidateNotNullorEmpty()]
         [Alias('ID')]
         [string]$ContentID,
-        [Parameter(Mandatory=$false,Position=1)]
+        [Parameter(Mandatory = $false, Position = 1)]
         [ValidateNotNullorEmpty()]
         [Alias('RPer')]
         [boolean]$RemovePersisted = $false,
-        [Parameter(Mandatory=$false,Position=2)]
+        [Parameter(Mandatory = $false, Position = 2)]
         [ValidateNotNullorEmpty()]
         [Alias('DaysThreshold')]
         [int16]$ReferencedThreshold = $script:ReferencedThreshold
@@ -1029,13 +1017,12 @@ Function Remove-CCMCacheElement {
 
     Begin {
 
-        ## Set script phase for logging
-        $script:RunPhase = 'Removal'
-
         ## Get the name of this function and write verbose header
         [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+        #  Set script phase for logging
+        $script:RunPhase = ${CmdletName}
         #  Write verbose header
-        Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Start' -VerboseMessage
 
         ## Initialize the CCM resource manager com object
         [__comobject]$CCMComObject = New-Object -ComObject 'UIResource.UIResourceMgr'
@@ -1044,16 +1031,16 @@ Function Remove-CCMCacheElement {
         [psobject]$RemovedCache = @()
 
         ## Set the date threshold
-        [datetime]$OlderThan = (Get-Date).AddDays(-$ReferencedThreshold)
+        [datetime]$OlderThan = (Get-Date).AddDays( - $ReferencedThreshold)
     }
     Process {
         Try {
 
             ## Get the CacheElementIDs to delete
-            $CacheInfo = $CCMComObject.GetCacheInfo().GetCacheElements() | Where-Object { ($_.ContentID -eq  $ContentID) }
+            $CacheInfo = $CCMComObject.GetCacheInfo().GetCacheElements() | Where-Object { ($_.ContentID -eq $ContentID) }
 
             ## Write verbose message
-            Write-Log -Message "ContentID [$ContentID]" -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message "ContentID [$ContentID]" -VerboseMessage
 
             ## Delete cache items (This loop is probably not needed but since I don't know if there can be multiple cache items with the same ContentID...)
             ForEach ($CacheItem in $CacheInfo) {
@@ -1069,11 +1056,11 @@ Function Remove-CCMCacheElement {
                     }
 
                     ## Check if the CacheElement has been deleted
-                    $CacheInfo = $CCMComObject.GetCacheInfo().GetCacheElements() | Where-Object { $_.ContentID -eq  $ContentID }
+                    $CacheInfo = $CCMComObject.GetCacheInfo().GetCacheElements() | Where-Object { $_.ContentID -eq $ContentID }
                     #  If cache item still exists perform additional checks (this is a hack it would be nice to get the deployment flags from somewhere)
                     If ($CacheInfo) {
                         #  If cache is above referenced threshold set status to 'AboveReferencedThreshold'
-                        If ($AboveReferencedThreshold)  { $RemovalStatus = 'AboveReferencedThreshold' }
+                        If ($AboveReferencedThreshold) { $RemovalStatus = 'AboveReferencedThreshold' }
                         #  If the RemovePersisted switch is set throw error
                         ElseIf ($RemovePersisted) { Throw "Failed to remove cache element [$($CacheItem.ContentID)]" }
                         #  If cache item still exists and RemovePersisted is not specified set the RemovalStatus to 'Persisted'
@@ -1089,14 +1076,14 @@ Function Remove-CCMCacheElement {
 
                 ## Build result object
                 $RemovedCacheProps = [ordered]@{
-                    ContentID = $($CacheItem.ContentID)
-                    ContentVersion = $($CacheItem.ContentVersion)
-                    ReferenceCount = $($CacheItem.ReferenceCount)
+                    ContentID         = $($CacheItem.ContentID)
+                    ContentVersion    = $($CacheItem.ContentVersion)
+                    ReferenceCount    = $($CacheItem.ReferenceCount)
                     LastReferenceTime = $($CacheItem.LastReferenceTime)
-                    Location = $($CacheItem.Location)
-                    ContentSize = '{0:N2}' -f $($CacheItem.ContentSize /1KB)
-                    CacheElementID = $($CacheItem.CacheElementID)
-                    RemovalStatus = $RemovalStatus
+                    Location          = $($CacheItem.Location)
+                    ContentSize       = '{0:N2}' -f $($CacheItem.ContentSize / 1KB)
+                    CacheElementID    = $($CacheItem.CacheElementID)
+                    RemovalStatus     = $RemovalStatus
                 }
 
                 ##  Add items to result object
@@ -1104,7 +1091,7 @@ Function Remove-CCMCacheElement {
             }
         }
         Catch {
-            Write-Log -Message "Could not delete cache element [$($CacheItem.CacheElementID)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not delete cache element [$($CacheItem.CacheElementID)]. `n$(Resolve-Error)" -Severity '3'
             Throw "Could not delete cache element [$($CacheItem.CacheElementID)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1114,14 +1101,14 @@ Function Remove-CCMCacheElement {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
 
 #region Function Remove-CCMCachedApplications
 Function Remove-CCMCachedApplications {
-<#
+    <#
 .SYNOPSIS
     Removes all ccm cached applications.
 .DESCRIPTION
@@ -1133,12 +1120,12 @@ Function Remove-CCMCachedApplications {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory = $false, Position = 0)]
         [ValidateNotNullorEmpty()]
         [Alias('RPer')]
         [boolean]$RemovePersisted = $false
@@ -1147,13 +1134,12 @@ Function Remove-CCMCachedApplications {
     Begin {
         Try {
 
-            ## Set script phase for logging
-            $script:RunPhase = 'Removal'
-
             ## Get the name of this function and write verbose header
             [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            #  Set script phase for logging
+            $script:RunPhase = ${CmdletName}
             #  Write verbose header
-            Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message 'Start' -VerboseMessage
 
             ## Get ccm cached applications
             $CachedApplications = Get-CCMCachedApplications
@@ -1162,7 +1148,7 @@ Function Remove-CCMCachedApplications {
             [psobject]$RemovedApplications = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3'
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -1178,16 +1164,16 @@ Function Remove-CCMCachedApplications {
                 ForEach ($CacheElement in $RemoveCacheElement) {
                     #  Assemble result object props
                     $RemovedApplicationProps = [ordered]@{
-                        FullName = $($Application.Name)
-                        Name = $($Application.DeploymentType)
-                        ContentID = $($CacheElement.ContentID)
-                        ContentVersion = $($CacheElement.ContentVersion)
-                        ReferenceCount = $($CacheElement.ReferenceCount)
+                        FullName          = $($Application.Name)
+                        Name              = $($Application.DeploymentType)
+                        ContentID         = $($CacheElement.ContentID)
+                        ContentVersion    = $($CacheElement.ContentVersion)
+                        ReferenceCount    = $($CacheElement.ReferenceCount)
                         LastReferenceTime = $($CacheElement.LastReferenceTime)
-                        Location = $($CacheElement.Location)
-                        'Size(MB)' = $($CacheElement.ContentSize)
-                        CacheElementID = $($CacheElement.CacheElementID)
-                        Status = $($CacheElement.RemovalStatus)
+                        Location          = $($CacheElement.Location)
+                        'Size(MB)'        = $($CacheElement.ContentSize)
+                        CacheElementID    = $($CacheElement.CacheElementID)
+                        Status            = $($CacheElement.RemovalStatus)
                     }
                     #  Add items to result object
                     $RemovedApplications += New-Object 'PSObject' -Property $RemovedApplicationProps
@@ -1195,7 +1181,7 @@ Function Remove-CCMCachedApplications {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached application [$($Application.Name)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached application [$($Application.Name)]. `n$(Resolve-Error)" -Severity '3'
             Throw "Could not remove cached application [$($Application.Name)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1205,7 +1191,7 @@ Function Remove-CCMCachedApplications {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
@@ -1224,12 +1210,12 @@ Function Remove-CCMCachedPackages {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory = $false, Position = 0)]
         [ValidateNotNullorEmpty()]
         [Alias('RPer')]
         [boolean]$RemovePersisted = $false
@@ -1238,13 +1224,12 @@ Function Remove-CCMCachedPackages {
     Begin {
         Try {
 
-            ## Set script phase for logging
-            $script:RunPhase = 'Removal'
-
             ## Get the name of this function and write verbose header
-		    [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            #  Set script phase for logging
+            $script:RunPhase = ${CmdletName}
             #  Write verbose header
-            Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message 'Start' -VerboseMessage
 
             ## Get ccm cached packages
             $CachedPackages = Get-CCMCachedPackages
@@ -1253,7 +1238,7 @@ Function Remove-CCMCachedPackages {
             [psobject]$RemovePackages = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3'
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -1277,16 +1262,16 @@ Function Remove-CCMCachedPackages {
                     If ($Status -ne 'Needed') { $Status = $($CacheElement.RemovalStatus) }
                     #  Assemble result object props
                     $RemovePackageProps = [ordered]@{
-                        FullName = $($Package.Name)
-                        Name = $($Package.Program)
-                        ContentID = $($CacheElement.ContentID)
-                        ContentVersion = $($CacheElement.ContentVersion)
-                        ReferenceCount = $($CacheElement.ReferenceCount)
+                        FullName          = $($Package.Name)
+                        Name              = $($Package.Program)
+                        ContentID         = $($CacheElement.ContentID)
+                        ContentVersion    = $($CacheElement.ContentVersion)
+                        ReferenceCount    = $($CacheElement.ReferenceCount)
                         LastReferenceTime = $($CacheElement.LastReferenceTime)
-                        Location = $($CacheElement.Location)
-                        'Size(MB)' = $($CacheElement.ContentSize)
-                        CacheElementID = $($CacheElement.CacheElementID)
-                        Status = $Status
+                        Location          = $($CacheElement.Location)
+                        'Size(MB)'        = $($CacheElement.ContentSize)
+                        CacheElementID    = $($CacheElement.CacheElementID)
+                        Status            = $Status
                     }
                     #  Add items to result object
                     $RemovePackages += New-Object 'PSObject' -Property $RemovePackageProps
@@ -1294,7 +1279,7 @@ Function Remove-CCMCachedPackages {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached package [$($Package.Name)]. `n$(Resolve-Error)" -Severity '3'
             Throw "Could not remove cached package [$($Package.Name)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1304,7 +1289,7 @@ Function Remove-CCMCachedPackages {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
@@ -1321,8 +1306,8 @@ Function Remove-CCMCachedUpdates {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
     [CmdletBinding()]
@@ -1330,13 +1315,12 @@ Function Remove-CCMCachedUpdates {
     Begin {
         Try {
 
-            ## Set script phase for logging
-            $script:RunPhase = 'Removal'
-
             ## Get the name of this function and write verbose header
             [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            #  Set script phase for logging
+            $script:RunPhase = ${CmdletName}
             #  Write verbose header
-            Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message 'Start' -VerboseMessage
 
             ## Get ccm cached updates
             $CachedUpdates = Get-CCMCachedUpdates
@@ -1345,7 +1329,7 @@ Function Remove-CCMCachedUpdates {
             [psobject]$RemoveUpdates = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3 -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity 3
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -1369,16 +1353,16 @@ Function Remove-CCMCachedUpdates {
                     If ($Status -ne 'Needed') { $Status = $($CacheElement.RemovalStatus) }
                     #  Assemble result object props
                     $RemoveUpdateProps = [ordered]@{
-                        FullName = $($Update.Title)
-                        Name = $($Update.Article)
-                        ContentID = $($CacheElement.ContentID)
-                        ContentVersion = $($CacheElement.ContentVersion)
-                        ReferenceCount = $($CacheElement.ReferenceCount)
+                        FullName          = $($Update.Title)
+                        Name              = $($Update.Article)
+                        ContentID         = $($CacheElement.ContentID)
+                        ContentVersion    = $($CacheElement.ContentVersion)
+                        ReferenceCount    = $($CacheElement.ReferenceCount)
                         LastReferenceTime = $($CacheElement.LastReferenceTime)
-                        Location = $($CacheElement.Location)
-                        'Size(MB)' = $($CacheElement.ContentSize)
-                        CacheElementID = $($CacheElement.CacheElementID)
-                        Status = $Status
+                        Location          = $($CacheElement.Location)
+                        'Size(MB)'        = $($CacheElement.ContentSize)
+                        CacheElementID    = $($CacheElement.CacheElementID)
+                        Status            = $Status
                     }
                     #  Add items to result object
                     $RemoveUpdates += New-Object 'PSObject' -Property $RemoveUpdateProps
@@ -1386,7 +1370,7 @@ Function Remove-CCMCachedUpdates {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached update [$($Update.Title)]. `n$(Resolve-Error)" -Severity '3'
             Throw "Could not remove cached update [$($Update.Title)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1396,7 +1380,7 @@ Function Remove-CCMCachedUpdates {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
@@ -1413,8 +1397,8 @@ Function Remove-CCMOrphanedCache {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
     [CmdletBinding()]
@@ -1422,13 +1406,12 @@ Function Remove-CCMOrphanedCache {
     Begin {
         Try {
 
-            ## Set script phase for logging
-            $script:RunPhase = 'Removal'
-
             ## Get the name of this function and write verbose header
             [string]${CmdletName} = $PSCmdlet.MyInvocation.MyCommand.Name
+            #  Set script phase for logging
+            $script:RunPhase = ${CmdletName}
             #  Write verbose header
-            Write-Log -Message 'Start' -VerboseMessage -Source ${CmdletName}
+            Write-Log -Message 'Start' -VerboseMessage
 
             ## Initialize the CCM resource manager com object
             [__comobject]$CCMComObject = New-Object -ComObject 'UIResource.UIResourceMgr'
@@ -1444,7 +1427,7 @@ Function Remove-CCMOrphanedCache {
             [psobject]$RemoveOrphaned = @()
         }
         Catch {
-            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Initialization failed. `n$(Resolve-Error)" -Severity '3'
             Throw "Initialization failed. `n$($_.Exception.Message)"
         }
     }
@@ -1472,10 +1455,10 @@ Function Remove-CCMOrphanedCache {
                         #ContentVersion = 'N/A'
                         #ReferenceCount = 'N/A'
                         #LastReferenceTime = 'N/A'
-                        Location = $CacheElementPath
-                        'Size(MB)' = '{0:N2}' -f $($CacheElementSize / 1KB)
+                        Location   = $CacheElementPath
+                        'Size(MB)' = '{0:N2}' -f $($CacheElementSize / 1MB)
                         #CacheElementID = 'NA'
-                        Status = 'Removed'
+                        Status     = 'Removed'
                     }
                     #  Add items to result object
                     $RemoveOrphaned += New-Object 'PSObject' -Property $RemoveOrphanedProps
@@ -1483,7 +1466,7 @@ Function Remove-CCMOrphanedCache {
             }
         }
         Catch {
-            Write-Log -Message "Could not remove cached item [$($CacheElementPath)]. `n$(Resolve-Error)" -Severity '3' -Source ${CmdletName}
+            Write-Log -Message "Could not remove cached item [$($CacheElementPath)]. `n$(Resolve-Error)" -Severity '3'
             Throw "Could not remove cached item [$($CacheElementPath)]. `n$($_.Exception.Message)"
         }
         Finally {
@@ -1493,7 +1476,7 @@ Function Remove-CCMOrphanedCache {
     End {
 
         ## Write verbose footer
-        Write-Log -Message 'Stop' -VerboseMessage -Source ${CmdletName}
+        Write-Log -Message 'Stop' -VerboseMessage
     }
 }
 #endregion
@@ -1511,23 +1494,10 @@ Function Remove-CCMOrphanedCache {
 Try {
 
     ## Set script phase for logging
-    $script:RunPhase = 'Initialization'
-
-    ## Get the file name of the source script
-    Try {
-        If ($script:MyInvocation.Value.ScriptName) {
-            [string]$ScriptSource = Split-Path -Path $script:MyInvocation.Value.ScriptName -Leaf -ErrorAction 'Stop'
-        }
-        Else {
-            [string]$ScriptSource = Split-Path -Path $script:MyInvocation.MyCommand.Definition -Leaf -ErrorAction 'Stop'
-        }
-    }
-    Catch {
-        $ScriptSource = ''
-    }
+    $script:RunPhase = 'Main'
 
     ## Write Start verbose message
-    Write-Log -Message 'Start' -VerboseMessage -Source $ScriptSource
+    Write-Log -Message 'Start' -VerboseMessage
 
     ## Initialize the CCM resource manager com object
     [__comobject]$CCMComObject = New-Object -ComObject 'UIResource.UIResourceMgr'
@@ -1552,29 +1522,29 @@ Try {
 
     ## Check run condition and stop execution if $ShouldRun is not $true
     If ($ShouldRun) {
-        Write-Log -Message 'Should Run test passed' -VerboseMessage -Source $ScriptSource
+        Write-Log -Message 'Should Run test passed' -VerboseMessage
     }
     Else {
-        Write-Log -Message 'Should Run test failed.' -Severity '3' -Source $ScriptSource
-        Write-Log -Message "FreeSpace/Threshold [$DriveFreeSpacePercentage`/$LowDiskSpaceThreshold] | IsSuperPeer/SkipSuperPeer [$CanBeSuperPeer`/$SkipSuperPeer]" -DebugMessage -Source $ScriptSource
-        Write-Log -Message 'Stop' -VerboseMessage -Source $ScriptSource
+        Write-Log -Message 'Should Run test failed.' -Severity '3'
+        Write-Log -Message "FreeSpace/Threshold [$DriveFreeSpacePercentage`/$LowDiskSpaceThreshold] | IsSuperPeer/SkipSuperPeer [$CanBeSuperPeer`/$SkipSuperPeer]" -DebugMessage
+        Write-Log -Message 'Stop' -VerboseMessage
 
         ## Stop execution
         Exit
     }
-    Write-Log -Message 'Stop' -Source $ScriptSource -VerboseMessage
+    Write-Log -Message 'Stop' -VerboseMessage
 }
 Catch {
-    Write-Log -Message "Script initialization failed. `n$(Resolve-Error)" -Severity '3' -Source $ScriptSource
+    Write-Log -Message "Script initialization failed. `n$(Resolve-Error)" -Severity '3'
     Throw "Script initialization failed. $($_.Exception.Message)"
 }
 Try {
 
     ## Set script phase for logging
-    $script:RunPhase = 'Cleanup'
+    $script:RunPhase = 'Main:Cleanup'
 
     ## Write debug action
-    Write-Log -Message  "Cleanup Actions [$CleanupActions]" -DebugMessage -Source $ScriptSource
+    Write-Log -Message  "Cleanup Actions [$CleanupActions]" -DebugMessage
 
     ## Process selected actions
     Switch ($CleanupActions) {
@@ -1597,19 +1567,19 @@ Try {
             $CleanupResult += Remove-CCMOrphanedCache
         }
         Default {
-            Write-Log -Message "Invalid cleanup action [$_] selected." -Severity '3' -Source $ScriptSource
+            Write-Log -Message "Invalid cleanup action [$_] selected." -Severity '3' #-Source $ScriptSource
             Throw "Invalid cleanup action selected."
         }
     }
 }
 Catch {
-    Write-Log -Message "Could not perform cleanup action. `n$(Resolve-Error)" -Severity '3' -Source $ScriptSource
+    Write-Log -Message "Could not perform cleanup action. `n$(Resolve-Error)" -Severity '3'
     Throw "Could not perform cleanup action. `n$($_.Exception.Message)"
 }
 Finally {
 
     ## Set script phase for logging
-    $script:RunPhase = 'CleanupResult'
+    $script:RunPhase = 'Main:CleanupResult'
 
     ## Calculate total deleted size
     $TotalDeletedSize = $CleanupResult | Where-Object { $_.Status -eq 'Removed' } | Measure-Object -Property 'Size(MB)' -Sum | Select-Object -ExpandProperty Sum
@@ -1619,10 +1589,10 @@ Finally {
     $OutputResult = $($CleanupResult | Format-List -Property FullName, Name, Location, LastReferenceTime, 'Size(MB)', Status | Out-String) + "TotalDeletedSize: " + $TotalDeletedSize
 
     ## Write output to log, event log and console and status
-    Write-Log -Message $OutputResult -Source $ScriptSource
+    Write-Log -Message $OutputResult
 
     ## Write verbose stop
-    Write-Log -Message 'Stop' -VerboseMessage -Source $ScriptSource
+    Write-Log -Message 'Stop' -VerboseMessage
 }
 
 #endregion
