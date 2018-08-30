@@ -23,8 +23,8 @@
     * Better error handling.
     * Better logging.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================

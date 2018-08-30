@@ -29,8 +29,8 @@
 .NOTES
     Written in collaboration with my good friend Octavian Cordos.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================
@@ -92,8 +92,8 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -185,8 +185,8 @@ Function Get-PatchTuesday {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -228,8 +228,8 @@ Function Get-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -274,8 +274,8 @@ Function Remove-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -337,8 +337,8 @@ Function Set-MaintenanceWindows {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     Param (
         [Parameter(Mandatory=$true,Position=0)]
@@ -443,8 +443,8 @@ Function Send-Mail {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (

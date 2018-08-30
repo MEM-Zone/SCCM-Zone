@@ -49,9 +49,9 @@
 .NOTES
     This script can be called directly.
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     WindowsUpdate
 .FUNCTIONALITY
@@ -128,9 +128,9 @@ Function Test-EventLogCompliance {
 .NOTES
     This function can typically be called directly.
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     WindowsUpdate
 .FUNCTIONALITY
@@ -213,9 +213,9 @@ Function Backup-EventLog {
 .NOTES
     This function can typically be called directly.
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     EventLog
 .FUNCTIONALITY
@@ -311,9 +311,9 @@ Function Repair-WUDataStore {
 .NOTES
     This function can typically be called directly.
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     WindowsUpdate
 .FUNCTIONALITY

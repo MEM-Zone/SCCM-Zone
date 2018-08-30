@@ -26,9 +26,9 @@
 .NOTES
     This function can typically be called directly.
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     SCCM
 .FUNCTIONALITY
@@ -80,9 +80,9 @@ Function Suspend-CMTaskSequence {
 .NOTES
     This function can typically be called directly.
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     SCCM
 .FUNCTIONALITY

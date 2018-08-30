@@ -46,8 +46,8 @@ Function Set-PageFile
         Get-WmiObject
         http://technet.microsoft.com/library/hh849824.aspx
     .LINK
-        https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+        https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     Param
     (

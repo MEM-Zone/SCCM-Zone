@@ -18,8 +18,8 @@
 .NOTES
     --
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================
@@ -51,8 +51,8 @@ Function -- {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (

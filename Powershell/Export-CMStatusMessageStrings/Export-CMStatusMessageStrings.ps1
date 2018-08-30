@@ -41,9 +41,9 @@
 .LINK
     https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================
@@ -151,9 +151,9 @@ Function Get-Message {
 .LINK
     https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     Message Tables
 .FUNCTIONALITY
@@ -304,9 +304,9 @@ Function Get-Messages {
 .LINK
     https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     Message Tables
 .FUNCTIONALITY

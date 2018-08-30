@@ -33,9 +33,9 @@ Function Get-LocalGroupMemberLegacy {
 .NOTES
     This is a regular function and can typically be called directly.
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (

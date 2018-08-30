@@ -16,8 +16,8 @@
 .EXAMPLE
     Run the code in SQL Server Management Studio.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 */
 
 /*##=============================================*/

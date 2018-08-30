@@ -27,8 +27,8 @@
     This script can be run using SCCM status filter rules, on collection membership change.
     DeleteAllCollectionMembers switch does not remove collection queries.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================
@@ -115,8 +115,8 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -230,8 +230,8 @@ Function Send-Mail {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -286,8 +286,8 @@ Function Get-SMSProviderLocation {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -331,8 +331,8 @@ Function Get-CimCollectionMembers {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -382,8 +382,8 @@ Function Remove-CimCollectionMembers {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
     Param (

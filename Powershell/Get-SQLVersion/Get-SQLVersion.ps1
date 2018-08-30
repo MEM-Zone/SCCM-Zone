@@ -19,8 +19,8 @@
 .NOTES
     SQL Versioning Reference: http://sqlserverbuilds.blogspot.ro/
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================

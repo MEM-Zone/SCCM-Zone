@@ -20,8 +20,8 @@
 .NOTES
     The script will change the password 31 times and then set the desired password.
 .LINK
-    https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM
+    https://SCCM-Zone.com
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
 
 ##*=============================================
@@ -560,9 +560,9 @@ Function Get-RandomPassword() {
     Credit to:
     https://blogs.technet.microsoft.com/heyscriptingguy/2013/06/03/generating-a-new-password-with-windows-powershell/
 .LINK
-    https://sccm-zone.com
+    https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCM
+    https://github.com/JhonnyTerminus/SCCMZone
 #>
     Param (
         [Parameter(Mandatory=$false,Position=0)]
