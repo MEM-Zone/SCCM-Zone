@@ -394,10 +394,10 @@ Function Write-Log {
 
         ## Logging Variables
         #  Log file date/time
-        [string]$LogTime = (Get-Date -Format 'HH:mm:ss.fff-').ToString()
+        [string]$LogTime = (Get-Date -Format 'HH:mm:ss.fff').ToString()
         [string]$LogDate = (Get-Date -Format 'MM-dd-yyyy').ToString()
         If (-not (Test-Path -LiteralPath 'variable:LogTimeZoneBias')) { [int32]$script:LogTimeZoneBias = [timezone]::CurrentTimeZone.GetUtcOffset([datetime]::Now).TotalMinutes }
-        [string]$LogTimePlusBias = $LogTime + $script:LogTimeZoneBias
+        [string]$LogTimePlusBias = $LogTime + '-' + $script:LogTimeZoneBias
         #  Initialize variables
         [boolean]$WriteHost = $false
         [boolean]$WriteFile = $false
