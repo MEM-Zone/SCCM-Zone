@@ -371,7 +371,7 @@ Function Write-Log {
         [int]$MaxLogFileSizeMB = '4',
         [Parameter(Mandatory = $false, Position = 9)]
         [ValidateNotNullorEmpty()]
-        [string]$LogName = $script:LogSource,
+        [string]$LogName = $script:LogName,
         [Parameter(Mandatory = $false, Position = 10)]
         [ValidateNotNullorEmpty()]
         [int32]$EventID = 1,
