@@ -12,7 +12,7 @@
 ### Changes
 
     * Simplified log naming and source by merging to $script:LogName and $script:LogSource variables only
-    * Simplified Write-Log parameter requirements by removing the requirement for $Source and using $script:Section
+    * Simplified Write-Log parameter requirements by removing the requirement for $Source and using $ScriptSection
     * Changed Write-Log to use $script:Section by default instead of $Source. (It can still be specified if needed)
     * Added option to log debug messages
     * Added event source deletion if the event log source already exists
