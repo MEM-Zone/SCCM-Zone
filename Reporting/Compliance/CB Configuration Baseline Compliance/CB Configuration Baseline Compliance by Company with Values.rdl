@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/reportdefinition">
-  <Description>Displays the compliance of all configuration items for the selected baseline by company with the actual values returned by the configuration item.</Description>
+  <Description>Displays the compliance of all configuration items for the selected baseline and collection by company with the actual values returned by the configuration item.</Description>
   <Author>Popovici Ioan @ SCCM-Zone.com</Author>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
@@ -75,10 +75,8 @@ WHERE Name = @ReportName</CommandText>
 * Modified by       |    Date    | Revision | Comments                                                  *
 * _____________________________________________________________________________________________________ *
 * Ioan Popovici     | 2017-09-22 | v1.0     | First version                                             *
-* Ioan Popovici     | 2018-01-17 | v1.1     | Fixed: Actual Value is NULL compliance is not displayed   *
-* Ioan Popovici     | 2018-06-21 | v2.0     | Completely re-written to optimize speed                   *
 * ===================================================================================================== *
-*                                                                                                       *
+* Release info moved separate markdown file, see notes.                                                 *
 *********************************************************************************************************
 
 .SYNOPSIS
@@ -86,6 +84,8 @@ WHERE Name = @ReportName</CommandText>
 .DESCRIPTION
     This SQL Query is used to get the Compliance by Company and Actual Values of a Configuration Baseline Result.
 .NOTES
+    Release notes
+        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Reporting/Compliance/CB%20Configuration%20Baseline%20Compliance/CHANGELOG.md
     Part of a report should not be run separately.
 .LINK
     https://SCCM-Zone.com
@@ -100,74 +100,77 @@ WHERE Name = @ReportName</CommandText>
 /* Remove previous temporary table if exists */
 IF OBJECT_ID (N'TempDB.DBO.#CIComplianceStatusDetails') IS NOT NULL
     BEGIN
-        DROP TABLE #CIComplianceStatusDetails;
-    END;
+    DROP TABLE #CIComplianceStatusDetails;
+END;
 
-/* Get Configuration Item Current Value */
-WITH CTE
-    AS (
-        SELECT
+/* Get configuration item current value for collection members and insert the result in a temporary table */
+WITH
+    CTE
+    AS
+    (
+        SELECT DISTINCT
             CIComplianceStatusDetails.ResourceID,
+            CIComplianceStatusDetails.CIVersion AS CBRevision,
             CIComplianceStatusDetails.CurrentValue,
             CIComplianceStatusDetails.LastComplianceMessageTime,
-            RN = ROW_NUMBER()
-            OVER (
-                PARTITION BY CIComplianceStatusDetails.Netbios_Name0 ORDER BY CIComplianceStatusDetails.LastComplianceMessageTime DESC
-            )
+            CIComplianceStatusDetails.Netbios_Name0
         FROM dbo.fn_rbac_CICurrentSettingsComplianceStatusDetail(@UserSIDs) AS CIComplianceStatusDetails
         WHERE CIComplianceStatusDetails.CI_ID
             IN (
                 SELECT ReferencedCI_ID
-                FROM dbo.fn_rbac_CIRelation_All(@UserSIDs)
-                WHERE CI_ID = @BaselineID
-                    AND RelationType NOT IN ('7', '0') --Exlude itself and no relation
+        FROM dbo.fn_rbac_CIRelation_All(@UserSIDs)
+        WHERE CI_ID = @BaselineID
+            AND RelationType NOT IN ('7', '0') --Exlude itself and no relation
             )
     )
 SELECT
     ResourceID,
+    CBRevision,
     CurrentValue,
     LastComplianceMessageTime
 INTO #CIComplianceStatusDetails
 FROM CTE
-WHERE RN = 1
 ORDER BY ResourceID;
 
+/* Get the other details and join with them with the temporary table based on ResourceID */
 SELECT
 
     /* IMPORTANT! YOU NEED TO ENABLE THE COMPANY FIELD GATHERING FOR SYSTEM DISCOVERY OTHERWISE THIS COLUMN IS NOT AVAILABLE */
-    Users.Company0 AS 'Company',
+    ComputerSystem.Company0 AS 'Company',
 
     /* CUSTOM FUNCTION LEAVE DISABLED */
-    --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([Users].[ResourceID]) ) AS [Company],
+    --( SELECT [CM_Tools].[dbo].[ufn_GetCompany_by_ResourceID]([ComputerSystem].[ResourceID]) ) AS [Company],
 
+    CollectionMembers.ResourceID,
     CIComplianceState.DisplayName,
-    CIComplianceState.ComplianceStateName AS ComplianceState,
-    Computer.Name0 AS DeviceName,
-    Users.User_Name0 AS UserName,
+    ( SELECT ISNULL(CIComplianceState.ComplianceStateName, 'Unknown' )) AS ComplianceState,
     OperatingSystem.Caption0 AS OperatingSystem,
-    Computer.Model0 AS [Model],
-    CIComplianceState.CIVersion,
+    ( SELECT ISNULL(ComputerSystem.UserName0, 'Unknown' )) AS UserName,
+    ComputerSystem.Name0 AS DeviceName,
+    ComputerSystem.Model0 AS Model,
+    ComputerStatus.LastHWScan,
+    CIComplianceState.CIVersion AS CIRevision,
+    CIComplianceStatusDetails.CBRevision,
     CIComplianceStatusDetails.CurrentValue,
-    CIComplianceStatusDetails.LastComplianceMessageTime AS LastEvaluation,
-    ComputerStatus.LastHWScan AS LastHWScan
-FROM v_BaselineTargetedComputers Baseline
-    JOIN dbo.fn_rbac_R_System(@UserSIDs) AS Users ON Users.ResourceID = Baseline.ResourceID
-    JOIN v_ClientCollectionMembers AS Collections ON Collections.ResourceID = Users.ResourceID
-    JOIN v_GS_COMPUTER_SYSTEM Computer ON Computer.ResourceID = Users.ResourceID
-    JOIN v_GS_OPERATING_SYSTEM AS OperatingSystem ON OperatingSystem.ResourceID = Users.ResourceID
-    JOIN dbo.fn_rbac_CIRelation_All(@UserSIDs) AS BaselineCIs ON BaselineCIs.CI_ID = @BaselineID
-        AND BaselineCIs.RelationType NOT IN ('7', '0') --Exlude itself and no relation
-    JOIN dbo.fn_rbac_ConfigurationItems(@UserSIDs) CIInfo ON CIInfo.CI_ID = BaselineCIs.ReferencedCI_ID
-    JOIN dbo.fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = BaselineCIs.ReferencedCI_ID
-        AND CIComplianceState.ResourceID = Users.ResourceID
-    JOIN v_GS_WORKSTATION_STATUS AS ComputerStatus ON ComputerStatus.ResourceID = Users.ResourceID
-    LEFT OUTER JOIN #CIComplianceStatusDetails AS CIComplianceStatusDetails ON CIComplianceStatusDetails.ResourceID = Baseline.ResourceID
-WHERE Collections.CollectionID = @CollectionID
-    AND Baseline.CI_ID = @BaselineID
+    CIComplianceStatusDetails.LastComplianceMessageTime,
+    CIComplianceStatusDetails.LastComplianceMessageTime AS LastEvaluation
+FROM
+    v_ClientCollectionMembers AS CollectionMembers
+    LEFT JOIN v_GS_OPERATING_SYSTEM AS OperatingSystem ON OperatingSystem.ResourceID = CollectionMembers.ResourceID
+    LEFT JOIN v_GS_COMPUTER_SYSTEM AS ComputerSystem ON ComputerSystem.ResourceID = CollectionMembers.ResourceID
+    LEFT JOIN v_GS_WORKSTATION_STATUS AS ComputerStatus ON ComputerStatus.ResourceID = CollectionMembers.ResourceID
+    FULL JOIN dbo.fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.ResourceID = CollectionMembers.ResourceID
+        AND CIComplianceState.CI_ID = @BaselineID
+    FULL JOIN #CIComplianceStatusDetails AS CIComplianceStatusDetails ON CIComplianceStatusDetails.ResourceID = CollectionMembers.ResourceID
+WHERE
+	CollectionMembers.CollectionID = @CollectionID
 ORDER BY
-	Company,
+    Company,
 	DisplayName,
 	ComplianceStateName
+
+/* Remove  temporary table */
+DROP TABLE #CIComplianceStatusDetails;
 
 /* #endregion */
 /*##=============================================*/
@@ -180,44 +183,56 @@ ORDER BY
           <DataField>Company</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="ComplianceState">
-          <DataField>ComplianceState</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
+        <Field Name="ResourceID">
+          <DataField>ResourceID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
         </Field>
         <Field Name="DisplayName">
           <DataField>DisplayName</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="DeviceName">
-          <DataField>DeviceName</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="UserName">
-          <DataField>UserName</DataField>
+        <Field Name="ComplianceState">
+          <DataField>ComplianceState</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="OperatingSystem">
           <DataField>OperatingSystem</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
+        <Field Name="UserName">
+          <DataField>UserName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="DeviceName">
+          <DataField>DeviceName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
         <Field Name="Model">
           <DataField>Model</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="CIVersion">
-          <DataField>CIVersion</DataField>
+        <Field Name="LastHWScan">
+          <DataField>LastHWScan</DataField>
+          <rd:TypeName>System.DateTime</rd:TypeName>
+        </Field>
+        <Field Name="CIRevision">
+          <DataField>CIRevision</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="CBRevision">
+          <DataField>CBRevision</DataField>
           <rd:TypeName>System.Int32</rd:TypeName>
         </Field>
         <Field Name="CurrentValue">
           <DataField>CurrentValue</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="LastEvaluation">
-          <DataField>LastEvaluation</DataField>
+        <Field Name="LastComplianceMessageTime">
+          <DataField>LastComplianceMessageTime</DataField>
           <rd:TypeName>System.DateTime</rd:TypeName>
         </Field>
-        <Field Name="LastHWScan">
-          <DataField>LastHWScan</DataField>
+        <Field Name="LastEvaluation">
+          <DataField>LastEvaluation</DataField>
           <rd:TypeName>System.DateTime</rd:TypeName>
         </Field>
       </Fields>
@@ -321,7 +336,10 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>2.19141cm</Width>
+                  <Width>2.48245cm</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>2.5cm</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>4.99999cm</Width>
@@ -333,7 +351,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <Width>4.1275cm</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>2.1825cm</Width>
+                  <Width>1.81208cm</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -342,17 +360,58 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="TH_CIVersion">
+                        <Textbox Name="TH_CBRevision">
                           <CanGrow>true</CanGrow>
                           <UserSort>
-                            <SortExpression>=Fields!CIVersion.Value</SortExpression>
+                            <SortExpression>=Fields!CBRevision.Value</SortExpression>
                           </UserSort>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=SrsResources.Localization.GetString("CI Version", User!Language)</Value>
+                                  <Value>=SrsResources.Localization.GetString("CB Revision", User!Language)</Value>
+                                  <Style>
+                                    <FontFamily>Segoe UI</FontFamily>
+                                    <FontSize>11pt</FontSize>
+                                    <FontWeight>Bold</FontWeight>
+                                    <Color>White</Color>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>#7292cc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>#4c68a2</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TH_CIRevision">
+                          <CanGrow>true</CanGrow>
+                          <UserSort>
+                            <SortExpression>=Fields!CIRevision.Value</SortExpression>
+                          </UserSort>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=SrsResources.Localization.GetString("CI Revision", User!Language)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>11pt</FontSize>
@@ -553,158 +612,14 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox91">
+                        <Textbox Name="TV_CBRevision">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style>
-                                <TextAlign>Center</TextAlign>
-                              </Style>
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox91</rd:DefaultName>
-                          <Style>
-                            <Border>
-                              <Color>White</Color>
-                              <Style>Solid</Style>
-                            </Border>
-                            <BackgroundColor>#c6daf8</BackgroundColor>
-                            <VerticalAlign>Middle</VerticalAlign>
-                            <PaddingLeft>2pt</PaddingLeft>
-                            <PaddingRight>2pt</PaddingRight>
-                            <PaddingTop>2pt</PaddingTop>
-                            <PaddingBottom>2pt</PaddingBottom>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox92">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style>
-                                <TextAlign>Left</TextAlign>
-                              </Style>
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox92</rd:DefaultName>
-                          <Style>
-                            <Border>
-                              <Color>White</Color>
-                              <Style>Solid</Style>
-                            </Border>
-                            <BackgroundColor>#c6daf8</BackgroundColor>
-                            <VerticalAlign>Middle</VerticalAlign>
-                            <PaddingLeft>2pt</PaddingLeft>
-                            <PaddingRight>2pt</PaddingRight>
-                            <PaddingTop>2pt</PaddingTop>
-                            <PaddingBottom>2pt</PaddingBottom>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox93">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style>
-                                <TextAlign>Center</TextAlign>
-                              </Style>
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox93</rd:DefaultName>
-                          <Style>
-                            <Border>
-                              <Color>White</Color>
-                              <Style>Solid</Style>
-                            </Border>
-                            <BackgroundColor>#c6daf8</BackgroundColor>
-                            <VerticalAlign>Middle</VerticalAlign>
-                            <PaddingLeft>2pt</PaddingLeft>
-                            <PaddingRight>2pt</PaddingRight>
-                            <PaddingTop>2pt</PaddingTop>
-                            <PaddingBottom>2pt</PaddingBottom>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox94">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style>
-                                <TextAlign>Center</TextAlign>
-                              </Style>
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox94</rd:DefaultName>
-                          <Style>
-                            <Border>
-                              <Color>White</Color>
-                              <Style>Solid</Style>
-                            </Border>
-                            <BackgroundColor>#c6daf8</BackgroundColor>
-                            <VerticalAlign>Middle</VerticalAlign>
-                            <PaddingLeft>2pt</PaddingLeft>
-                            <PaddingRight>2pt</PaddingRight>
-                            <PaddingTop>2pt</PaddingTop>
-                            <PaddingBottom>2pt</PaddingBottom>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="TV_Total_Devices_ComplianceStatus">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value>=Count(Fields!DeviceName.Value)</Value>
+                                  <Value>=Fields!CBRevision.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                   </Style>
@@ -720,7 +635,27 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               <Color>White</Color>
                               <Style>Solid</Style>
                             </Border>
-                            <BackgroundColor>#c6daf8</BackgroundColor>
+                            <TopBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
+                            <BackgroundColor>#e6eefc</BackgroundColor>
                             <VerticalAlign>Middle</VerticalAlign>
                             <PaddingLeft>2pt</PaddingLeft>
                             <PaddingRight>2pt</PaddingRight>
@@ -730,21 +665,16 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                         </Textbox>
                       </CellContents>
                     </TablixCell>
-                  </TablixCells>
-                </TablixRow>
-                <TablixRow>
-                  <Height>0.6cm</Height>
-                  <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="TV_CIVersion">
+                        <Textbox Name="TV_CIRevision">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!CIVersion.Value</Value>
+                                  <Value>=Fields!CIRevision.Value</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                   </Style>
@@ -760,6 +690,26 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               <Color>White</Color>
                               <Style>Solid</Style>
                             </Border>
+                            <TopBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
                             <BackgroundColor>#e6eefc</BackgroundColor>
                             <VerticalAlign>Middle</VerticalAlign>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -901,6 +851,26 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               <Color>White</Color>
                               <Style>Solid</Style>
                             </Border>
+                            <TopBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>White</Color>
+                              <Style>Solid</Style>
+                              <Width>1pt</Width>
+                            </RightBorder>
                             <BackgroundColor>#e6eefc</BackgroundColor>
                             <VerticalAlign>Middle</VerticalAlign>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -918,7 +888,104 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox10">
+                        <Textbox Name="Textbox56">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value />
+                                  <Style>
+                                    <FontFamily>Segoe UI</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox56</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#e6eefc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <TopBorder>
+                              <Color>#e6eefc</Color>
+                              <Style>Solid</Style>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Color>#e6eefc</Color>
+                              <Style>Solid</Style>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Color>#e6eefc</Color>
+                              <Style>None</Style>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Color>#e6eefc</Color>
+                              <Style>Solid</Style>
+                            </RightBorder>
+                            <BackgroundColor>#c6daf8</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>5</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TV_Values_Total">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Count(Fields!DeviceName.Value)</Value>
+                                  <Style>
+                                    <FontFamily>Segoe UI</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border>
+                              <Color>#e6eefc</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>#c6daf8</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.6cm</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox67">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -933,17 +1000,75 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                 </TextRun>
                               </TextRuns>
                               <Style>
+                                <TextAlign>Left</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox65</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>#c6daf8</Color>
+                              <Style>None</Style>
+                            </Border>
+                            <BottomBorder>
+                              <Style>Solid</Style>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Style>None</Style>
+                            </LeftBorder>
+                            <BackgroundColor>#9eb6e4</BackgroundColor>
+                            <VerticalAlign>Middle</VerticalAlign>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>5</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="TV_Computers_Total">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Count(Fields!DeviceName.Value)</Value>
+                                  <Style>
+                                    <FontFamily>Segoe UI</FontFamily>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
                                 <TextAlign>Center</TextAlign>
                               </Style>
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox10</rd:DefaultName>
                           <Style>
                             <Border>
-                              <Color>#9eb6e4</Color>
+                              <Color>#c6daf8</Color>
                               <Style>Solid</Style>
                             </Border>
-                            <BackgroundColor>#7292cc</BackgroundColor>
+                            <TopBorder>
+                              <Style>None</Style>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Style>Solid</Style>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Style>Solid</Style>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Style>Solid</Style>
+                            </RightBorder>
+                            <BackgroundColor>#9eb6e4</BackgroundColor>
                             <VerticalAlign>Middle</VerticalAlign>
                             <PaddingLeft>2pt</PaddingLeft>
                             <PaddingRight>2pt</PaddingRight>
@@ -953,9 +1078,14 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                         </Textbox>
                       </CellContents>
                     </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.6cm</Height>
+                  <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox3">
+                        <Textbox Name="Textbox30">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -969,17 +1099,27 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
-                              <Style>
-                                <TextAlign>Center</TextAlign>
-                              </Style>
+                              <Style />
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox3</rd:DefaultName>
+                          <rd:DefaultName>Textbox29</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>#9eb6e4</Color>
                               <Style>Solid</Style>
                             </Border>
+                            <TopBorder>
+                              <Style>Solid</Style>
+                            </TopBorder>
+                            <BottomBorder>
+                              <Style>Solid</Style>
+                            </BottomBorder>
+                            <LeftBorder>
+                              <Style>None</Style>
+                            </LeftBorder>
+                            <RightBorder>
+                              <Style>None</Style>
+                            </RightBorder>
                             <BackgroundColor>#7292cc</BackgroundColor>
                             <VerticalAlign>Middle</VerticalAlign>
                             <PaddingLeft>2pt</PaddingLeft>
@@ -988,85 +1128,16 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             <PaddingBottom>2pt</PaddingBottom>
                           </Style>
                         </Textbox>
+                        <ColSpan>5</ColSpan>
                       </CellContents>
                     </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox6">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style>
-                                <TextAlign>Center</TextAlign>
-                              </Style>
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox6</rd:DefaultName>
-                          <Style>
-                            <Border>
-                              <Color>#9eb6e4</Color>
-                              <Style>Solid</Style>
-                            </Border>
-                            <BackgroundColor>#7292cc</BackgroundColor>
-                            <VerticalAlign>Middle</VerticalAlign>
-                            <PaddingLeft>2pt</PaddingLeft>
-                            <PaddingRight>2pt</PaddingRight>
-                            <PaddingTop>2pt</PaddingTop>
-                            <PaddingBottom>2pt</PaddingBottom>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox7">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style>
-                                <TextAlign>Center</TextAlign>
-                              </Style>
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox7</rd:DefaultName>
-                          <Style>
-                            <Border>
-                              <Color>#9eb6e4</Color>
-                              <Style>Solid</Style>
-                            </Border>
-                            <BackgroundColor>#7292cc</BackgroundColor>
-                            <VerticalAlign>Middle</VerticalAlign>
-                            <PaddingLeft>2pt</PaddingLeft>
-                            <PaddingRight>2pt</PaddingRight>
-                            <PaddingTop>2pt</PaddingTop>
-                            <PaddingBottom>2pt</PaddingBottom>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="TV_Total_Devices">
+                        <Textbox Name="TV_Total_Computers_Total">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
@@ -1106,6 +1177,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
             </TablixBody>
             <TablixColumnHierarchy>
               <TablixMembers>
+                <TablixMember />
                 <TablixMember />
                 <TablixMember />
                 <TablixMember />
@@ -1162,7 +1234,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>8.32083cm</Size>
+                        <Size>6.15125cm</Size>
                         <CellContents>
                           <Textbox Name="TH_DisplayName">
                             <CanGrow>true</CanGrow>
@@ -1207,7 +1279,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>3.16146cm</Size>
+                            <Size>3.41309cm</Size>
                             <CellContents>
                               <Textbox Name="TH_ComplianceState">
                                 <CanGrow>true</CanGrow>
@@ -1252,7 +1324,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>4.18936cm</Size>
+                                <Size>3.68668cm</Size>
                                 <CellContents>
                                   <Textbox Name="TH_DeviceName">
                                     <CanGrow>true</CanGrow>
@@ -1451,6 +1523,12 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                     <SortExpression>
                       <Value>=Fields!Company.Value</Value>
                     </SortExpression>
+                    <SortExpression>
+                      <Value>=Fields!DisplayName.Value</Value>
+                    </SortExpression>
+                    <SortExpression>
+                      <Value>=Fields!ComplianceState.Value</Value>
+                    </SortExpression>
                   </SortExpressions>
                   <TablixHeader>
                     <Size>2.82413cm</Size>
@@ -1478,6 +1556,10 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             <Color>#c6daf8</Color>
                             <Style>Solid</Style>
                           </Border>
+                          <BottomBorder>
+                            <Color>#c6daf8</Color>
+                            <Style>Solid</Style>
+                          </BottomBorder>
                           <BackgroundColor>#9eb6e4</BackgroundColor>
                           <VerticalAlign>Middle</VerticalAlign>
                           <PaddingLeft>2pt</PaddingLeft>
@@ -1486,7 +1568,6 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                           <PaddingBottom>2pt</PaddingBottom>
                         </Style>
                       </Textbox>
-                      <rd:Selected>true</rd:Selected>
                     </CellContents>
                   </TablixHeader>
                   <TablixMembers>
@@ -1502,7 +1583,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                         </SortExpression>
                       </SortExpressions>
                       <TablixHeader>
-                        <Size>8.32083cm</Size>
+                        <Size>6.15125cm</Size>
                         <CellContents>
                           <Textbox Name="TV_DisplayName">
                             <CanGrow>true</CanGrow>
@@ -1524,7 +1605,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             </Paragraphs>
                             <Style>
                               <Border>
-                                <Color>#e6eefc</Color>
+                                <Color>#c6daf8</Color>
                                 <Style>Solid</Style>
                               </Border>
                               <BackgroundColor>#9eb6e4</BackgroundColor>
@@ -1551,7 +1632,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             </SortExpression>
                           </SortExpressions>
                           <TablixHeader>
-                            <Size>3.16146cm</Size>
+                            <Size>3.41309cm</Size>
                             <CellContents>
                               <Textbox Name="TV_ComplianceState">
                                 <CanGrow>true</CanGrow>
@@ -1588,170 +1669,18 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                           </TablixHeader>
                           <TablixMembers>
                             <TablixMember>
+                              <Group Name="DeviceName">
+                                <GroupExpressions>
+                                  <GroupExpression>=Fields!DeviceName.Value</GroupExpression>
+                                </GroupExpressions>
+                              </Group>
+                              <SortExpressions>
+                                <SortExpression>
+                                  <Value>=Fields!DeviceName.Value</Value>
+                                </SortExpression>
+                              </SortExpressions>
                               <TablixHeader>
-                                <Size>4.18936cm</Size>
-                                <CellContents>
-                                  <Textbox Name="Textbox11">
-                                    <CanGrow>true</CanGrow>
-                                    <KeepTogether>true</KeepTogether>
-                                    <Paragraphs>
-                                      <Paragraph>
-                                        <TextRuns>
-                                          <TextRun>
-                                            <Value />
-                                            <Style>
-                                              <FontFamily>Segoe UI</FontFamily>
-                                            </Style>
-                                          </TextRun>
-                                        </TextRuns>
-                                        <Style>
-                                          <TextAlign>Center</TextAlign>
-                                        </Style>
-                                      </Paragraph>
-                                    </Paragraphs>
-                                    <rd:DefaultName>Textbox9</rd:DefaultName>
-                                    <Style>
-                                      <Border>
-                                        <Color>White</Color>
-                                        <Style>Solid</Style>
-                                      </Border>
-                                      <BackgroundColor>#c6daf8</BackgroundColor>
-                                      <VerticalAlign>Middle</VerticalAlign>
-                                      <PaddingLeft>2pt</PaddingLeft>
-                                      <PaddingRight>2pt</PaddingRight>
-                                      <PaddingTop>2pt</PaddingTop>
-                                      <PaddingBottom>2pt</PaddingBottom>
-                                    </Style>
-                                  </Textbox>
-                                </CellContents>
-                              </TablixHeader>
-                              <TablixMembers>
-                                <TablixMember>
-                                  <TablixHeader>
-                                    <Size>4.09211cm</Size>
-                                    <CellContents>
-                                      <Textbox Name="Textbox9">
-                                        <CanGrow>true</CanGrow>
-                                        <KeepTogether>true</KeepTogether>
-                                        <Paragraphs>
-                                          <Paragraph>
-                                            <TextRuns>
-                                              <TextRun>
-                                                <Value />
-                                                <Style>
-                                                  <FontFamily>Segoe UI</FontFamily>
-                                                </Style>
-                                              </TextRun>
-                                            </TextRuns>
-                                            <Style>
-                                              <TextAlign>Center</TextAlign>
-                                            </Style>
-                                          </Paragraph>
-                                        </Paragraphs>
-                                        <rd:DefaultName>Textbox9</rd:DefaultName>
-                                        <Style>
-                                          <Border>
-                                            <Color>White</Color>
-                                            <Style>Solid</Style>
-                                          </Border>
-                                          <BackgroundColor>#c6daf8</BackgroundColor>
-                                          <VerticalAlign>Middle</VerticalAlign>
-                                          <PaddingLeft>2pt</PaddingLeft>
-                                          <PaddingRight>2pt</PaddingRight>
-                                          <PaddingTop>2pt</PaddingTop>
-                                          <PaddingBottom>2pt</PaddingBottom>
-                                        </Style>
-                                      </Textbox>
-                                    </CellContents>
-                                  </TablixHeader>
-                                  <TablixMembers>
-                                    <TablixMember>
-                                      <TablixHeader>
-                                        <Size>5.96666cm</Size>
-                                        <CellContents>
-                                          <Textbox Name="Textbox89">
-                                            <CanGrow>true</CanGrow>
-                                            <KeepTogether>true</KeepTogether>
-                                            <Paragraphs>
-                                              <Paragraph>
-                                                <TextRuns>
-                                                  <TextRun>
-                                                    <Value />
-                                                    <Style>
-                                                      <FontFamily>Segoe UI</FontFamily>
-                                                    </Style>
-                                                  </TextRun>
-                                                </TextRuns>
-                                                <Style />
-                                              </Paragraph>
-                                            </Paragraphs>
-                                            <rd:DefaultName>Textbox89</rd:DefaultName>
-                                            <Style>
-                                              <Border>
-                                                <Color>White</Color>
-                                                <Style>Solid</Style>
-                                              </Border>
-                                              <BackgroundColor>#c6daf8</BackgroundColor>
-                                              <VerticalAlign>Middle</VerticalAlign>
-                                              <PaddingLeft>2pt</PaddingLeft>
-                                              <PaddingRight>2pt</PaddingRight>
-                                              <PaddingTop>2pt</PaddingTop>
-                                              <PaddingBottom>2pt</PaddingBottom>
-                                            </Style>
-                                          </Textbox>
-                                        </CellContents>
-                                      </TablixHeader>
-                                      <TablixMembers>
-                                        <TablixMember>
-                                          <TablixHeader>
-                                            <Size>3.25454cm</Size>
-                                            <CellContents>
-                                              <Textbox Name="Textbox90">
-                                                <CanGrow>true</CanGrow>
-                                                <KeepTogether>true</KeepTogether>
-                                                <Paragraphs>
-                                                  <Paragraph>
-                                                    <TextRuns>
-                                                      <TextRun>
-                                                        <Value />
-                                                        <Style>
-                                                          <FontFamily>Segoe UI</FontFamily>
-                                                        </Style>
-                                                      </TextRun>
-                                                    </TextRuns>
-                                                    <Style>
-                                                      <TextAlign>Left</TextAlign>
-                                                    </Style>
-                                                  </Paragraph>
-                                                </Paragraphs>
-                                                <rd:DefaultName>Textbox90</rd:DefaultName>
-                                                <Style>
-                                                  <Border>
-                                                    <Color>White</Color>
-                                                    <Style>Solid</Style>
-                                                  </Border>
-                                                  <BackgroundColor>#c6daf8</BackgroundColor>
-                                                  <VerticalAlign>Middle</VerticalAlign>
-                                                  <PaddingLeft>2pt</PaddingLeft>
-                                                  <PaddingRight>2pt</PaddingRight>
-                                                  <PaddingTop>2pt</PaddingTop>
-                                                  <PaddingBottom>2pt</PaddingBottom>
-                                                </Style>
-                                              </Textbox>
-                                            </CellContents>
-                                          </TablixHeader>
-                                        </TablixMember>
-                                      </TablixMembers>
-                                    </TablixMember>
-                                  </TablixMembers>
-                                </TablixMember>
-                              </TablixMembers>
-                              <KeepWithGroup>After</KeepWithGroup>
-                            </TablixMember>
-                            <TablixMember>
-                              <Group Name="Details" />
-                              <TablixHeader>
-                                <Size>4.18936cm</Size>
+                                <Size>3.68668cm</Size>
                                 <CellContents>
                                   <Textbox Name="TV_DeviceName">
                                     <CanGrow>true</CanGrow>
@@ -1773,10 +1702,10 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                     </Paragraphs>
                                     <Style>
                                       <Border>
-                                        <Color>White</Color>
+                                        <Color>#e6eefc</Color>
                                         <Style>Solid</Style>
                                       </Border>
-                                      <BackgroundColor>#e6eefc</BackgroundColor>
+                                      <BackgroundColor>#c6daf8</BackgroundColor>
                                       <VerticalAlign>Middle</VerticalAlign>
                                       <PaddingLeft>2pt</PaddingLeft>
                                       <PaddingRight>2pt</PaddingRight>
@@ -1788,61 +1717,57 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               </TablixHeader>
                               <TablixMembers>
                                 <TablixMember>
-                                  <TablixHeader>
-                                    <Size>4.09211cm</Size>
-                                    <CellContents>
-                                      <Textbox Name="TV_UserName">
-                                        <CanGrow>true</CanGrow>
-                                        <KeepTogether>true</KeepTogether>
-                                        <Paragraphs>
-                                          <Paragraph>
-                                            <TextRuns>
-                                              <TextRun>
-                                                <Value>=Fields!UserName.Value</Value>
-                                                <Style>
-                                                  <FontFamily>Segoe UI</FontFamily>
-                                                </Style>
-                                              </TextRun>
-                                            </TextRuns>
-                                            <Style>
-                                              <TextAlign>Left</TextAlign>
-                                            </Style>
-                                          </Paragraph>
-                                        </Paragraphs>
-                                        <Style>
-                                          <Border>
-                                            <Color>White</Color>
-                                            <Style>Solid</Style>
-                                          </Border>
-                                          <BackgroundColor>#e6eefc</BackgroundColor>
-                                          <VerticalAlign>Middle</VerticalAlign>
-                                          <PaddingLeft>2pt</PaddingLeft>
-                                          <PaddingRight>2pt</PaddingRight>
-                                          <PaddingTop>2pt</PaddingTop>
-                                          <PaddingBottom>2pt</PaddingBottom>
-                                        </Style>
-                                      </Textbox>
-                                    </CellContents>
-                                  </TablixHeader>
+                                  <Group Name="Details" />
+                                  <SortExpressions>
+                                    <SortExpression>
+                                      <Value>=Fields!DeviceName.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!UserName.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!OperatingSystem.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!Model.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!CBRevision.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!CIRevision.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!CurrentValue.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!LastEvaluation.Value</Value>
+                                    </SortExpression>
+                                    <SortExpression>
+                                      <Value>=Fields!LastHWScan.Value</Value>
+                                    </SortExpression>
+                                  </SortExpressions>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>5.96666cm</Size>
+                                        <Size>4.09211cm</Size>
                                         <CellContents>
-                                          <Textbox Name="TV_OperatingSystem">
+                                          <Textbox Name="TV_UserName">
                                             <CanGrow>true</CanGrow>
                                             <KeepTogether>true</KeepTogether>
                                             <Paragraphs>
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=Fields!OperatingSystem.Value</Value>
+                                                    <Value>=Fields!UserName.Value</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
-                                                <Style />
+                                                <Style>
+                                                  <TextAlign>Left</TextAlign>
+                                                </Style>
                                               </Paragraph>
                                             </Paragraphs>
                                             <Style>
@@ -1863,24 +1788,22 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                       <TablixMembers>
                                         <TablixMember>
                                           <TablixHeader>
-                                            <Size>3.25454cm</Size>
+                                            <Size>5.96666cm</Size>
                                             <CellContents>
-                                              <Textbox Name="TV_Model">
+                                              <Textbox Name="TV_OperatingSystem">
                                                 <CanGrow>true</CanGrow>
                                                 <KeepTogether>true</KeepTogether>
                                                 <Paragraphs>
                                                   <Paragraph>
                                                     <TextRuns>
                                                       <TextRun>
-                                                        <Value>=Fields!Model.Value</Value>
+                                                        <Value>=Fields!OperatingSystem.Value</Value>
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
                                                         </Style>
                                                       </TextRun>
                                                     </TextRuns>
-                                                    <Style>
-                                                      <TextAlign>Left</TextAlign>
-                                                    </Style>
+                                                    <Style />
                                                   </Paragraph>
                                                 </Paragraphs>
                                                 <Style>
@@ -1899,18 +1822,247 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                             </CellContents>
                                           </TablixHeader>
                                           <TablixMembers>
-                                            <TablixMember />
+                                            <TablixMember>
+                                              <TablixHeader>
+                                                <Size>3.25454cm</Size>
+                                                <CellContents>
+                                                  <Textbox Name="TV_Model">
+                                                    <CanGrow>true</CanGrow>
+                                                    <KeepTogether>true</KeepTogether>
+                                                    <Paragraphs>
+                                                      <Paragraph>
+                                                        <TextRuns>
+                                                          <TextRun>
+                                                            <Value>=Fields!Model.Value</Value>
+                                                            <Style>
+                                                              <FontFamily>Segoe UI</FontFamily>
+                                                            </Style>
+                                                          </TextRun>
+                                                        </TextRuns>
+                                                        <Style>
+                                                          <TextAlign>Left</TextAlign>
+                                                        </Style>
+                                                      </Paragraph>
+                                                    </Paragraphs>
+                                                    <Style>
+                                                      <Border>
+                                                        <Color>White</Color>
+                                                        <Style>Solid</Style>
+                                                      </Border>
+                                                      <BackgroundColor>#e6eefc</BackgroundColor>
+                                                      <VerticalAlign>Middle</VerticalAlign>
+                                                      <PaddingLeft>2pt</PaddingLeft>
+                                                      <PaddingRight>2pt</PaddingRight>
+                                                      <PaddingTop>2pt</PaddingTop>
+                                                      <PaddingBottom>2pt</PaddingBottom>
+                                                    </Style>
+                                                  </Textbox>
+                                                </CellContents>
+                                              </TablixHeader>
+                                              <TablixMembers>
+                                                <TablixMember />
+                                              </TablixMembers>
+                                            </TablixMember>
                                           </TablixMembers>
                                         </TablixMember>
                                       </TablixMembers>
                                     </TablixMember>
                                   </TablixMembers>
+                                  <Visibility>
+                                    <Hidden>true</Hidden>
+                                    <ToggleItem>TV_DeviceName</ToggleItem>
+                                  </Visibility>
+                                </TablixMember>
+                                <TablixMember>
+                                  <TablixHeader>
+                                    <Size>4.09211cm</Size>
+                                    <CellContents>
+                                      <Textbox Name="TV_Values_Label">
+                                        <CanGrow>true</CanGrow>
+                                        <KeepTogether>true</KeepTogether>
+                                        <Paragraphs>
+                                          <Paragraph>
+                                            <TextRuns>
+                                              <TextRun>
+                                                <Value>Values</Value>
+                                                <Style>
+                                                  <FontFamily>Segoe UI</FontFamily>
+                                                  <FontWeight>Bold</FontWeight>
+                                                </Style>
+                                              </TextRun>
+                                            </TextRuns>
+                                            <Style>
+                                              <TextAlign>Left</TextAlign>
+                                            </Style>
+                                          </Paragraph>
+                                        </Paragraphs>
+                                        <Style>
+                                          <Border>
+                                            <Color>#e6eefc</Color>
+                                            <Style>Solid</Style>
+                                          </Border>
+                                          <RightBorder>
+                                            <Style>None</Style>
+                                          </RightBorder>
+                                          <BackgroundColor>#c6daf8</BackgroundColor>
+                                          <VerticalAlign>Middle</VerticalAlign>
+                                          <PaddingLeft>2pt</PaddingLeft>
+                                          <PaddingRight>2pt</PaddingRight>
+                                          <PaddingTop>2pt</PaddingTop>
+                                          <PaddingBottom>2pt</PaddingBottom>
+                                        </Style>
+                                      </Textbox>
+                                    </CellContents>
+                                  </TablixHeader>
+                                  <TablixMembers>
+                                    <TablixMember>
+                                      <TablixHeader>
+                                        <Size>9.2212cm</Size>
+                                        <CellContents>
+                                          <Textbox Name="Textbox54">
+                                            <CanGrow>true</CanGrow>
+                                            <KeepTogether>true</KeepTogether>
+                                            <Paragraphs>
+                                              <Paragraph>
+                                                <TextRuns>
+                                                  <TextRun>
+                                                    <Value />
+                                                    <Style>
+                                                      <FontFamily>Segoe UI</FontFamily>
+                                                    </Style>
+                                                  </TextRun>
+                                                </TextRuns>
+                                                <Style />
+                                              </Paragraph>
+                                            </Paragraphs>
+                                            <rd:DefaultName>Textbox54</rd:DefaultName>
+                                            <Style>
+                                              <Border>
+                                                <Color>#e6eefc</Color>
+                                                <Style>Solid</Style>
+                                              </Border>
+                                              <LeftBorder>
+                                                <Style>None</Style>
+                                              </LeftBorder>
+                                              <RightBorder>
+                                                <Style>None</Style>
+                                              </RightBorder>
+                                              <BackgroundColor>#c6daf8</BackgroundColor>
+                                              <VerticalAlign>Middle</VerticalAlign>
+                                              <PaddingLeft>2pt</PaddingLeft>
+                                              <PaddingRight>2pt</PaddingRight>
+                                              <PaddingTop>2pt</PaddingTop>
+                                              <PaddingBottom>2pt</PaddingBottom>
+                                            </Style>
+                                          </Textbox>
+                                        </CellContents>
+                                      </TablixHeader>
+                                    </TablixMember>
+                                  </TablixMembers>
+                                  <KeepWithGroup>Before</KeepWithGroup>
                                 </TablixMember>
                               </TablixMembers>
                               <Visibility>
                                 <Hidden>true</Hidden>
                                 <ToggleItem>TV_ComplianceState</ToggleItem>
                               </Visibility>
+                            </TablixMember>
+                            <TablixMember>
+                              <TablixHeader>
+                                <Size>3.68668cm</Size>
+                                <CellContents>
+                                  <Textbox Name="TV_Computers_Label">
+                                    <CanGrow>true</CanGrow>
+                                    <KeepTogether>true</KeepTogether>
+                                    <Paragraphs>
+                                      <Paragraph>
+                                        <TextRuns>
+                                          <TextRun>
+                                            <Value>Computers</Value>
+                                            <Style>
+                                              <FontFamily>Segoe UI</FontFamily>
+                                              <FontWeight>Bold</FontWeight>
+                                            </Style>
+                                          </TextRun>
+                                        </TextRuns>
+                                        <Style>
+                                          <TextAlign>Left</TextAlign>
+                                        </Style>
+                                      </Paragraph>
+                                    </Paragraphs>
+                                    <Style>
+                                      <Border>
+                                        <Color>#c6daf8</Color>
+                                        <Style>Solid</Style>
+                                      </Border>
+                                      <TopBorder>
+                                        <Style>None</Style>
+                                      </TopBorder>
+                                      <BottomBorder>
+                                        <Style>Solid</Style>
+                                      </BottomBorder>
+                                      <LeftBorder>
+                                        <Style>Solid</Style>
+                                      </LeftBorder>
+                                      <RightBorder>
+                                        <Style>None</Style>
+                                      </RightBorder>
+                                      <BackgroundColor>#9eb6e4</BackgroundColor>
+                                      <VerticalAlign>Middle</VerticalAlign>
+                                      <PaddingLeft>2pt</PaddingLeft>
+                                      <PaddingRight>2pt</PaddingRight>
+                                      <PaddingTop>2pt</PaddingTop>
+                                      <PaddingBottom>2pt</PaddingBottom>
+                                    </Style>
+                                  </Textbox>
+                                </CellContents>
+                              </TablixHeader>
+                              <TablixMembers>
+                                <TablixMember>
+                                  <TablixHeader>
+                                    <Size>13.31331cm</Size>
+                                    <CellContents>
+                                      <Textbox Name="Textbox65">
+                                        <CanGrow>true</CanGrow>
+                                        <KeepTogether>true</KeepTogether>
+                                        <Paragraphs>
+                                          <Paragraph>
+                                            <TextRuns>
+                                              <TextRun>
+                                                <Value />
+                                                <Style>
+                                                  <FontFamily>Segoe UI</FontFamily>
+                                                  <FontWeight>Bold</FontWeight>
+                                                </Style>
+                                              </TextRun>
+                                            </TextRuns>
+                                            <Style>
+                                              <TextAlign>Left</TextAlign>
+                                            </Style>
+                                          </Paragraph>
+                                        </Paragraphs>
+                                        <rd:DefaultName>Textbox65</rd:DefaultName>
+                                        <Style>
+                                          <Border>
+                                            <Color>#c6daf8</Color>
+                                            <Style>None</Style>
+                                          </Border>
+                                          <BottomBorder>
+                                            <Style>Solid</Style>
+                                          </BottomBorder>
+                                          <BackgroundColor>#9eb6e4</BackgroundColor>
+                                          <VerticalAlign>Middle</VerticalAlign>
+                                          <PaddingLeft>2pt</PaddingLeft>
+                                          <PaddingRight>2pt</PaddingRight>
+                                          <PaddingTop>2pt</PaddingTop>
+                                          <PaddingBottom>2pt</PaddingBottom>
+                                        </Style>
+                                      </Textbox>
+                                    </CellContents>
+                                  </TablixHeader>
+                                </TablixMember>
+                              </TablixMembers>
+                              <KeepWithGroup>Before</KeepWithGroup>
                             </TablixMember>
                           </TablixMembers>
                         </TablixMember>
@@ -1922,7 +2074,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixHeader>
                     <Size>2.82413cm</Size>
                     <CellContents>
-                      <Textbox Name="TV_Total_Label_StatusMessage">
+                      <Textbox Name="TV_Total_Label">
                         <CanGrow>true</CanGrow>
                         <KeepTogether>true</KeepTogether>
                         <Paragraphs>
@@ -1944,6 +2096,19 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             <Color>#9eb6e4</Color>
                             <Style>Solid</Style>
                           </Border>
+                          <TopBorder>
+                            <Color>#c6daf8</Color>
+                            <Style>Solid</Style>
+                          </TopBorder>
+                          <BottomBorder>
+                            <Style>Solid</Style>
+                          </BottomBorder>
+                          <LeftBorder>
+                            <Style>Solid</Style>
+                          </LeftBorder>
+                          <RightBorder>
+                            <Style>None</Style>
+                          </RightBorder>
                           <BackgroundColor>#7292cc</BackgroundColor>
                           <VerticalAlign>Middle</VerticalAlign>
                           <PaddingLeft>2pt</PaddingLeft>
@@ -1957,9 +2122,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>8.32083cm</Size>
+                        <Size>26.56433cm</Size>
                         <CellContents>
-                          <Textbox Name="Textbox26">
+                          <Textbox Name="Textbox29">
                             <CanGrow>true</CanGrow>
                             <KeepTogether>true</KeepTogether>
                             <Paragraphs>
@@ -1976,12 +2141,24 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                 <Style />
                               </Paragraph>
                             </Paragraphs>
-                            <rd:DefaultName>Textbox26</rd:DefaultName>
+                            <rd:DefaultName>Textbox29</rd:DefaultName>
                             <Style>
                               <Border>
                                 <Color>#9eb6e4</Color>
                                 <Style>Solid</Style>
                               </Border>
+                              <TopBorder>
+                                <Style>None</Style>
+                              </TopBorder>
+                              <BottomBorder>
+                                <Style>Solid</Style>
+                              </BottomBorder>
+                              <LeftBorder>
+                                <Style>Solid</Style>
+                              </LeftBorder>
+                              <RightBorder>
+                                <Style>None</Style>
+                              </RightBorder>
                               <BackgroundColor>#7292cc</BackgroundColor>
                               <VerticalAlign>Middle</VerticalAlign>
                               <PaddingLeft>2pt</PaddingLeft>
@@ -1993,211 +2170,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                         </CellContents>
                       </TablixHeader>
                       <TablixMembers>
-                        <TablixMember>
-                          <TablixHeader>
-                            <Size>3.16146cm</Size>
-                            <CellContents>
-                              <Textbox Name="Textbox29">
-                                <CanGrow>true</CanGrow>
-                                <KeepTogether>true</KeepTogether>
-                                <Paragraphs>
-                                  <Paragraph>
-                                    <TextRuns>
-                                      <TextRun>
-                                        <Value />
-                                        <Style>
-                                          <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                        </Style>
-                                      </TextRun>
-                                    </TextRuns>
-                                    <Style />
-                                  </Paragraph>
-                                </Paragraphs>
-                                <rd:DefaultName>Textbox29</rd:DefaultName>
-                                <Style>
-                                  <Border>
-                                    <Color>#9eb6e4</Color>
-                                    <Style>Solid</Style>
-                                  </Border>
-                                  <BackgroundColor>#7292cc</BackgroundColor>
-                                  <VerticalAlign>Middle</VerticalAlign>
-                                  <PaddingLeft>2pt</PaddingLeft>
-                                  <PaddingRight>2pt</PaddingRight>
-                                  <PaddingTop>2pt</PaddingTop>
-                                  <PaddingBottom>2pt</PaddingBottom>
-                                </Style>
-                              </Textbox>
-                            </CellContents>
-                          </TablixHeader>
-                          <TablixMembers>
-                            <TablixMember>
-                              <TablixHeader>
-                                <Size>4.18936cm</Size>
-                                <CellContents>
-                                  <Textbox Name="Textbox49">
-                                    <CanGrow>true</CanGrow>
-                                    <KeepTogether>true</KeepTogether>
-                                    <Paragraphs>
-                                      <Paragraph>
-                                        <TextRuns>
-                                          <TextRun>
-                                            <Value />
-                                            <Style>
-                                              <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                            </Style>
-                                          </TextRun>
-                                        </TextRuns>
-                                        <Style />
-                                      </Paragraph>
-                                    </Paragraphs>
-                                    <rd:DefaultName>Textbox49</rd:DefaultName>
-                                    <Style>
-                                      <Border>
-                                        <Color>#9eb6e4</Color>
-                                        <Style>Solid</Style>
-                                      </Border>
-                                      <BackgroundColor>#7292cc</BackgroundColor>
-                                      <VerticalAlign>Middle</VerticalAlign>
-                                      <PaddingLeft>2pt</PaddingLeft>
-                                      <PaddingRight>2pt</PaddingRight>
-                                      <PaddingTop>2pt</PaddingTop>
-                                      <PaddingBottom>2pt</PaddingBottom>
-                                    </Style>
-                                  </Textbox>
-                                </CellContents>
-                              </TablixHeader>
-                              <TablixMembers>
-                                <TablixMember>
-                                  <TablixHeader>
-                                    <Size>4.09211cm</Size>
-                                    <CellContents>
-                                      <Textbox Name="Textbox23">
-                                        <CanGrow>true</CanGrow>
-                                        <KeepTogether>true</KeepTogether>
-                                        <Paragraphs>
-                                          <Paragraph>
-                                            <TextRuns>
-                                              <TextRun>
-                                                <Value />
-                                                <Style>
-                                                  <FontFamily>Segoe UI</FontFamily>
-                                                  <FontWeight>Bold</FontWeight>
-                                                </Style>
-                                              </TextRun>
-                                            </TextRuns>
-                                            <Style>
-                                              <TextAlign>Center</TextAlign>
-                                            </Style>
-                                          </Paragraph>
-                                        </Paragraphs>
-                                        <rd:DefaultName>Textbox23</rd:DefaultName>
-                                        <Style>
-                                          <Border>
-                                            <Color>#9eb6e4</Color>
-                                            <Style>Solid</Style>
-                                          </Border>
-                                          <BackgroundColor>#7292cc</BackgroundColor>
-                                          <VerticalAlign>Middle</VerticalAlign>
-                                          <PaddingLeft>2pt</PaddingLeft>
-                                          <PaddingRight>2pt</PaddingRight>
-                                          <PaddingTop>2pt</PaddingTop>
-                                          <PaddingBottom>2pt</PaddingBottom>
-                                        </Style>
-                                      </Textbox>
-                                    </CellContents>
-                                  </TablixHeader>
-                                  <TablixMembers>
-                                    <TablixMember>
-                                      <TablixHeader>
-                                        <Size>5.96666cm</Size>
-                                        <CellContents>
-                                          <Textbox Name="Textbox901">
-                                            <CanGrow>true</CanGrow>
-                                            <KeepTogether>true</KeepTogether>
-                                            <Paragraphs>
-                                              <Paragraph>
-                                                <TextRuns>
-                                                  <TextRun>
-                                                    <Value />
-                                                    <Style>
-                                                      <FontFamily>Segoe UI</FontFamily>
-                                                      <FontWeight>Bold</FontWeight>
-                                                    </Style>
-                                                  </TextRun>
-                                                </TextRuns>
-                                                <Style />
-                                              </Paragraph>
-                                            </Paragraphs>
-                                            <rd:DefaultName>Textbox901</rd:DefaultName>
-                                            <Style>
-                                              <Border>
-                                                <Color>#9eb6e4</Color>
-                                                <Style>Solid</Style>
-                                              </Border>
-                                              <BackgroundColor>#7292cc</BackgroundColor>
-                                              <VerticalAlign>Middle</VerticalAlign>
-                                              <PaddingLeft>2pt</PaddingLeft>
-                                              <PaddingRight>2pt</PaddingRight>
-                                              <PaddingTop>2pt</PaddingTop>
-                                              <PaddingBottom>2pt</PaddingBottom>
-                                            </Style>
-                                          </Textbox>
-                                        </CellContents>
-                                      </TablixHeader>
-                                      <TablixMembers>
-                                        <TablixMember>
-                                          <TablixHeader>
-                                            <Size>3.25454cm</Size>
-                                            <CellContents>
-                                              <Textbox Name="Textbox932">
-                                                <CanGrow>true</CanGrow>
-                                                <KeepTogether>true</KeepTogether>
-                                                <Paragraphs>
-                                                  <Paragraph>
-                                                    <TextRuns>
-                                                      <TextRun>
-                                                        <Value />
-                                                        <Style>
-                                                          <FontFamily>Segoe UI</FontFamily>
-                                                          <FontWeight>Bold</FontWeight>
-                                                        </Style>
-                                                      </TextRun>
-                                                    </TextRuns>
-                                                    <Style>
-                                                      <TextAlign>Center</TextAlign>
-                                                    </Style>
-                                                  </Paragraph>
-                                                </Paragraphs>
-                                                <rd:DefaultName>Textbox932</rd:DefaultName>
-                                                <Style>
-                                                  <Border>
-                                                    <Color>#9eb6e4</Color>
-                                                    <Style>Solid</Style>
-                                                  </Border>
-                                                  <BackgroundColor>#7292cc</BackgroundColor>
-                                                  <VerticalAlign>Middle</VerticalAlign>
-                                                  <PaddingLeft>2pt</PaddingLeft>
-                                                  <PaddingRight>2pt</PaddingRight>
-                                                  <PaddingTop>2pt</PaddingTop>
-                                                  <PaddingBottom>2pt</PaddingBottom>
-                                                </Style>
-                                              </Textbox>
-                                            </CellContents>
-                                          </TablixHeader>
-                                          <TablixMembers>
-                                            <TablixMember />
-                                          </TablixMembers>
-                                        </TablixMember>
-                                      </TablixMembers>
-                                    </TablixMember>
-                                  </TablixMembers>
-                                </TablixMember>
-                              </TablixMembers>
-                            </TablixMember>
-                          </TablixMembers>
-                        </TablixMember>
+                        <TablixMember />
                       </TablixMembers>
                     </TablixMember>
                   </TablixMembers>
@@ -2212,8 +2185,8 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
             </SortExpressions>
             <Top>1.22349cm</Top>
             <Left>0.09525cm</Left>
-            <Height>2.4cm</Height>
-            <Width>49.45091cm</Width>
+            <Height>3cm</Height>
+            <Width>49.4509cm</Width>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -2366,7 +2339,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
             </Style>
           </Line>
         </ReportItems>
-        <Height>3.68049cm</Height>
+        <Height>4.30287cm</Height>
         <Style>
           <Border>
             <Style>None</Style>
@@ -2374,7 +2347,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
           <BackgroundColor>#6e7b8b</BackgroundColor>
         </Style>
       </Body>
-      <Width>49.67846cm</Width>
+      <Width>49.67783cm</Width>
       <Page>
         <PageHeader>
           <Height>2.54668cm</Height>
@@ -2475,7 +2448,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>0.70548cm</Height>
+          <Height>0.81131cm</Height>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
             <Textbox Name="PageNumber">
