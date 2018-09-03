@@ -6,6 +6,7 @@
 * _____________________________________________________________________________________________________ *
 * Ioan Popovici | 2015-11-15 | v1.0     | First version                                                 *
 * Ioan Popovici | 2017-09-22 | v1.1     | Modified for all drives, improvements and code cleanup        *
+* Ioan Popovici | 2018-09-03 | v1.2     | Added encryption status                                       *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -83,6 +84,16 @@ Function Get-BitLockerStatus {
                         0 { 'PROTECTION OFF' }
                         1 { 'PROTECTION ON' }
                         2 { 'PROTECTION UNKNOWN' }
+                    }
+                )
+                'EncryptionStatus' = $(
+                    Switch ($_.ConversionStatus) {
+                        0 { 'FullyDecrypted' }
+                        1 { 'FullyEncrypted' }
+                        2 { 'EncryptionInProgress' }
+                        3 { 'DecryptionInProgress' }
+                        4 { 'EncryptionPaused' }
+                        5 { 'DecryptionPaused' }
                     }
                 )
             }
