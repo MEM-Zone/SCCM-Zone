@@ -7,6 +7,7 @@
 * Ioan Popovici | 2015-11-15 | v1.0     | First version                                                 *
 * Ioan Popovici | 2017-09-22 | v1.1     | Modified for all drives, improvements and code cleanup        *
 * Ioan Popovici | 2018-09-03 | v1.2     | Added encryption status                                       *
+* Ioan Popovici | 2018-09-04 | v1.4     | Hide table header                                             *
 * ===================================================================================================== *
 *                                                                                                       *
 *********************************************************************************************************
@@ -145,7 +146,7 @@ Function Get-BitLockerStatus {
 #region ScriptBody
 
 ## Write BitLockerStatus to console
-Write-Host "$(Get-BitLockerStatus | Format-Table | Out-String)" -ForegroundColor 'Yellow' -BackgroundColor 'Black'
+Write-Output "$(Get-BitLockerStatus  | Format-Table -HideTableHeaders | Out-String)"
 
 #endregion
 ##*=============================================
