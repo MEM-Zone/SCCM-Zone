@@ -78,7 +78,7 @@ Function Get-BitLockerStatus {
 .DESCRIPTION
     This Function is used the get the BitLocker Protection Status.
 .PARAMETER DriveType
-    Specifies the drive type(s) for which to get the gitlocker status. Default is: '3'.
+    Specifies the drive type(s) for which to get the bitlocker status. Default is: '3'.
     Available values
         0   DRIVE_UNKNOWN
         1   DRIVE_NO_ROOT_DIR
