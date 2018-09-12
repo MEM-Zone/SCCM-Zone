@@ -84,7 +84,7 @@
     * Improved logging
     * Basic error Management
 
-## 1.0 - 2015-11-16
+## 1.0 - 2015-11-13
 
 ### First version
 
