@@ -1,26 +1,46 @@
 <#
-*********************************************************************************************************
-* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2015-11-15 | v1.0     | First version                                                 *
-* Ioan Popovici | 2017-09-22 | v1.1     | Modified for all drives, improvements and code cleanup        *
-* Ioan Popovici | 2018-09-03 | v1.2     | Added encryption status                                       *
-* Ioan Popovici | 2018-09-04 | v1.4     | Hide table header                                             *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
-    This PowerShell Script is used to get the BitLocker protection status.
+    Gets the BitLocker protection status.
 .DESCRIPTION
-    This PowerShell Script is used to get the BitLocker protection status for a specific drive, or all drives.
+    Gets the BitLocker protection status for a specific drive, or all drives.
+.PARAMETER DriveType
+    Specifies the drive type(s) for which to get the gitlocker status. Default is: '3'.
+    Available values
+        0   DRIVE_UNKNOWN
+        1   DRIVE_NO_ROOT_DIR
+        2   DRIVE_REMOVABLE
+        3   DRIVE_FIXED
+        4   DRIVE_REMOTE
+        5   DRIVE_CDROM
+        6   DRIVE_RAMDISK
+    These values are just for reference you probably will never use them.
+.PARAMETER DriveLetter
+    Specifies the drive letter(s) for which to get the bitlocker status. Default is: 'All'.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Get-BitLockerStatus.ps1
+    Get-BitLockerStatus.ps1 -DriveLetter 'All'
+.EXAMPLE
+    Get-BitLockerStatus.ps1 -DriveType '2'
+.EXAMPLE
+    Get-BitLockerStatus.ps1 -DriveType '2','3' -DriveLetter 'C:','D:'
+.INPUTS
+    System.String.
+.OUTPUTS
+    System.String.
+.NOTES
+    Created by
+        Ioan Popovici   2015-11-15
+    Release notes
+        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Powershell/Get-BitlockerStatus/CHANGELOG.md
+    For issue reporting please use github
+        https://github.com/JhonnyTerminus/SCCMZone/issues
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    BitLocker
+.FUNCTIONALITY
+    Get BitLocker status
 #>
 
 ##*=============================================
@@ -28,12 +48,17 @@
 ##*=============================================
 #region VariableDeclaration
 
-## Initializing Result Object
-[psCustomObject]$Result =@()
-[array]$ResultProps =@()
-
-## Initializing variables
-[string]$LocalDrives
+## Get script parameters
+Param (
+    [Parameter(Mandatory = $false, Position = 0)]
+    [ValidateNotNullorEmpty()]
+    [Alias('Type')]
+    [string[]]$DriveType = '3',
+    [Parameter(Mandatory = $false, Position = 1)]
+    [ValidateNotNullorEmpty()]
+    [Alias('Drive')]
+    [string[]]$DriveLetter = 'All'
+)
 
 #endregion
 ##*=============================================
@@ -47,90 +72,134 @@
 
 #region Function Get-BitLockerStatus
 Function Get-BitLockerStatus {
-<#
+    <#
 .SYNOPSIS
     This Function is used the get the BitLocker Protection Status.
 .DESCRIPTION
     This Function is used the get the BitLocker Protection Status.
+.PARAMETER DriveType
+    Specifies the drive type(s) for which to get the gitlocker status. Default is: '3'.
+    Available values
+        0   DRIVE_UNKNOWN
+        1   DRIVE_NO_ROOT_DIR
+        2   DRIVE_REMOVABLE
+        3   DRIVE_FIXED
+        4   DRIVE_REMOTE
+        5   DRIVE_CDROM
+        6   DRIVE_RAMDISK
+    These values are just for reference you probably will never use them.
 .PARAMETER DriveLetter
-    Drive Letter to check for BitLocker Status. Optional Parameter.
+    Specifies the drive letter(s) for which to get the bitlocker status. Default is: 'All'.
 .EXAMPLE
-    Get-BitLockerStatus -DriveLetter 'D'
+    Get-BitLockerStatus.ps1 -DriveLetter 'All'
+.EXAMPLE
+    Get-BitLockerStatus.ps1 -DriveType '2'
+.EXAMPLE
+    Get-BitLockerStatus.ps1 -DriveType '2','3' -DriveLetter 'C:','D:'
+.INPUTS
+    System.String.
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    BitLocker
+.FUNCTIONALITY
+    Get BitLocker status
 #>
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$false,Position=0)]
+        [Parameter(Mandatory = $false, Position = 0)]
+        [ValidateNotNullorEmpty()]
+        [Alias('Type')]
+        [string[]]$DriveType = '3',
+        [Parameter(Mandatory = $false, Position = 1)]
+        [ValidateNotNullorEmpty()]
         [Alias('Drive')]
-        [string]$DriveLetter
+        [string[]]$DriveLetter = 'All'
     )
 
-    Try {
+    Begin {
 
-        ##  Get the local drives from WMI
-        $LocalDrives = Get-CimInstance -Namespace 'root\CIMV2' -ClassName 'CIM_LogicalDisk' | Where-Object { $_.DriveType -eq '3' }
+        ## Initializing Result Object
+        [psCustomObject]$Result = @()
+    }
+    Process {
+        Try { #$ss = Get-CimInstance -Namespace 'root\CIMV2' -ClassName 'CIM_LogicalDisk'| Select-Object DriveType
 
-        ## Get the BitLocker Status for all drives from WMI
-        Get-CimInstance  -Namespace 'root\CIMV2\Security\MicrosoftVolumeEncryption'  -ClassName 'Win32_EncryptableVolume' -ErrorAction 'Stop' | ForEach-Object {
+            ##  Get the local drives from WMI
+            [psObject]$LocalDrives = Get-CimInstance -Namespace 'root\CIMV2' -ClassName 'CIM_LogicalDisk' | Where-Object -Property 'DriveType' -in $DriveType
 
-            #  Create the Result Props and make the ProtectionStatus more report friendly
-            $ResultProps = [ordered]@{
-                'Drive' = $_.DriveLetter
-                'ProtectionStatus' = $(
-                    Switch ($_.ProtectionStatus) {
-                        0 { 'PROTECTION OFF' }
-                        1 { 'PROTECTION ON' }
-                        2 { 'PROTECTION UNKNOWN' }
-                    }
-                )
-                'EncryptionStatus' = $(
-                    Switch ($_.ConversionStatus) {
-                        0 { 'FullyDecrypted' }
-                        1 { 'FullyEncrypted' }
-                        2 { 'EncryptionInProgress' }
-                        3 { 'DecryptionInProgress' }
-                        4 { 'EncryptionPaused' }
-                        5 { 'DecryptionPaused' }
-                    }
-                )
-            }
+            ## Get the BitLocker Status for all drives from WMI
+            Get-CimInstance  -Namespace 'root\CIMV2\Security\MicrosoftVolumeEncryption'  -ClassName 'Win32_EncryptableVolume' -ErrorAction 'Stop' | `
+                Where-Object -Property 'DriveLetter' -in $($LocalDrives.DeviceID) | `
+                ForEach-Object {
 
-            #  Adding ResultProps hash table to result object
-            $Result += New-Object PSObject -Property $ResultProps
-        }
+                #  Get the drive type
+                [string]$GetDriveType = $($LocalDrives | Where-Object -Property 'DeviceID' -eq $($_.DriveLetter)) | Select-Object -ExpandProperty 'DriveType'
 
-        #  Workaround for some Windows 7 computers not reporting BitLocker protection status for all drives
-        #  Create the ResultProps array
-        $LocalDrives | ForEach-Object {
-            If ($_.DeviceID -notin $Result.Drive) {
-                $ResultProps = [ordered]@{
-                    'Drive' = $_.DeviceID
-                    'ProtectionStatus' = 'PROTECTION OFF'
+                #  Create the Result Props and make the ProtectionStatus more report friendly
+                [hashtable]$ResultProps = [ordered]@{
+                    'Drive'            = $($_.DriveLetter)
+                    'ProtectionStatus' = $(
+                        Switch ($_.ProtectionStatus) {
+                            0 { 'PROTECTION OFF' }
+                            1 { 'PROTECTION ON' }
+                            2 { 'PROTECTION UNKNOWN' }
+                        }
+                    )
+                    'EncryptionStatus' = $(
+                        Switch ($_.ConversionStatus) {
+                            0 { 'FullyDecrypted' }
+                            1 { 'FullyEncrypted' }
+                            2 { 'EncryptionInProgress' }
+                            3 { 'DecryptionInProgress' }
+                            4 { 'EncryptionPaused' }
+                            5 { 'DecryptionPaused' }
+                        }
+                    )
+                    'DriveType' = 'Type ' + $GetDriveType
                 }
 
                 #  Adding ResultProps hash table to result object
                 $Result += New-Object PSObject -Property $ResultProps
             }
+
+            #  Workaround for some Windows 7 computers not reporting BitLocker protection status for all drives
+            #  Create the ResultProps array
+            $LocalDrives | ForEach-Object {
+                If ($($_.DeviceID) -notin $($Result.Drive)) {
+                    $ResultProps = [ordered]@{
+                        'Drive'            = $($_.DeviceID)
+                        'ProtectionStatus' = 'PROTECTION OFF'
+                        'DriveType'        = $($_.DriveType)
+                    }
+
+                    #  Adding ResultProps hash table to result object
+                    $Result += New-Object PSObject -Property $ResultProps
+                }
+            }
+        }
+
+        ## Catch any script errors
+        Catch {
+            Write-Error -Message "Script Execution Error!`n $_" -Category 'NotSpecified'
+        }
+        Finally {
+
+            ## Filter result depending the DriveLetter parameter
+            If ($DriveLetter -ne 'All') {
+                Write-Output -InputObject $($Result | Where-Object -Property 'Drive' -in $DriveLetter)
+            }
+            Else {
+                Write-Output -InputObject $Result
+            }
         }
     }
-
-    ## Catch any script errors
-    Catch {
-        Write-Host "Script Execution - Error!`n $_`n" -ForegroundColor 'Red' -BackgroundColor 'Black'
-    }
-    Finally {
-
-        ## Return different Results depending on wether the DriveLetter parameter was specified or not
-        If ($DriveLetter) {
-            Write-Output -InputObject $($Result | Where-Object { $_.Drive -match $DriveLetter })
-        }
-        Else {
-            Write-Output -InputObject $Result
-        }
+    End {
     }
 }
 #endregion
@@ -146,7 +215,8 @@ Function Get-BitLockerStatus {
 #region ScriptBody
 
 ## Write BitLockerStatus to console
-Write-Output "$(Get-BitLockerStatus  | Format-Table -HideTableHeaders | Out-String)"
+[string]$Result = $(Get-BitLockerStatus -DriveType $DriveType -DriveLetter $DriveLetter | Format-Table -HideTableHeaders | Out-String)
+Write-Output $Result
 
 #endregion
 ##*=============================================
