@@ -7,6 +7,7 @@
     * Fixed Get-Help functionality.
     * Moved written requirements to #Required statement
     * Added full Get-Help support
+    * Code cleanup
 
 ## 3.4 - 2018-08-30
 
