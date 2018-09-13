@@ -1,5 +1,13 @@
 # Clean-CMClientCache release history
 
+## 3.5 - 2018-09-13
+
+## Changed
+
+    * Fixed Get-Help functionality.
+    * Moved written requirements to #Required statement
+    * Added full Get-Help support
+
 ## 3.4 - 2018-08-30
 
 ### Fixed

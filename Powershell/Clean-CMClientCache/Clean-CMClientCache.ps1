@@ -1,14 +1,4 @@
 <#
-************************************************************************************************************
-* Requires          | Requires PowerShell 3.0                                                              *
-* ======================================================================================================== *
-* Created by        |    Date    | Comments                                                                *
-* ________________________________________________________________________________________________________ *
-* Ioan Popovici     | 2015-11-13 | First version                                                           *
-* ======================================================================================================== *
-* Release info moved separate markdown file, see notes.                                                    *
-************************************************************************************************************
-
 .SYNOPSIS
     Cleans the configuration manager client cache.
 .DESCRIPTION
@@ -35,25 +25,35 @@
 .PARAMETER LogDebugMessages
     This switch specifies to log debug messages. Default is: $false.
 .EXAMPLE
-    PowerShell.exe .\Clean-CMClientCache -CleanupActions "Applications, Packages, Updates, Orphaned" -LoggingOptions 'Host' -LowDiskSpaceThreshold '100' -ReferencedThreshold '30' -SkipSuperPeer -RemovePersisted -Verbose -Debug
+    Clean-CMClientCache.ps1 -CleanupActions "Applications, Packages, Updates, Orphaned" -LoggingOptions 'Host' -LowDiskSpaceThreshold '100' -ReferencedThreshold '30' -SkipSuperPeer -RemovePersisted -Verbose -Debug
 .INPUTS
-    None
+    System.String.
 .OUTPUTS
     System.Management.Automation.PSObject
 .NOTES
+    Created by
+        Ioan Popovici   2015-11-13
     Release notes
         https://github.com/JhonnyTerminus/SCCMZone/blob/master/Powershell/Clean-CMClientCache/CHANGELOG.md
     For issue reporting please use github
         https://github.com/JhonnyTerminus/SCCMZone/issues
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Clean CM Client Cache
 #>
 
 ##*=============================================
 ##* VARIABLE DECLARATION
 ##*=============================================
 #region VariableDeclaration
+
+## Set script requirements
+#Requires -Version 3.0
 
 ## Get script parameters
 Param (
@@ -661,11 +661,20 @@ Function Get-CCMCachedApplications {
     Lists all configuration manager client cached applications with custom properties.
 .EXAMPLE
     Get-CCMCachedApplications
+.INPUTS
+    None
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Get cached applications
 #>
     [CmdletBinding()]
     Param ()
@@ -775,11 +784,20 @@ Function Get-CCMCachedPackages {
     Lists all configuration manager client cached packages with custom properties.
 .EXAMPLE
     Get-CCMCachedPackages
+.INPUTS
+    None
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Get cached packages
 #>
     [CmdletBinding()]
     Param ()
@@ -883,11 +901,20 @@ Function Get-CCMCachedUpdates {
     Lists all configuration manager client cached updates with custom properties.
 .EXAMPLE
     Get-CCMCachedUpdates
+.INPUTS
+    None
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Get cached updates
 #>
 
     [CmdletBinding()]
@@ -989,11 +1016,20 @@ Function Remove-CCMCacheElement {
     Default is: $script:ReferencedThreshold.
 .EXAMPLE
     Remove-CCMCacheElement -ContentID '234234234' -RemovePersisted
+.INPUTS
+    System.String.
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Remove cached element
 #>
     [CmdletBinding()]
     Param (
@@ -1112,11 +1148,20 @@ Function Remove-CCMCachedApplications {
     Specifies to remove cached application even if it's persisted. Default is: $false.
 .EXAMPLE
     Remove-CCMCachedApplications -RemovePersisted $true
+.INPUTS
+    System.Boolean.
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Remove cached applications
 #>
     [CmdletBinding()]
     Param (
@@ -1201,11 +1246,20 @@ Function Remove-CCMCachedPackages {
     Specifies to remove cached package even if it's persisted. Default is: $false.
 .EXAMPLE
     Remove-CCMCachedPackages -RemovePersisted $true
+.INPUTS
+    System.Boolean.
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Remove cached packages
 #>
     [CmdletBinding()]
     Param (
@@ -1296,11 +1350,20 @@ Function Remove-CCMCachedUpdates {
     Removes all ccm cached updates.
 .EXAMPLE
     Remove-CCMCachedUpdates
+.INPUTS
+    None
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Remove cached updates
 #>
 
     [CmdletBinding()]
@@ -1386,11 +1449,20 @@ Function Remove-CCMOrphanedCache {
     Removes all ccm cache items not present it wmi.
 .EXAMPLE
     Remove-CCMOrphanedCache
+.INPUTS
+    None.
+.OUTPUTS
+    System.Object.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    CM Client Cache
+.FUNCTIONALITY
+    Remove orphaned cached items
 #>
 
     [CmdletBinding()]
@@ -1440,15 +1512,8 @@ Function Remove-CCMOrphanedCache {
 
                     #  Assemble result object props
                     $RemoveOrphanedProps = [ordered]@{
-                        #FullName = 'N/A'
-                        #Name = 'N/A'
-                        #ContentID = 'N/A'
-                        #ContentVersion = 'N/A'
-                        #ReferenceCount = 'N/A'
-                        #LastReferenceTime = 'N/A'
                         Location   = $CacheElementPath
                         'Size(MB)' = '{0:N2}' -f $($CacheElementSize / 1MB)
-                        #CacheElementID = 'NA'
                         Status     = 'Removed'
                     }
                     #  Add items to result object
