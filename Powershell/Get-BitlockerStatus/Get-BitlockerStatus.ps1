@@ -16,6 +16,8 @@
     These values are just for reference you probably will never use them.
 .PARAMETER DriveLetter
     Specifies the drive letter(s) for which to get the bitlocker status. Default is: 'All'.
+.PARAMETER ShowTableHeaders
+    This switch specifies to show the table headers. Default: $false.
 .EXAMPLE
     Get-BitLockerStatus.ps1 -DriveLetter 'All'
 .EXAMPLE
@@ -57,13 +59,20 @@ Param (
     [Parameter(Mandatory = $false, Position = 1)]
     [ValidateNotNullorEmpty()]
     [Alias('Drive')]
-    [string[]]$DriveLetter = 'All'
+    [string[]]$DriveLetter = 'All',
+    [Parameter(Mandatory = $false, Position = 2)]
+    [ValidateNotNullorEmpty()]
+    [Alias('ShowHeaders')]
+    [switch]$ShowTableHeaders = $false
 )
 
 #endregion
 ##*=============================================
 ##* END VARIABLE DECLARATION
 ##*=============================================
+
+## Set table headers
+[boolean]$HideTableHeaders = If ($ShowTableHeaders) { $false } Else { $true }
 
 ##*=============================================
 ##* FUNCTION LISTINGS
@@ -91,11 +100,11 @@ Function Get-BitLockerStatus {
 .PARAMETER DriveLetter
     Specifies the drive letter(s) for which to get the bitlocker status. Default is: 'All'.
 .EXAMPLE
-    Get-BitLockerStatus.ps1 -DriveLetter 'All'
+    Get-BitLockerStatus -DriveLetter 'All'
 .EXAMPLE
-    Get-BitLockerStatus.ps1 -DriveType '2'
+    Get-BitLockerStatus -DriveType '2'
 .EXAMPLE
-    Get-BitLockerStatus.ps1 -DriveType '2','3' -DriveLetter 'C:','D:'
+    Get-BitLockerStatus -DriveType '2','3' -DriveLetter 'C:','D:'
 .INPUTS
     System.String.
 .OUTPUTS
@@ -104,6 +113,7 @@ Function Get-BitLockerStatus {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
 .COMPONENT
     BitLocker
@@ -215,7 +225,7 @@ Function Get-BitLockerStatus {
 #region ScriptBody
 
 ## Write BitLockerStatus to console
-[string]$Result = $(Get-BitLockerStatus -DriveType $DriveType -DriveLetter $DriveLetter | Format-Table -HideTableHeaders | Out-String)
+[string]$Result = $(Get-BitLockerStatus -DriveType $DriveType -DriveLetter $DriveLetter | Format-Table -HideTableHeaders:$HideTableHeaders | Out-String)
 Write-Output $Result
 
 #endregion

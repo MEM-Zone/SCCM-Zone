@@ -1,5 +1,12 @@
 # Get-BitlockerStatus release history
 
+## 1.5 - 2018-09-13
+
+### Changed
+
+    * Added ShowTableHeaders switch
+    * Corrected examples
+
 ## 1.4 - 2018-09-12
 
 ### Fixed
