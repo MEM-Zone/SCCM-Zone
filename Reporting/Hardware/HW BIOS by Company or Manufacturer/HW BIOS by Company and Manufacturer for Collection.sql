@@ -1,26 +1,17 @@
 /*
-*********************************************************************************************************
-* Requires          | SQL, company AD attribute, Wi32_Computer_System_Product WMI class gathering       *
-* ===================================================================================================== *
-* Modified by       |    Date    | Revision | Comments                                                  *
-* _____________________________________________________________________________________________________ *
-* Octavian Cordos   | 2018-01-18 | v1.0     | First version                                             *
-* Ioan Popovici     | 2018-08-08 | v1.1     | Added localizations, interactive sorting, new template,   *
-*                   |            |          | element naming, windows 10 version                        *
-* Ioan Popovici     | 2018-08-21 | v1.2     | Fixed duplicates minor formating fixes                    *
-* Ioan Popovici     | 2018-08-23 | v1.3     | Removed company query                                     *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
     This SQL Query is used to get the Hardware info of a Computer Collection.
 .DESCRIPTION
     This SQL Query is used to get the Hardware info of a Computer Collection including BIOS version and Computer model.
 .NOTES
-    Part of a report should not be run separately.
+    Created by
+        Ioan Popovici   2018-01-18
+    Release notes
+        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Reporting/Hardware/HW%20BIOS%20by%20Company%20or%20Manufacturer/CHANGELOG.md
+    This query is part of a report should not be run separately.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
 */
 
@@ -66,7 +57,7 @@ FROM dbo.fn_rbac_GS_COMPUTER_SYSTEM(@UserSIDs) AS System
     JOIN dbo.v_GS_COMPUTER_SYSTEM_PRODUCT AS Product ON Product.ResourceID = System.ResourceID
 WHERE Collections.CollectionID = @CollectionID
     AND
-        System.Model0 NOT LIKE (
+    System.Model0 NOT LIKE (
             CASE @ExcludeVirtualMachines
                 WHEN 'YES' THEN '%Virtual%'
                 ELSE ''
