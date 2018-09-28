@@ -1,0 +1,74 @@
+//——————————————— // BitLocker Policy Reporting //———————————————
+
+/* Set default Namespace and delete the Win32Reg_BitLockerPolicy if it already exists */
+#PRAGMA Namespace   ("\\\\.\\Root\\CIMv2\\SMS")
+#PRAGMA DeleteClass ("Win32Reg_BitLockerPolicy", NOFAIL)
+
+// Create WMI class
+/* Class Qualifiers */
+[
+    Description     ("The Win32Reg_BitLockerPolicy class contains information about the BitLocker Policy. You can use this information for BitLocker reporting."): ToInstance,
+    SMS_Report      (TRUE),
+    SMS_Group_Name  ("BitLocker Policy"),
+    SMS_Class_ID    ("CUSTOM|WIN32REG_BITLOCKERPOLICY|1.0"),
+    SMS_Context_1   ("__ProviderArchitecture=32|Uint32"),
+    SMS_Context_2   ("__RequiredArchitecture=true|Boolean")
+]
+/* Class properties */
+Class Win32Reg_BitLockerPolicy : SMS_Class_Template
+{
+    [ SMS_Report (TRUE), KEY ]
+    String              KeyName;
+    [ SMS_Report (TRUE) ]
+    Uint32              ActiveDirectoryBackup;
+    [ SMS_Report (TRUE) ]
+    Uint32              RequireActiveDirectoryBackup;
+    [ SMS_Report (TRUE) ]
+    Uint32              ActiveDirectoryInfoToStore;
+    [ SMS_Report (TRUE) ]
+    Uint32              EncryptionMethod;
+    [ SMS_Report (TRUE) ]
+    Uint32              EncryptionMethodWithXtsOs;
+    [ SMS_Report (TRUE) ]
+    Uint32              MinimumPIN;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSRecovery;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSManageDRA;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSRecoveryPassword;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSRecoveryKey;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSHideRecoveryPage;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSActiveDirectoryBackup;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSActiveDirectoryInfoToStore;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSRequireActiveDirectoryBackup;
+    [ SMS_Report (TRUE) ]
+    Uint32              UseAdvancedStartup;
+    [ SMS_Report (TRUE) ]
+    Uint32              EnableBDEWithNoTPM;
+    [ SMS_Report (TRUE) ]
+    Uint32              UseTPM;
+    [ SMS_Report (TRUE) ]
+    Uint32              UseTPMPIN;
+    [ SMS_Report (TRUE) ]
+    Uint32              UseTPMKey;
+    [ SMS_Report (TRUE) ]
+    Uint32              UseTPMKeyPIN;
+    [ SMS_Report (TRUE) ]
+    Uint32              RecoveryKeyMessageSource;
+    [ SMS_Report (TRUE) ]
+    String              RecoveryKeyMessage;
+    [ SMS_Report (TRUE) ]
+    String              RecoveryKeyUrl;
+    [ SMS_Report (TRUE) ]
+    Uint32              OSEncryptionType;
+    [ SMS_Report (TRUE) ]
+    Uint32              DisallowStandardUserPINReset;
+    [ SMS_Report (TRUE) ]
+    Uint32              EncryptionMethodNoDiffuser;
+};
