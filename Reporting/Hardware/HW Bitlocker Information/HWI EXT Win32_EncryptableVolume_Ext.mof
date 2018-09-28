@@ -1,11 +1,11 @@
-//——————————————— // BitLocker Status //———————————————
+//——————————————— // BitLocker Status Start //———————————————
 
-/* Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists */
+//-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists
 #PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")
 #PRAGMA DeleteClass ("Win32_EncryptableVolume_Ext",NOFAIL)
 
-// Create custom class
-/* Class Qualifiers */
+//-- Create custom class
+//-  Class Qualifiers
 [
     Description ("The Win32_EncryptableVolume_Ext class contains information about the BitLocker status. You can use this information for BitLocker reporting."): ToInstance,
     UNION,
@@ -18,21 +18,23 @@
     Dynamic,
     Provider ("MS_VIEW_INSTANCE_PROVIDER")
 ]
-/* Class properties */
+//-  Class properties
 Class Win32_EncryptableVolume_Ext
 {
     [ PropertySources {"DeviceID"}, KEY ]
-    String              DeviceID;
+    String    DeviceID;
     [ PropertySources {"PersistentVolumeID"} ]
-    String              PersistentVolumeID;
+    String    PersistentVolumeID;
     [ PropertySources {"DriveLetter"} ]
-    String              DriveLetter;
+    String    DriveLetter;
     [ PropertySources {"ProtectionStatus"} ]
-    UInt32              ProtectionStatus;
+    UInt32    ProtectionStatus;
     [ PropertySources {"ConversionStatus"} ]
-    UInt32              ConversionStatus;
+    UInt32    ConversionStatus;
     [ PropertySources {"EncryptionMethod"} ]
-    UInt32              EncryptionMethod;
+    UInt32    EncryptionMethod;
     [ PropertySources {"IsVolumeInitializedForProtection"} ]
-    Boolean             IsVolumeInitializedForProtection;
+    Boolean   IsVolumeInitializedForProtection;
 };
+
+//——————————————— // BitLocker Status End //———————————————

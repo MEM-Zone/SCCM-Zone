@@ -1,180 +1,35 @@
-//——————————————— // BitLocker Policy Properties //———————————————
+//——————————————— // BitLocker Status Reporting Start //———————————————
 
-/* Set default Namespace and delete the Win32Reg_BitLockerPolicy if it already exists */
-#PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")
-#PRAGMA DeleteClass ("Win32Reg_BitLockerPolicy",NOFAIL)
+//-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists. Use only inside of Configuration.mof
+//#PRAGMA Namespace     ("\\\\.\\Root\\CIMv2\\SMS")
+//#PRAGMA DeleteClass   ("Win32_EncryptableVolume_Ext", NOFAIL)
 
-// Create custom class
-/* Class Qualifiers */
+//-- Create custom class
+//-  Class Qualifiers
 [
-    Description ("The Win32Reg_BitLockerPolicy class contains information about the BitLocker Policy. You can use this information for BitLocker reporting."): ToInstance,
-    Dynamic,
-    Provider ("MS_VIEW_INSTANCE_PROVIDER")
-]
-
-/* Class properties */
-[DYNPROPS]
-Class Win32Reg_BitLockerPolicy
-{
-    [KEY]
-    String    KeyName;
-    Uint32    ActiveDirectoryBackup;
-    Uint32    RequireActiveDirectoryBackup;
-    Uint32    ActiveDirectoryInfoToStore;
-    Uint32    EncryptionMethod;
-    Uint32    EncryptionMethodWithXtsOs;
-    Uint32    MinimumPIN;
-    Uint32    OSRecovery;
-    Uint32    OSManageDRA;
-    Uint32    OSRecoveryPassword;
-    Uint32    OSRecoveryKey;
-    Uint32    OSHideRecoveryPage;
-    Uint32    OSActiveDirectoryBackup;
-    Uint32    OSActiveDirectoryInfoToStore;
-    Uint32    OSRequireActiveDirectoryBackup;
-    Uint32    UseAdvancedStartup;
-    Uint32    EnableBDEWithNoTPM;
-    Uint32    UseTPM;
-    Uint32    UseTPMPIN;
-    Uint32    UseTPMKey;
-    Uint32    UseTPMKeyPIN;
-    Uint32    RecoveryKeyMessageSource;
-    String    RecoveryKeyMessage;
-    String    RecoveryKeyUrl;
-    Uint32    OSEncryptionType;
-    Uint32    DisallowStandardUserPINReset;
-    Uint32    EncryptionMethodNoDiffuser;
-};
-
-[DYNPROPS]
-Instance of Win32Reg_BitLockerPolicy
-{
-    KeyName = "Win32Reg_BitLockerPolicy";
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|ActiveDirectoryBackup"), Dynamic, Provider ("RegPropProv") ]
-        ActiveDirectoryBackup;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|RequireActiveDirectoryBackup"), Dynamic, Provider ("RegPropProv") ]
-        RequireActiveDirectoryBackup;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|ActiveDirectoryInfoToStore"), Dynamic, Provider ("RegPropProv") ]
-        ActiveDirectoryInfoToStore;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|EncryptionMethod"), Dynamic, Provider ("RegPropProv") ]
-        EncryptionMethod;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|EncryptionMethodWithXtsOs"), Dynamic, Provider ("RegPropProv") ]
-        EncryptionMethodWithXtsOs;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|MinimumPIN"), Dynamic, Provider ("RegPropProv") ]
-        MinimumPIN;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSRecovery"), Dynamic, Provider ("RegPropProv") ]
-        OSRecovery;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSManageDRA"), Dynamic, Provider ("RegPropProv") ]
-        OSManageDRA;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSRecoveryPassword"), Dynamic, Provider ("RegPropProv") ]
-        OSRecoveryPassword;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSRecoveryKey"), Dynamic, Provider ("RegPropProv") ]
-        OSRecoveryKey;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSHideRecoveryPage"), Dynamic, Provider ("RegPropProv") ]
-        OSHideRecoveryPage;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSActiveDirectoryBackup"), Dynamic, Provider ("RegPropProv") ]
-        OSActiveDirectoryBackup;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSActiveDirectoryInfoToStore"), Dynamic, Provider ("RegPropProv") ]
-        OSActiveDirectoryInfoToStore;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSRequireActiveDirectoryBackup"), Dynamic, Provider ("RegPropProv") ]
-        OSRequireActiveDirectoryBackup;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|UseAdvancedStartup"), Dynamic, Provider ("RegPropProv") ]
-        UseAdvancedStartup;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|EnableBDEWithNoTPM"), Dynamic, Provider ("RegPropProv") ]
-        EnableBDEWithNoTPM;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|UseTPM"), Dynamic, Provider ("RegPropProv") ]
-        UseTPM;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|UseTPMPIN"), Dynamic, Provider ("RegPropProv") ]
-        UseTPMPIN;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|UseTPMKey"), Dynamic, Provider ("RegPropProv") ]
-        UseTPMKey;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|UseTPMKeyPIN"), Dynamic, Provider ("RegPropProv") ]
-        UseTPMKeyPIN;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|RecoveryKeyMessageSource"), Dynamic, Provider ("RegPropProv") ]
-        RecoveryKeyMessageSource;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|RecoveryKeyMessage"), Dynamic, Provider ("RegPropProv") ]
-        RecoveryKeyMessage;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|RecoveryKeyUrl"), Dynamic, Provider ("RegPropProv") ]
-        RecoveryKeyUrl;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|OSEncryptionType"), Dynamic, Provider ("RegPropProv") ]
-        OSEncryptionType;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|DisallowStandardUserPINReset"), Dynamic, Provider ("RegPropProv") ]
-        DisallowStandardUserPINReset;
-    [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|EncryptionMethodNoDiffuser"), Dynamic, Provider ("RegPropProv") ]
-        EncryptionMethodNoDiffuser;
-};
-
-//——————————————— // BitLocker Policy Reporting //———————————————
-
-/* Set default Namespace and delete the Win32Reg_BitLockerPolicy if it already exists */
-#PRAGMA Namespace   ("\\\\.\\Root\\CIMv2\\SMS")
-#PRAGMA DeleteClass ("Win32Reg_BitLockerPolicy", NOFAIL)
-
-// Create WMI class
-/* Class Qualifiers */
-[
-    Description     ("The Win32Reg_BitLockerPolicy class contains information about the BitLocker Policy. You can use this information for BitLocker reporting."): ToInstance,
+    Description     ("The Win32_EncryptableVolume_Ext class contains information about the BitLocker status. You can use this information for BitLocker reporting."): ToInstance,
     SMS_Report      (TRUE),
-    SMS_Group_Name  ("BitLocker Policy"),
-    SMS_Class_ID    ("CUSTOM|WIN32REG_BITLOCKERPOLICY|1.0"),
-    SMS_Context_1   ("__ProviderArchitecture=32|uint32"),
-    SMS_Context_2   ("__RequiredArchitecture=true|boolean")
+    SMS_Group_Name  ("BitLocker"),
+    SMS_Class_ID    ("CUSTOM|ENCRYPTABLE_VOLUME|1.0"),
+    Namespace       ("\\\\.\\Root\\CIMv2")
 ]
-/* Class properties */
-Class Win32Reg_BitLockerPolicy
+//-  Class properties
+Class Win32_EncryptableVolume_Ext : SMS_Class_Template
 {
     [ SMS_Report (TRUE), KEY ]
-    String              KeyName;
+    String              DeviceID;
     [ SMS_Report (TRUE) ]
-    Uint32              ActiveDirectoryBackup;
+    String              PersistentVolumeID;
     [ SMS_Report (TRUE) ]
-    Uint32              RequireActiveDirectoryBackup;
+    String              DriveLetter;
     [ SMS_Report (TRUE) ]
-    Uint32              ActiveDirectoryInfoToStore;
+    Uint32              ProtectionStatus;
+    [ SMS_Report (TRUE) ]
+    Uint32              ConversionStatus;
     [ SMS_Report (TRUE) ]
     Uint32              EncryptionMethod;
     [ SMS_Report (TRUE) ]
-    Uint32              EncryptionMethodWithXtsOs;
-    [ SMS_Report (TRUE) ]
-    Uint32              MinimumPIN;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSRecovery;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSManageDRA;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSRecoveryPassword;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSRecoveryKey;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSHideRecoveryPage;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSActiveDirectoryBackup;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSActiveDirectoryInfoToStore;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSRequireActiveDirectoryBackup;
-    [ SMS_Report (TRUE) ]
-    Uint32              UseAdvancedStartup;
-    [ SMS_Report (TRUE) ]
-    Uint32              EnableBDEWithNoTPM;
-    [ SMS_Report (TRUE) ]
-    Uint32              UseTPM;
-    [ SMS_Report (TRUE) ]
-    Uint32              UseTPMPIN;
-    [ SMS_Report (TRUE) ]
-    Uint32              UseTPMKey;
-    [ SMS_Report (TRUE) ]
-    Uint32              UseTPMKeyPIN;
-    [ SMS_Report (TRUE) ]
-    Uint32              RecoveryKeyMessageSource;
-    [ SMS_Report (TRUE) ]
-    String              RecoveryKeyMessage;
-    [ SMS_Report (TRUE) ]
-    String              RecoveryKeyUrl;
-    [ SMS_Report (TRUE) ]
-    Uint32              OSEncryptionType;
-    [ SMS_Report (TRUE) ]
-    Uint32              DisallowStandardUserPINReset;
-    [ SMS_Report (TRUE) ]
-    Uint32              EncryptionMethodNoDiffuser;
+    Boolean             IsVolumeInitializedForProtection;
 };
+
+//——————————————— // BitLocker Status Reporting End //———————————————
