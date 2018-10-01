@@ -2,7 +2,7 @@
 
 //-- Set default Namespace and delete the Win32Reg_BitLockerPolicy if it already exists
 #PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")
-#PRAGMA DeleteClass ("Win32Reg_BitLockerPolicy",NOFAIL)
+#PRAGMA DeleteClass ("Win32Reg_BitLockerPolicy", NOFAIL)
 
 //-- Create custom class
 //-  Class properties

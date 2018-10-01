@@ -2,7 +2,7 @@
 
 //-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists
 #PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")
-#PRAGMA DeleteClass ("Win32_EncryptableVolume_Ext",NOFAIL)
+#PRAGMA DeleteClass ("Win32_EncryptableVolume_Ext", NOFAIL)
 
 //-- Create custom class
 //-  Class Qualifiers
