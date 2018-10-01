@@ -1,4 +1,4 @@
-//——————————————— // BitLocker Policy Start //———————————————
+//——————————————— // BitLocker Policy //———————————————
 
 //-- Set default Namespace and delete the Win32Reg_BitLockerPolicy if it already exists
 #PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")
@@ -343,5 +343,3 @@ Instance of Win32Reg_BitLockerPolicy
     [ PropertyContext ("Local|HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE|RDVRestrictHardwareEncryptionAlgorithms"), Dynamic, Provider ("RegPropProv") ]
         RDVRestrictHardwareEncryptionAlgorithms;
 };
-
-//——————————————— // BitLocker Policy End //———————————————

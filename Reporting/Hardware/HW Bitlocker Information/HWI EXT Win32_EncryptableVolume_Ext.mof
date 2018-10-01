@@ -1,4 +1,4 @@
-//——————————————— // BitLocker Status Start //———————————————
+//——————————————— // BitLocker Status //———————————————
 
 //-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists
 #PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")
@@ -36,5 +36,3 @@ Class Win32_EncryptableVolume_Ext
     [ PropertySources {"IsVolumeInitializedForProtection"} ]
     Boolean   IsVolumeInitializedForProtection;
 };
-
-//——————————————— // BitLocker Status End //———————————————

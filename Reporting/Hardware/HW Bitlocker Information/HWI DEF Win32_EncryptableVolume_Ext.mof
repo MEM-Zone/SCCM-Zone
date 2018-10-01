@@ -1,4 +1,4 @@
-//——————————————— // BitLocker Status Reporting Start //———————————————
+//——————————————— // BitLocker Status Reporting //———————————————
 
 //-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists. Use only inside of Configuration.mof
 //#PRAGMA Namespace     ("\\\\.\\Root\\CIMv2\\SMS")
@@ -11,7 +11,7 @@
     SMS_Report      (TRUE),
     SMS_Group_Name  ("BitLocker"),
     SMS_Class_ID    ("CUSTOM|ENCRYPTABLE_VOLUME|1.0"),
-    Namespace       ("\\\\.\\Root\\CIMv2")
+    Namespace       ("\\\\.\\Root\\CIMV2\\Security\\MicrosoftVolumeEncryption")
 ]
 //-  Class properties
 Class Win32_EncryptableVolume_Ext : SMS_Class_Template
@@ -31,5 +31,3 @@ Class Win32_EncryptableVolume_Ext : SMS_Class_Template
     [ SMS_Report (TRUE) ]
     Boolean             IsVolumeInitializedForProtection;
 };
-
-//——————————————— // BitLocker Status Reporting End //———————————————

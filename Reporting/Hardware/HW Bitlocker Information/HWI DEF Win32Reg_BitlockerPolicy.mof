@@ -1,4 +1,4 @@
-//——————————————— // BitLocker Policy Reporting Start //———————————————
+//——————————————— // BitLocker Policy Reporting //———————————————
 
 // Set default Namespace and delete the Win32Reg_BitLockerPolicy if it already exists
 //#PRAGMA Namespace ("\\\\.\\Root\\CIMv2\\SMS")
@@ -234,5 +234,3 @@ Class Win32Reg_BitLockerPolicy : SMS_Class_Template
     [ SMS_Report (TRUE), KEY ]
     Uint32   RDVRestrictHardwareEncryptionAlgorithms;
 };
-
-//——————————————— // BitLocker Policy Reporting End //———————————————
