@@ -16,20 +16,33 @@
 *********************************************************************************************************
 
 .SYNOPSIS
-    This PowerShell script is used clean the image before SysPrep.
+    Cleans the image before SysPrep.
 .DESCRIPTION
-    This PowerShell script is used shrink the image before SysPrep by removing volume caches, update backups and update caches.
+    Cleans the image before SysPrep by removing volume caches, update backups and update caches.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Clean-Image.ps1
+    Clean-Image.ps1
+.INPUTS
+    None.
+.OUTPUTS
+    None.
 .NOTES
-    Credit for the original VBScript to: @mikael_nystrom https://deploymentbunny.com
-.NOTES
-    To do:
-    * Add error handling.
-    * Add better logging.
+    Created by
+        Ioan Popovici   2017-07-10
+
+    Credit
+        Original VBScript by: @mikael_nystrom https://deploymentbunny.com
+    Release notes
+        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Powershell/Clean-WindowsImage/CHANGELOG.md
+    For issue reporting please use github
+        https://github.com/JhonnyTerminus/SCCMZone/issues
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
+.COMPONENT
+    Cleanup
+.FUNCTIONALITY
+    Clean Windows Image
 #>
 
 ##*=============================================
@@ -75,6 +88,7 @@ Function Start-Cleanup {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/JhonnyTerminus/SCCMZone
 #>
     [CmdletBinding()]
@@ -165,7 +179,6 @@ Function Start-Cleanup {
         }
     }
 }
-
 #endregion
 
 #endregion
