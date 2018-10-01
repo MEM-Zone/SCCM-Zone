@@ -1,20 +1,4 @@
 <#
-*********************************************************************************************************
-* Requires          | PowerShell 3.0                                                                    *
-* ===================================================================================================== *
-* Modified by       |    Date    | Revision | Comments                                                  *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici     | 2017-07-10 | v1.0     | First version                                             *
-* Ioan Popovici     | 2017-07-10 | v2.0     | Vastly improved                                           *
-* Ioan Popovici     | 2017-07-14 | v2.1     | Bug fixes and improvements                                *
-* Andrew Reiter     | 2017-09-07 | v2.2     | Fix Copy-Item Bug                                         *
-* Ioan Popovici     | 2018-05-24 | v2.3     | Fix Windows 10 1803 bigger image after cleanup            *
-* Matthew Hilton    | 2018-07-27 | v2.4     | Added Progress bars, fixed ErrorAction to stop MDT Errors *
-* Ioan Popovici     | 2018-08-31 | v2.5     | Minor formatting, switched to CIM cmdlets                 *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
     Cleans the image before SysPrep.
 .DESCRIPTION

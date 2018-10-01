@@ -2,7 +2,7 @@
 
 ## 2.5 - 2018-10-01
 
-### Change
+### Changes
 
     * Regression, switched back to Get-WmiObject, Cim seems to fail in some cases
     * Fixed cleanup is not performed on some systems
