@@ -1,5 +1,12 @@
 # Clean-WindowsImage release history
 
+## 2.6 - 2018-10-03
+
+### Changes
+
+    * Fixed parameter bug
+    * Minor formating changes
+
 ## 2.5 - 2018-10-01
 
 ### Changes
