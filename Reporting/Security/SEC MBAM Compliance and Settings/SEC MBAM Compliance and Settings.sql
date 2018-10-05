@@ -5,9 +5,9 @@
     Gets the MBAM compliance in SCCM, and displays verbose info.
 .NOTES
     Created by
-        Ioan Popovici   2018-09-2018
+        Ioan Popovici   2018-10-05
     Release notes
-        ---https://github.com/JhonnyTerminus/SCCMZone/blob/master/Reporting/Hardware/HW%20BIOS%20by%20Company%20or%20Manufacturer/CHANGELOG.md
+        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Reporting/Security/SEC%20Bitlocker%20Compliance%20and%20Settings/CHANGELOG.md
     This query is part of a report should not be run separately.
 .LINK
     https://SCCM-Zone.com
