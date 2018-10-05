@@ -10,8 +10,8 @@
     Description     ("The Win32_EncryptableVolume_Ext class contains information about the BitLocker status. You can use this information for BitLocker reporting."): ToInstance,
     SMS_Report      (TRUE),
     SMS_Group_Name  ("BitLocker"),
-    SMS_Class_ID    ("CUSTOM|ENCRYPTABLE_VOLUME|1.0"),
-    Namespace       ("\\\\.\\Root\\CIMV2\\Security\\MicrosoftVolumeEncryption")
+    SMS_Class_ID    ("CUSTOM|ENCRYPTABLE_VOLUME_EXT|1.0"),
+    Namespace       ("\\\\.\\Root\\CIMV2")
 ]
 //-  Class properties
 Class Win32_EncryptableVolume_Ext : SMS_Class_Template
@@ -28,6 +28,8 @@ Class Win32_EncryptableVolume_Ext : SMS_Class_Template
     Uint32              ConversionStatus;
     [ SMS_Report (TRUE) ]
     Uint32              EncryptionMethod;
+    [ SMS_Report (TRUE) ]
+    Uint32              VolumeType;
     [ SMS_Report (TRUE) ]
     Boolean             IsVolumeInitializedForProtection;
 };

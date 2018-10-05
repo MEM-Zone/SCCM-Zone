@@ -1,4 +1,4 @@
-//——————————————— // BitLocker Status //———————————————
+//——————————————— // BitLocker Status Definitions //———————————————
 
 //-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists
 #PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")
@@ -10,7 +10,7 @@
     Description ("The Win32_EncryptableVolume_Ext class contains information about the BitLocker status. You can use this information for BitLocker reporting."): ToInstance,
     UNION,
     ViewSources {
-        "SELECT DeviceID, PersistentVolumeID, DriveLetter, ProtectionStatus, ConversionStatus, EncryptionMethod, IsVolumeInitializedForProtection FROM Win32_EncryptableVolume"
+        "SELECT DeviceID, PersistentVolumeID, DriveLetter, ProtectionStatus, ConversionStatus, EncryptionMethod, VolumeType, IsVolumeInitializedForProtection FROM Win32_EncryptableVolume"
     },
     ViewSpaces {
         "\\\\.\\Root\\CIMV2\\Security\\MicrosoftVolumeEncryption"
@@ -19,7 +19,7 @@
     Provider ("MS_VIEW_INSTANCE_PROVIDER")
 ]
 //-  Class properties
-Class Win32_EncryptableVolume_Ext
+Class Win32_EncryptableVolume_Ext : SMS_Class_Template
 {
     [ PropertySources {"DeviceID"}, KEY ]
     String    DeviceID;
@@ -33,6 +33,8 @@ Class Win32_EncryptableVolume_Ext
     UInt32    ConversionStatus;
     [ PropertySources {"EncryptionMethod"} ]
     UInt32    EncryptionMethod;
+    [ PropertySources {"VolumeType"} ]
+    UInt32    VolumeType;
     [ PropertySources {"IsVolumeInitializedForProtection"} ]
     Boolean   IsVolumeInitializedForProtection;
 };
