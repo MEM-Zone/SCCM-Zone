@@ -1,5 +1,15 @@
 # HW BIOS by Company or Manufacturer release history
 
+## 1.4 - 2018-10-11
+
+### Changes
+
+    * Deprecated 'HW BIOS by Company and Manufacturer for Collection report', 'HW BIOS by Manufacturer and Model for Collection' will continue to receive updates
+    * Fixed user name not showing on certain computers
+    * Fixed os version duplicates
+    * Added domain short name to user name
+    * Optimized query for speed
+
 ## 1.3 - 2018-08-28
 
 ### Fixed
