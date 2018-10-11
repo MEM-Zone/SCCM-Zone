@@ -5,7 +5,7 @@
     Gets the software update compliance in SCCM by computer state and classification.
 .NOTES
     Created by
-        Ioan Popovici   2018-10-03
+        Ioan Popovici   2018-10-11
     Release notes
         https://github.com/JhonnyTerminus/SCCMZone/blob/master/Reporting/Updates/SU%20Compliance%20by%20Computer%20State%20and%20Classification/CHANGELOG.md
     This query is part of a report should not be run separately.

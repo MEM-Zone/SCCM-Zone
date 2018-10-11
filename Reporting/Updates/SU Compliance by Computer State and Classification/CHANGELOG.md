@@ -1,7 +1,7 @@
 # SU Compliance by Computer State and Classification release history
 
-## 1.0 - 2018-11-11
+## 1.0 - 2018-10-11
 
 ### First version
 
-* Gets the Update compliance in SCCM by computer state and classification.
+* Gets the software update compliance in SCCM by computer state and classification.
