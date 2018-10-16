@@ -1,26 +1,20 @@
 /*
-*********************************************************************************************************
-* Created by Ioan Popovici   | Requirements: CM_Tools Database                                          *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2015-08-18 | v1.0     | First version                                                 *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
-    This SQL Function is used to parse a CSV string.
+    Parses a CSV string.
 .DESCRIPTION
-    This SQL Function is used to parse a CSV string and return individual substrings.
+    Parses a CSV string and returns individual substrings.
 .EXAMPLE
+    Replace the {Your_Site_Code} with your site code
     Run the code in SQL Server Management Studio
 .NOTES
-    Credit to:
-    Michelle Ufford http://sqlfool.com.
+    Created by
+        Ioan Popovici   2015-08-18
+    Credit to
+        Michelle Ufford http://sqlfool.com.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+.LINK
+    https://github.com/Ioan-Popovici/SCCMZone
 */
 
 /*##=============================================*/
@@ -28,7 +22,7 @@
 /*##=============================================*/
 /* #region QueryBody */
 
-USE [CM_Tools]
+USE [CM_{Your_Site_Code}]
 GO
 
 SET ANSI_NULLS ON
