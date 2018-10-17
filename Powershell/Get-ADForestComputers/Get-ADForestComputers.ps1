@@ -18,7 +18,7 @@
 .EXAMPLE
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
 
 ##*=============================================
@@ -107,7 +107,7 @@ Function Remove-InvalidCharacters {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (

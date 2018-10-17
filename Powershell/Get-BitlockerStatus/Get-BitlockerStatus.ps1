@@ -32,13 +32,13 @@
     Created by
         Ioan Popovici   2015-11-15
     Release notes
-        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Powershell/Get-BitlockerStatus/CHANGELOG.md
+        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Powershell/Get-BitlockerStatus/CHANGELOG.md
     For issue reporting please use github
-        https://github.com/JhonnyTerminus/SCCMZone/issues
+        https://github.com/Ioan-Popovici/SCCMZone/issues
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     BitLocker
 .FUNCTIONALITY
@@ -114,7 +114,7 @@ Function Get-BitLockerStatus {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     BitLocker
 .FUNCTIONALITY
@@ -138,7 +138,7 @@ Function Get-BitLockerStatus {
         [psCustomObject]$Result = @()
     }
     Process {
-        Try { #$ss = Get-CimInstance -Namespace 'root\CIMV2' -ClassName 'CIM_LogicalDisk'| Select-Object DriveType
+        Try {
 
             ##  Get the local drives from WMI
             [psObject]$LocalDrives = Get-CimInstance -Namespace 'root\CIMV2' -ClassName 'CIM_LogicalDisk' | Where-Object -Property 'DriveType' -in $DriveType

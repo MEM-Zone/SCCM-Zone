@@ -34,13 +34,13 @@
     Created by
         Ioan Popovici   2015-11-13
     Release notes
-        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Powershell/Clean-CMClientCache/CHANGELOG.md
+        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Powershell/Clean-CMClientCache/CHANGELOG.md
     For issue reporting please use github
-        https://github.com/JhonnyTerminus/SCCMZone/issues
+        https://github.com/Ioan-Popovici/SCCMZone/issues
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -670,7 +670,7 @@ Function Get-CCMCachedApplications {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -793,7 +793,7 @@ Function Get-CCMCachedPackages {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -910,7 +910,7 @@ Function Get-CCMCachedUpdates {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1025,7 +1025,7 @@ Function Remove-CCMCacheElement {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1157,7 +1157,7 @@ Function Remove-CCMCachedApplications {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1255,7 +1255,7 @@ Function Remove-CCMCachedPackages {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1359,7 +1359,7 @@ Function Remove-CCMCachedUpdates {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1458,7 +1458,7 @@ Function Remove-CCMOrphanedCache {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY

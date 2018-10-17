@@ -16,13 +16,13 @@
     Credit
         Original VBScript by: @mikael_nystrom https://deploymentbunny.com
     Release notes
-        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Powershell/Clean-WindowsImage/CHANGELOG.md
+        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Powershell/Clean-WindowsImage/CHANGELOG.md
     For issue reporting please use github
-        https://github.com/JhonnyTerminus/SCCMZone/issues
+        https://github.com/Ioan-Popovici/SCCMZone/issues
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     Cleanup
 .FUNCTIONALITY
@@ -73,7 +73,7 @@ Function Start-Cleanup {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (

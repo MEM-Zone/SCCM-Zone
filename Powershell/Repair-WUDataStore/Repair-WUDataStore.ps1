@@ -51,7 +51,7 @@
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     WindowsUpdate
 .FUNCTIONALITY
@@ -130,7 +130,7 @@ Function Test-EventLogCompliance {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     WindowsUpdate
 .FUNCTIONALITY
@@ -215,7 +215,7 @@ Function Backup-EventLog {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     EventLog
 .FUNCTIONALITY
@@ -313,7 +313,7 @@ Function Repair-WUDataStore {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     WindowsUpdate
 .FUNCTIONALITY

@@ -18,7 +18,7 @@
     Part of a report should not be run separately.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 */
 
 /*##=============================================*/

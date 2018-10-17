@@ -29,7 +29,7 @@
     * Better logging.
 .LINK
     https://sccm-zone.com
-    https://github.com/JhonnyTerminus/SCCM.
+    https://github.com/Ioan-Popovici/SCCM.
 #>
 
 ##*=============================================

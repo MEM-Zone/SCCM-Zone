@@ -17,7 +17,7 @@
     Run the code in SQL Server Management Studio.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 */
 
 /*##=============================================*/

@@ -20,7 +20,7 @@
     SQL Versioning Reference: http://sqlserverbuilds.blogspot.ro/
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
 
 ##*=============================================

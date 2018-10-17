@@ -28,7 +28,7 @@
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     SCCM
 .FUNCTIONALITY
@@ -82,7 +82,7 @@ Function Suspend-CMTaskSequence {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     SCCM
 .FUNCTIONALITY

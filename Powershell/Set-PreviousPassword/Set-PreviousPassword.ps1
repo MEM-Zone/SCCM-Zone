@@ -21,7 +21,7 @@
     The script will change the password 31 times and then set the desired password.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
 
 ##*=============================================
@@ -562,7 +562,7 @@ Function Get-RandomPassword() {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     Param (
         [Parameter(Mandatory=$false,Position=0)]

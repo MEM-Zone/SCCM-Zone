@@ -43,7 +43,7 @@
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
 
 ##*=============================================
@@ -153,7 +153,7 @@ Function Get-Message {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     Message Tables
 .FUNCTIONALITY
@@ -306,7 +306,7 @@ Function Get-Messages {
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 .COMPONENT
     Message Tables
 .FUNCTIONALITY

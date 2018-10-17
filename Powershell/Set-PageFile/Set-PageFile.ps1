@@ -47,7 +47,7 @@ Function Set-PageFile
         http://technet.microsoft.com/library/hh849824.aspx
     .LINK
         https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     Param
     (

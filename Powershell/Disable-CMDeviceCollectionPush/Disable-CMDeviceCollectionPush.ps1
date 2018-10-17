@@ -28,7 +28,7 @@
     DeleteAllCollectionMembers switch does not remove collection queries.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
 
 ##*=============================================
@@ -116,7 +116,7 @@ Function Write-Log {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -231,7 +231,7 @@ Function Send-Mail {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -287,7 +287,7 @@ Function Get-SMSProviderLocation {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -332,7 +332,7 @@ Function Get-CimCollectionMembers {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -383,7 +383,7 @@ Function Remove-CimCollectionMembers {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (

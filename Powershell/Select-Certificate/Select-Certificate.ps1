@@ -23,7 +23,7 @@
     https://home.configmgrftw.com/certificate-deployment-with-configmgr/
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
 
 ##*=============================================
@@ -101,7 +101,7 @@ Function Select-Certificate {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (

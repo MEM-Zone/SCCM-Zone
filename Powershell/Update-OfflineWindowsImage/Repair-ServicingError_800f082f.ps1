@@ -1,31 +1,43 @@
 <#
-*********************************************************************************************************
-* Created by Ioan Popovici   | 3.0, ADK Windows 10, Windows 8 or higher. Tested on Windows 2012 R2.     *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2017-08-31 | v1.0     | First version                                                 *
-* Ioan Popovici | 2017-09-11 | v1.1     | Fixed $ScriptName variable                                    *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
     This PowerShell script is used to fix the 0x800f082f~ error encountered during offline servicing.
 .DESCRIPTION
     This PowerShell script is used to fix the 0x800f082f~ error encountered during offline servicing by
     setting the HKLM:\Microsoft\Windows\CurrentVersion\Component Based Servicing\SessionsPending\Exclusive
     value to 0.
+.INPUTS
+    None.
+.OUTPUTS
+    None.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Repair-ServicingError_800f082f.ps1
+    Repair-ServicingError_800f082f.ps1
 .NOTES
-    To do:
-    * Better error handling.
-    * Better logging.
+    Requirements
+        ADK Windows 10, Windows 8 or higher.
+    Created by
+        Ioan Popovici
+    ChangeLog
+        # 2017-08-31 - v1.0
+            * First version                                                 *
+        # 2017-09-11 - v1.1
+            * Fixed $ScriptName variable
+        # 2018-10-17 - v1.2
+            * Throw error if image not in the same folder
+    To do
+        * Better error handling.
+        * Better logging.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+.LINK
+    https://github.com/Ioan-Popovici/SCCMZone
+.COMPONENT
+    Windows Serviving
+.FUNCTIONALITY
+    Workaround for 0x800f082f~
 #>
+
+## Set script requirements
+#Requires -Version 3.0
 
 ##*=============================================
 ##* VARIABLE DECLARATION
@@ -151,6 +163,10 @@ If ((Test-Path $MountPath) -eq $False) {
 If ((Test-Path $ScratchPath) -eq $False) {
     New-Item -Path $ScratchPath -Type Directory | Out-Null
 }
+
+## Check for images
+$CheckForImages = Get-ChildItem -Path $ScriptPath -Filter '*.wim'
+If (-not $CheckForImages) { Write-Error -Message 'Image not found! Script must be in the same folder as the image.' -ErrorAction 'Stop' }
 
 ## Prompt for WIM to service, don't allow null input
 Do {

@@ -7,12 +7,12 @@
     Created by
         Ioan Popovici   2018-10-03
     Release notes
-        https://github.com/JhonnyTerminus/SCCMZone/blob/master/Reporting/Security/SEC%20BitLocker%20Compliance%20and%20Settings/CHANGELOG.md
+        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Reporting/Security/SEC%20BitLocker%20Compliance%20and%20Settings/CHANGELOG.md
     This query is part of a report should not be run separately.
 .LINK
     https://SCCM-Zone.com
 .LINK
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 */
 
 /*##=============================================*/

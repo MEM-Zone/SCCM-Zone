@@ -23,7 +23,7 @@
     * Add option to add new computers without removing all direct membership rules first.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
 
 ##*=============================================
@@ -94,7 +94,7 @@ Function Write-Log {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -209,7 +209,7 @@ Function Send-Mail {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -265,7 +265,7 @@ Function Get-DeviceDirectMembershipRules {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -309,7 +309,7 @@ Function Remove-DeviceDirectMembershipRule {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -359,7 +359,7 @@ Function Add-DeviceDirectMembershipRule {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
@@ -406,7 +406,7 @@ Function Start-DataProcessing {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     ## Import SCCM PSH module and changing context
     Try {
@@ -530,7 +530,7 @@ Function Test-FileChangeEvent {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
-    https://github.com/JhonnyTerminus/SCCMZone
+    https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
     Param (
