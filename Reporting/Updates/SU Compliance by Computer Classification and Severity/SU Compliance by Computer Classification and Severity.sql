@@ -245,7 +245,7 @@ SELECT
     , IsDeployed
     , IsEnabled
 FROM @SystemsInfo AS SystemsInfo
-LEFT JOIN @UpdateInfo AS UpdateInfo ON UpdateInfo.ResourceID = SystemsInfo.ResourceID
+    LEFT JOIN @UpdateInfo AS UpdateInfo ON UpdateInfo.ResourceID = SystemsInfo.ResourceID
 ORDER BY
     Managed
     , ComputerName
