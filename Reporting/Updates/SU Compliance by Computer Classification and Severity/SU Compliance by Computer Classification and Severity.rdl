@@ -31,8 +31,7 @@
             <Value>=Parameters!ExcludeUpdates.Value</Value>
           </QueryParameter>
         </QueryParameters>
-        <CommandText>
-/*
+        <CommandText>/*
 .SYNOPSIS
     Gets the software update compliance in SCCM.
 .DESCRIPTION
@@ -122,7 +121,7 @@ SELECT
     , UserName          = CONCAT(Computers.User_Domain0 + '\', Computers.User_Name0)   --Add user domain to UserName
     , OperatingSystem   =
         CASE
-            WHEN OperatingSystem.Caption0 <> '' THEN
+            WHEN OperatingSystem.Caption0 &lt;&gt; '' THEN
                 CONCAT(
                     REPLACE(OperatingSystem.Caption0, 'Microsoft ', ''),               --Remove 'Microsoft ' from OperatingSystem
                     REPLACE(OperatingSystem.CSDVersion0, 'Service Pack ', ' SP')       --Replace 'Service Pack ' with ' SP' in OperatingSystem
@@ -176,7 +175,7 @@ SELECT
                         (
                             SELECT '#!' + LTRIM(RTRIM(StateName)) AS [data()]
                             FROM @ClientState
-                            WHERE BitMask & CombinedResources.ClientState <> 0
+                            WHERE BitMask &amp; CombinedResources.ClientState &lt;&gt; 0
                             FOR XML PATH('')
                         ),
                         ' #!',', '
@@ -265,7 +264,7 @@ SELECT
             CASE
                 WHEN ComplianceStatus IS NOT NULL THEN ComplianceStatus
                 WHEN ComplianceStatus IS NULL
-                    AND LastUpdateScan > = (SELECT DATEADD(dd, -7, CURRENT_TIMESTAMP)) --Scanned for updates in the last 7 days
+                    AND LastUpdateScan &gt; = (SELECT DATEADD(dd, -7, CURRENT_TIMESTAMP)) --Scanned for updates in the last 7 days
                     AND ClientState LIKE 'Active%' THEN 'Compliant'
                 ELSE 'Unknown'
             END
@@ -279,7 +278,7 @@ SELECT
     , IsDeployed
     , IsEnabled
 FROM @SystemsInfo AS SystemsInfo
-LEFT JOIN @UpdateInfo AS UpdateInfo ON UpdateInfo.ResourceID = SystemsInfo.ResourceID
+    LEFT JOIN @UpdateInfo AS UpdateInfo ON UpdateInfo.ResourceID = SystemsInfo.ResourceID
 ORDER BY
     Managed
     , ComputerName
@@ -305,8 +304,7 @@ ORDER BY
 
 /*##=============================================*/
 /*## END QUERY BODY                              */
-/*##=============================================*/
-        </CommandText>
+/*##=============================================*/</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
@@ -5413,7 +5411,7 @@ WHERE Name = @ReportName</CommandText>
             <Top>13.39607mm</Top>
             <Left>0.9525mm</Left>
             <Height>50.76299mm</Height>
-            <Width>711.87954mm</Width>
+            <Width>711.87955mm</Width>
             <Style>
               <Border>
                 <Style>None</Style>
