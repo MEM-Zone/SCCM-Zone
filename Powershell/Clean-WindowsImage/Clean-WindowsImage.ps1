@@ -4,7 +4,7 @@
 .DESCRIPTION
     Cleans the image before SysPrep by removing volume caches, update backups and update caches.
 .EXAMPLE
-    Clean-Image.ps1
+    Clean-Image.ps1 -CleanCCMCache
 .INPUTS
     None.
 .OUTPUTS
@@ -12,7 +12,6 @@
 .NOTES
     Created by
         Ioan Popovici   2017-07-10
-
     Credit
         Original VBScript by: @mikael_nystrom https://deploymentbunny.com
     Release notes
@@ -34,6 +33,14 @@
 ##*=============================================
 #region VariableDeclaration
 
+## Set script requirements
+#Requires -Version 3.0
+
+## Get script parameters
+Param (
+    [Parameter(Mandatory = $false, Position = 0)]
+    [switch]$CleanCCMCache = $false
+)
 ## Variables: Get Machine Operating System
 [String]$RegExPattern = '(Windows\ (?:7|8\.1|8|10|Server\ (?:2008\ R2|2012\ R2|2012|2016)))'
 [String]$MachineOS = (Get-WmiObject -Class 'Win32_OperatingSystem' | Select-Object -ExpandProperty 'Caption' | `
@@ -67,7 +74,7 @@ Function Start-Cleanup {
 .PARAMETER CleanupOptions
     The CleanupOptions depending of what type of cleanup to perform.
 .EXAMPLE
-    Start-Cleanup -CleanupOptions ('comCacheRepair','comCacheCleanup','updCacheCleanup','volCacheCleanup')
+    Start-Cleanup -CleanupOptions ('comCacheRepair','comCacheCleanup','updCacheCleanup','volCacheCleanup', 'ccmCacheCleanup')
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
@@ -161,6 +168,19 @@ Function Start-Cleanup {
             Remove-Item -Path 'C:\Windows\SoftwareDistribution\' -Recurse -Force | Out-Null
             Start-Service -Name 'wuauserv' -ErrorAction 'SilentlyContinue' | Out-Null
         }
+        'ccmCacheCleanup' {
+
+            ## Initialize the CCM resource manager com object
+            [__comobject]$CCMComObject = New-Object -ComObject 'UIResource.UIResourceMgr'
+
+            ## Get the CacheElementIDs to delete
+            $CacheInfo = $CCMComObject.GetCacheInfo().GetCacheElements()
+
+            ## Remove cache items
+            ForEach ($CacheItem in $CacheInfo) {
+                $null = $CCMComObject.GetCacheInfo().DeleteCacheElement([string]$($CacheItem.CacheElementID))
+            }
+        }
     }
 }
 #endregion
@@ -200,11 +220,14 @@ If ($MachineOS) {
             Start-Cleanup ('comCacheRepair', 'comCacheCleanup', 'updCacheCleanup')
         }
         'Windows Server 2016' {
-            Start-Cleanup ('updCacheCleanup', 'comCacheCleanup')
+            Start-Cleanup ('updCacheCleanup', 'comCacheCleanup', 'ccmCacheCleanup')
         }
         Default {
             Write-Host "Unknown Operating System, Skipping Cleanup! `n" -ForegroundColor 'Red' -BackgroundColor 'Black'
         }
+    }
+    If ($CleanCCMCache) {
+        Start-Cleanup ('ccmCacheCleanup')
     }
 }
 Else {

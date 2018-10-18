@@ -1,5 +1,11 @@
 # Clean-WindowsImage release history
 
+## 2.7 - 2018-10-18
+
+### Changes
+
+    * Added CCMCache cleanup option
+
 ## 2.6 - 2018-10-03
 
 ### Changes
