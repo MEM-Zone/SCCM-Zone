@@ -1,18 +1,27 @@
 # CB Configuration Baseline Compliance release history
 
+## 3.0 - 2018-10-22
+
+### Changes
+
+    * Fixed duplicates (settings, rules, values)
+    * Re-written to optimize speed
+    * Added compliance rules, instance data and severity
+    * Removed some data and fields that were not critical
+
 ## 2.1 - 2018-09-03
 
-## Fixed
+### Fixed
 
     * Query result showing just one value per machine
     * Dropping temporary table after completion
 
-## Added
+### Added
 
     * CB Revision
     * Encryption progress (in PowerShell script)
 
-## Changed
+### Changed
 
     * Re-wrote query to be more efficient
     * Re-formated report and report groups
