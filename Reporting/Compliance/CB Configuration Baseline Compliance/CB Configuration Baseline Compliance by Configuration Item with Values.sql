@@ -2,7 +2,7 @@
 .SYNOPSIS
     Gets the Compliance of a Configuration Baseline.
 .DESCRIPTION
-    Gets the Compliance and Actual Values of a Configuration Baseline Result.
+    Gets the Compliance and Actual Values of a Configuration Baseline setting result.
 .NOTES
     Created by
         Ioan Popovici   2017-09-22
@@ -141,13 +141,15 @@ SELECT DISTINCT
             WHEN 3 THEN 'Critical'
             WHEN 4 THEN 'Critical with event'
         END
-FROM fn_rbac_CIComplianceStatusDetail(@UserSIDs) AS CISettingsStatus
+FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
+    INNER JOIN fn_rbac_CIComplianceStatusDetail(@UserSIDs) AS CISettingsStatus ON CISettingsStatus.ResourceID = CollectionMembers.ResourceID
     INNER JOIN fn_rbac_ListCIRules(@LocaleID, @UserSIDs) AS CIRules ON CIRules.Rule_UniqueID = CISettingsStatus.Rule_UniqueID
         AND CIRules.CIVersion = CISettingsStatus.CIVersion --Select only curent baseline version
     INNER JOIN fn_ListCISettings(@LocaleID) AS CISettings ON CISettings.Setting_UniqueID = CISettingsStatus.Setting_UniqueID
         AND CISettings.CIVersion = CISettingsStatus.CIVersion
     INNER JOIN dbo.fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = @BaselineID
-WHERE CISettingsStatus.CI_ID IN (SELECT CIID FROM @CIID)
+WHERE CollectionMembers.CollectionID = @CollectionID
+    AND CISettingsStatus.CI_ID IN (SELECT CIID FROM @CIID)
 
 /* Join SystemsInfo and ComplianceInfo data */
 SELECT
