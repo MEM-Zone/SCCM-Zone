@@ -131,7 +131,7 @@ SELECT DISTINCT
     , RuleName        = CIRules.RuleName
     , Criteria        = CISettingsStatus.Criteria
     , ActualValue     = CISettingsStatus.CurrentValue
-    , InstanceData	  = CISettingsStatus.InstanceData
+    , InstanceData    = CISettingsStatus.InstanceData
     , LastEvaluation  = CISettingsStatus.LastComplianceMessageTime
     , Severity	      =
         CASE CISettingsStatus.RuleSeverity
