@@ -133,7 +133,7 @@ SELECT DISTINCT
     , ActualValue     = CISettingsStatus.CurrentValue
     , InstanceData    = CISettingsStatus.InstanceData
     , LastEvaluation  = CISettingsStatus.LastComplianceMessageTime
-    , Severity	      =
+    , Severity        =
         CASE CISettingsStatus.RuleSeverity
             WHEN 0 THEN 'None'
             WHEN 1 THEN 'Information'
