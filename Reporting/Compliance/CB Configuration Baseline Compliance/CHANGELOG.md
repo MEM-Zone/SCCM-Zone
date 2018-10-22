@@ -8,6 +8,8 @@
     * Re-written to optimize speed
     * Added compliance rules, instance data and severity
     * Removed some data and fields that were not critical
+    * Deprecated the 'CB Configuration Baseline Compliance by Company with Values' report.
+    Will not be updated in the future because it's too hard to maintain two versions of the report.
 
 ## 2.1 - 2018-09-03
 
