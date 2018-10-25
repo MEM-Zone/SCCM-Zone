@@ -147,7 +147,7 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
         AND CIRules.CIVersion = CISettingsStatus.CIVersion --Select only curent baseline version
     INNER JOIN fn_ListCISettings(@LocaleID) AS CISettings ON CISettings.Setting_UniqueID = CISettingsStatus.Setting_UniqueID
         AND CISettings.CIVersion = CISettingsStatus.CIVersion
-    INNER JOIN dbo.fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = @BaselineID
+    INNER JOIN fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = @BaselineID
 WHERE CollectionMembers.CollectionID = @CollectionID
     AND CISettingsStatus.CI_ID IN (SELECT CIID FROM @CIID)
 

@@ -217,7 +217,7 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
         AND CIRules.CIVersion = CISettingsStatus.CIVersion --Select only curent baseline version
     INNER JOIN fn_ListCISettings(@LocaleID) AS CISettings ON CISettings.Setting_UniqueID = CISettingsStatus.Setting_UniqueID
         AND CISettings.CIVersion = CISettingsStatus.CIVersion
-    INNER JOIN dbo.fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = @BaselineID
+    INNER JOIN fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = @BaselineID
 WHERE CollectionMembers.CollectionID = @CollectionID
     AND CISettingsStatus.CI_ID IN (SELECT CIID FROM @CIID)
 
@@ -1056,7 +1056,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Count(Fields!DeviceName.Value)</Value>
+                                  <Value>=Count(Fields!ActualValue.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                   </Style>
@@ -1292,7 +1292,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Count(Fields!DeviceName.Value)</Value>
+                                  <Value>=CountDistinct(Fields!DeviceName.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                   </Style>
@@ -3110,14 +3110,14 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixHeader>
                     <Size>2.14959cm</Size>
                     <CellContents>
-                      <Textbox Name="Textbox19">
+                      <Textbox Name="TV_Total">
                         <CanGrow>true</CanGrow>
                         <KeepTogether>true</KeepTogether>
                         <Paragraphs>
                           <Paragraph>
                             <TextRuns>
                               <TextRun>
-                                <Value />
+                                <Value>Total</Value>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
                                   <FontWeight>Bold</FontWeight>
@@ -3127,7 +3127,6 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             <Style />
                           </Paragraph>
                         </Paragraphs>
-                        <rd:DefaultName>Textbox19</rd:DefaultName>
                         <Style>
                           <Border>
                             <Color>#9eb6e4</Color>
@@ -3573,7 +3572,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
             <Top>1.22349cm</Top>
             <Left>0.09525cm</Left>
             <Height>3cm</Height>
-            <Width>54.63099cm</Width>
+            <Width>54.631cm</Width>
             <Style>
               <Border>
                 <Style>None</Style>

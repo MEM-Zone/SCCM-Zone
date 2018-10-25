@@ -1,5 +1,11 @@
 # CB Configuration Baseline Compliance release history
 
+## 3.1 - 2018-10-25
+
+### Changes
+
+    * Fixed totals count
+
 ## 3.0 - 2018-10-22
 
 ### Changes
