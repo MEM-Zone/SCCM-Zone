@@ -1,5 +1,15 @@
 # CB Configuration Baseline Compliance release history
 
+## 3.2 - 2018-10-29
+
+### Changes
+
+    * Fixed Error compliance
+    * Fixed null device name
+    * Added error info and headers
+    * Optimized speed
+    * Minor formating fixes
+
 ## 3.1 - 2018-10-25
 
 ### Changes

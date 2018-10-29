@@ -74,17 +74,16 @@ WHERE Name = @ReportName</CommandText>
 .DESCRIPTION
     Gets the Compliance and Actual Values of a Configuration Baseline setting result.
 .NOTES
-    Created by
-        Ioan Popovici   2017-09-22
-    Requires
-        SQL, SCCM Configuration Baseline
-    Release notes
-        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Reporting/Compliance/CB%20Configuration%20Baseline%20Compliance/CHANGELOG.md
-    Part of a report should not be run separately.
+    Created by Ioan Popovici
+    Requires SSRS/SQL, SCCM Configuration Baseline
 .LINK
-    https://SCCM-Zone.com
+    BlogPost: https://sccm-zone.com/baseline-reporting-with-actual-values-output-in-sccm-73fec334ba8f
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    Changes : https://SCCM.Zone/cb-configuration-baseline-compliance-changelog
+.LINK
+    Github  : https://SCCM.Zone/cb-configuration-baseline-compliance
+.LINK
+    Issues  : https://SCCM.Zone/issues
 */
 
 /*##=============================================*/
@@ -93,7 +92,7 @@ WHERE Name = @ReportName</CommandText>
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs     AS NVARCHAR(250) = 1;
---DECLARE @CollectionID AS NVARCHAR(10)  = 'A01000B3';
+--DECLARE @CollectionID AS NVARCHAR(10)  = 'A01000EC';
 --DECLARE @LocaleID     AS INT           = 2;
 --DECLARE @BaselineID   AS INT           = 503286;
 
@@ -217,13 +216,33 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
         AND CIRules.CIVersion = CISettingsStatus.CIVersion --Select only curent baseline version
     INNER JOIN fn_ListCISettings(@LocaleID) AS CISettings ON CISettings.Setting_UniqueID = CISettingsStatus.Setting_UniqueID
         AND CISettings.CIVersion = CISettingsStatus.CIVersion
-    INNER JOIN fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = @BaselineID
+    INNER JOIN fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.ResourceID = CollectionMembers.ResourceID
+        AND CIComplianceState.CI_ID = @BaselineID
 WHERE CollectionMembers.CollectionID = @CollectionID
     AND CISettingsStatus.CI_ID IN (SELECT CIID FROM @CIID)
+	AND CIComplianceState.ComplianceStateName != 'Error' --We are adding errors below, removing artefacts if any
+
+/* Get error data and add it to ComplianceInfo table */
+INSERT INTO @ComplianceInfo (ResourceID, ComplianceState, UserName, CIVersion, SettingVersion, SettingName, RuleName, Criteria, ActualValue, InstanceData)
+SELECT
+    ResourceID        = ErrorDetails.AssetID
+    , ComplianceState = 'Error'
+    , UserName        = ErrorDetails.ADUserName
+    , CIVersion       = ErrorDetails.BLRevision
+    , SettingVersion  = ErrorDetails.Revision
+    , SettigName      = ErrorDetails.CIName
+    , RuleName        = ErrorDetails.ObjectName
+    , Criteria        = ErrorDetails.ObjectTypeName
+    , ActualValue     = ErrorDetails.ErrorTypeDisplay
+    , InstanceData    = ErrorDetails.ErrorCode
+FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
+INNER JOIN fn_DCMDeploymentErrorDetailsPerAsset(@LocaleID) AS ErrorDetails ON ErrorDetails.AssetID = CollectionMembers.ResourceID
+    AND ErrorDetails.BL_ID = @BaselineID
+WHERE CollectionMembers.CollectionID = @CollectionID
 
 /* Join SystemsInfo and ComplianceInfo data */
 SELECT
-    ComplianceState = ( SELECT ISNULL(ComplianceInfo.ComplianceState, 'Unknown' ))
+    ComplianceState   = ( SELECT ISNULL(ComplianceInfo.ComplianceState, 'Unknown' ))
     , Managed         = SystemsInfo.Managed
     , ClientState     = SystemsInfo.ClientState
     , DeviceName      = SystemsInfo.DeviceName
@@ -240,6 +259,7 @@ SELECT
     , Severity        = ComplianceInfo.Severity
 FROM @SystemsInfo AS SystemsInfo
     LEFT JOIN @ComplianceInfo AS ComplianceInfo ON ComplianceInfo.ResourceID = SystemsInfo.ResourceID
+WHERE DeviceName != '' --Eliminate artefacts with no device name
 ORDER BY
     ComplianceState
     , Managed
@@ -701,7 +721,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!InstanceData.Value</Value>
+                                  <Value>=IIF(IsNumeric(Fields!InstanceData.Value), SrsResources.Localization.GetErrorMessage(Fields!InstanceData.Value, User!Language), Fields!InstanceData.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>9pt</FontSize>
@@ -841,16 +861,17 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox61">
+                        <Textbox Name="TH2_ErrorType">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value />
+                                  <Value>=IIF(IsNumeric(Fields!InstanceData.Value) And IsNothing(Fields!InstanceData.Value) = False, SrsResources.Localization.GetString("ErrorType", User!Language),"")</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
+                                    <FontWeight>Bold</FontWeight>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -859,7 +880,6 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               </Style>
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox61</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>#e6eefc</Color>
@@ -893,16 +913,17 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                     </TablixCell>
                     <TablixCell>
                       <CellContents>
-                        <Textbox Name="Textbox112">
+                        <Textbox Name="TH2_ErrorName">
                           <CanGrow>true</CanGrow>
                           <KeepTogether>true</KeepTogether>
                           <Paragraphs>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value />
+                                  <Value>=IIF(IsNumeric(Fields!InstanceData.Value) And IsNothing(Fields!InstanceData.Value) = False, SrsResources.Localization.GetString("ErrorDescription", User!Language),"")</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
+                                    <FontWeight>Bold</FontWeight>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -911,7 +932,6 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               </Style>
                             </Paragraph>
                           </Paragraphs>
-                          <rd:DefaultName>Textbox112</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>#e6eefc</Color>
@@ -1707,7 +1727,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>2.5cm</Size>
+                                <Size>2.94978cm</Size>
                                 <CellContents>
                                   <Textbox Name="TH_ClientState">
                                     <CanGrow>true</CanGrow>
@@ -1995,7 +2015,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                   </TablixMembers>
                 </TablixMember>
                 <TablixMember>
-                  <Group Name="Managed1">
+                  <Group Name="Managed">
                     <GroupExpressions>
                       <GroupExpression>=Fields!Managed.Value</GroupExpression>
                     </GroupExpressions>
@@ -2005,79 +2025,19 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                       <Value>=Fields!Managed.Value</Value>
                     </SortExpression>
                   </SortExpressions>
-                  <TablixHeader>
-                    <Size>2.14959cm</Size>
-                    <CellContents>
-                      <Textbox Name="TV_Managed">
-                        <CanGrow>true</CanGrow>
-                        <KeepTogether>true</KeepTogether>
-                        <Paragraphs>
-                          <Paragraph>
-                            <TextRuns>
-                              <TextRun>
-                                <Value>=Fields!Managed.Value</Value>
-                                <Style>
-                                  <FontFamily>Segoe UI</FontFamily>
-                                </Style>
-                              </TextRun>
-                            </TextRuns>
-                            <Style>
-                              <TextAlign>Center</TextAlign>
-                            </Style>
-                          </Paragraph>
-                        </Paragraphs>
-                        <Style>
-                          <Border>
-                            <Color>#c6daf8</Color>
-                            <Style>Solid</Style>
-                          </Border>
-                          <TopBorder>
-                            <Style>Solid</Style>
-                          </TopBorder>
-                          <BottomBorder>
-                            <Style>Solid</Style>
-                            <Width>1pt</Width>
-                          </BottomBorder>
-                          <LeftBorder>
-                            <Style>Solid</Style>
-                          </LeftBorder>
-                          <RightBorder>
-                            <Style>Solid</Style>
-                          </RightBorder>
-                          <BackgroundColor>#9eb6e4</BackgroundColor>
-                          <VerticalAlign>Middle</VerticalAlign>
-                          <PaddingLeft>2pt</PaddingLeft>
-                          <PaddingRight>2pt</PaddingRight>
-                          <PaddingTop>2pt</PaddingTop>
-                          <PaddingBottom>2pt</PaddingBottom>
-                        </Style>
-                      </Textbox>
-                    </CellContents>
-                  </TablixHeader>
                   <TablixMembers>
                     <TablixMember>
-                      <Group Name="ComplianceState">
-                        <GroupExpressions>
-                          <GroupExpression>=Fields!ComplianceState.Value</GroupExpression>
-                        </GroupExpressions>
-                      </Group>
-                      <SortExpressions>
-                        <SortExpression>
-                          <Value>=Fields!DeviceName.Value</Value>
-                          <Direction>Descending</Direction>
-                        </SortExpression>
-                      </SortExpressions>
                       <TablixHeader>
-                        <Size>3.28021cm</Size>
+                        <Size>2.14959cm</Size>
                         <CellContents>
-                          <Textbox Name="TV_ComplianceState">
+                          <Textbox Name="TV_Managed">
                             <CanGrow>true</CanGrow>
                             <KeepTogether>true</KeepTogether>
                             <Paragraphs>
                               <Paragraph>
                                 <TextRuns>
                                   <TextRun>
-                                    <Value>=Fields!ComplianceState.Value</Value>
+                                    <Value>=Fields!Managed.Value</Value>
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
                                     </Style>
@@ -2093,6 +2053,19 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                 <Color>#c6daf8</Color>
                                 <Style>Solid</Style>
                               </Border>
+                              <TopBorder>
+                                <Style>Solid</Style>
+                              </TopBorder>
+                              <BottomBorder>
+                                <Style>Solid</Style>
+                                <Width>1pt</Width>
+                              </BottomBorder>
+                              <LeftBorder>
+                                <Style>Solid</Style>
+                              </LeftBorder>
+                              <RightBorder>
+                                <Style>Solid</Style>
+                              </RightBorder>
                               <BackgroundColor>#9eb6e4</BackgroundColor>
                               <VerticalAlign>Middle</VerticalAlign>
                               <PaddingLeft>2pt</PaddingLeft>
@@ -2105,43 +2078,44 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                       </TablixHeader>
                       <TablixMembers>
                         <TablixMember>
-                          <Group Name="DeviceName">
+                          <Group Name="ComplianceState">
                             <GroupExpressions>
-                              <GroupExpression>=Fields!DeviceName.Value</GroupExpression>
+                              <GroupExpression>=Fields!ComplianceState.Value</GroupExpression>
                             </GroupExpressions>
                           </Group>
                           <SortExpressions>
                             <SortExpression>
                               <Value>=Fields!DeviceName.Value</Value>
+                              <Direction>Descending</Direction>
                             </SortExpression>
                           </SortExpressions>
                           <TablixHeader>
-                            <Size>3.43265cm</Size>
+                            <Size>3.28021cm</Size>
                             <CellContents>
-                              <Textbox Name="TV_DeviceName">
+                              <Textbox Name="TV_ComplianceState">
                                 <CanGrow>true</CanGrow>
                                 <KeepTogether>true</KeepTogether>
                                 <Paragraphs>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value>=Fields!DeviceName.Value</Value>
+                                        <Value>=Fields!ComplianceState.Value</Value>
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
                                         </Style>
                                       </TextRun>
                                     </TextRuns>
                                     <Style>
-                                      <TextAlign>Left</TextAlign>
+                                      <TextAlign>Center</TextAlign>
                                     </Style>
                                   </Paragraph>
                                 </Paragraphs>
                                 <Style>
                                   <Border>
-                                    <Color>#e6eefc</Color>
+                                    <Color>#c6daf8</Color>
                                     <Style>Solid</Style>
                                   </Border>
-                                  <BackgroundColor>#c6daf8</BackgroundColor>
+                                  <BackgroundColor>#9eb6e4</BackgroundColor>
                                   <VerticalAlign>Middle</VerticalAlign>
                                   <PaddingLeft>2pt</PaddingLeft>
                                   <PaddingRight>2pt</PaddingRight>
@@ -2153,34 +2127,37 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                           </TablixHeader>
                           <TablixMembers>
                             <TablixMember>
-                              <Group Name="ClientState">
+                              <Group Name="DeviceName">
                                 <GroupExpressions>
-                                  <GroupExpression>=Fields!ClientState.Value</GroupExpression>
+                                  <GroupExpression>=Fields!DeviceName.Value</GroupExpression>
                                 </GroupExpressions>
                               </Group>
                               <SortExpressions>
                                 <SortExpression>
                                   <Value>=Fields!ClientState.Value</Value>
                                 </SortExpression>
+                                <SortExpression>
+                                  <Value>=Fields!DeviceName.Value</Value>
+                                </SortExpression>
                               </SortExpressions>
                               <TablixHeader>
-                                <Size>2.5cm</Size>
+                                <Size>3.43265cm</Size>
                                 <CellContents>
-                                  <Textbox Name="TV_ClientState">
+                                  <Textbox Name="TV_DeviceName">
                                     <CanGrow>true</CanGrow>
                                     <KeepTogether>true</KeepTogether>
                                     <Paragraphs>
                                       <Paragraph>
                                         <TextRuns>
                                           <TextRun>
-                                            <Value>=Fields!ClientState.Value</Value>
+                                            <Value>=Fields!DeviceName.Value</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
                                             </Style>
                                           </TextRun>
                                         </TextRuns>
                                         <Style>
-                                          <TextAlign>Center</TextAlign>
+                                          <TextAlign>Left</TextAlign>
                                         </Style>
                                       </Paragraph>
                                     </Paragraphs>
@@ -2201,41 +2178,43 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               </TablixHeader>
                               <TablixMembers>
                                 <TablixMember>
-                                  <Group Name="OperatingSystem">
+                                  <Group Name="ClientState">
                                     <GroupExpressions>
-                                      <GroupExpression>=Fields!OperatingSystem.Value</GroupExpression>
+                                      <GroupExpression>=Fields!ClientState.Value</GroupExpression>
                                     </GroupExpressions>
                                   </Group>
                                   <SortExpressions>
                                     <SortExpression>
-                                      <Value>=Fields!OperatingSystem.Value</Value>
+                                      <Value>=Fields!ClientState.Value</Value>
                                     </SortExpression>
                                   </SortExpressions>
                                   <TablixHeader>
-                                    <Size>4.61667cm</Size>
+                                    <Size>2.94978cm</Size>
                                     <CellContents>
-                                      <Textbox Name="TV_OperatingSystem">
+                                      <Textbox Name="TV_ClientState">
                                         <CanGrow>true</CanGrow>
                                         <KeepTogether>true</KeepTogether>
                                         <Paragraphs>
                                           <Paragraph>
                                             <TextRuns>
                                               <TextRun>
-                                                <Value>=Fields!OperatingSystem.Value</Value>
+                                                <Value>=Fields!ClientState.Value</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
                                                 </Style>
                                               </TextRun>
                                             </TextRuns>
-                                            <Style />
+                                            <Style>
+                                              <TextAlign>Center</TextAlign>
+                                            </Style>
                                           </Paragraph>
                                         </Paragraphs>
                                         <Style>
                                           <Border>
-                                            <Color>#e5e5e5</Color>
+                                            <Color>#e6eefc</Color>
                                             <Style>Solid</Style>
                                           </Border>
-                                          <BackgroundColor>#e6eefc</BackgroundColor>
+                                          <BackgroundColor>#c6daf8</BackgroundColor>
                                           <VerticalAlign>Middle</VerticalAlign>
                                           <PaddingLeft>2pt</PaddingLeft>
                                           <PaddingRight>2pt</PaddingRight>
@@ -2247,35 +2226,33 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                   </TablixHeader>
                                   <TablixMembers>
                                     <TablixMember>
-                                      <Group Name="UserName">
+                                      <Group Name="OperatingSystem">
                                         <GroupExpressions>
-                                          <GroupExpression>=Fields!UserName.Value</GroupExpression>
+                                          <GroupExpression>=Fields!OperatingSystem.Value</GroupExpression>
                                         </GroupExpressions>
                                       </Group>
                                       <SortExpressions>
                                         <SortExpression>
-                                          <Value>=Fields!UserName.Value</Value>
+                                          <Value>=Fields!OperatingSystem.Value</Value>
                                         </SortExpression>
                                       </SortExpressions>
                                       <TablixHeader>
-                                        <Size>2.5cm</Size>
+                                        <Size>4.61667cm</Size>
                                         <CellContents>
-                                          <Textbox Name="TV_UserName">
+                                          <Textbox Name="TV_OperatingSystem">
                                             <CanGrow>true</CanGrow>
                                             <KeepTogether>true</KeepTogether>
                                             <Paragraphs>
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=Fields!UserName.Value</Value>
+                                                    <Value>=Fields!OperatingSystem.Value</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
                                                     </Style>
                                                   </TextRun>
                                                 </TextRuns>
-                                                <Style>
-                                                  <TextAlign>Left</TextAlign>
-                                                </Style>
+                                                <Style />
                                               </Paragraph>
                                             </Paragraphs>
                                             <Style>
@@ -2295,27 +2272,27 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                       </TablixHeader>
                                       <TablixMembers>
                                         <TablixMember>
-                                          <Group Name="SettingName">
+                                          <Group Name="UserName">
                                             <GroupExpressions>
-                                              <GroupExpression>=Fields!SettingName.Value</GroupExpression>
+                                              <GroupExpression>=Fields!UserName.Value</GroupExpression>
                                             </GroupExpressions>
                                           </Group>
                                           <SortExpressions>
                                             <SortExpression>
-                                              <Value>=Fields!SettingName.Value</Value>
+                                              <Value>=Fields!UserName.Value</Value>
                                             </SortExpression>
                                           </SortExpressions>
                                           <TablixHeader>
-                                            <Size>3.4525cm</Size>
+                                            <Size>2.5cm</Size>
                                             <CellContents>
-                                              <Textbox Name="TV_SettingName">
+                                              <Textbox Name="TV_UserName">
                                                 <CanGrow>true</CanGrow>
                                                 <KeepTogether>true</KeepTogether>
                                                 <Paragraphs>
                                                   <Paragraph>
                                                     <TextRuns>
                                                       <TextRun>
-                                                        <Value>=Fields!SettingName.Value</Value>
+                                                        <Value>=Fields!UserName.Value</Value>
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
                                                         </Style>
@@ -2343,27 +2320,27 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                           </TablixHeader>
                                           <TablixMembers>
                                             <TablixMember>
-                                              <Group Name="RuleName">
+                                              <Group Name="SettingName">
                                                 <GroupExpressions>
-                                                  <GroupExpression>=Fields!RuleName.Value</GroupExpression>
+                                                  <GroupExpression>=Fields!SettingName.Value</GroupExpression>
                                                 </GroupExpressions>
                                               </Group>
                                               <SortExpressions>
                                                 <SortExpression>
-                                                  <Value>=Fields!RuleName.Value</Value>
+                                                  <Value>=Fields!SettingName.Value</Value>
                                                 </SortExpression>
                                               </SortExpressions>
                                               <TablixHeader>
-                                                <Size>3.34667cm</Size>
+                                                <Size>3.4525cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="TV_RuleName">
+                                                  <Textbox Name="TV_SettingName">
                                                     <CanGrow>true</CanGrow>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
                                                       <Paragraph>
                                                         <TextRuns>
                                                           <TextRun>
-                                                            <Value>=Fields!RuleName.Value</Value>
+                                                            <Value>=Fields!SettingName.Value</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
                                                             </Style>
@@ -2391,23 +2368,27 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                               </TablixHeader>
                                               <TablixMembers>
                                                 <TablixMember>
-                                                  <Group Name="Details" />
+                                                  <Group Name="RuleName">
+                                                    <GroupExpressions>
+                                                      <GroupExpression>=Fields!RuleName.Value</GroupExpression>
+                                                    </GroupExpressions>
+                                                  </Group>
                                                   <SortExpressions>
                                                     <SortExpression>
-                                                      <Value>Details</Value>
+                                                      <Value>=Fields!RuleName.Value</Value>
                                                     </SortExpression>
                                                   </SortExpressions>
                                                   <TablixHeader>
-                                                    <Size>2.34125cm</Size>
+                                                    <Size>3.34667cm</Size>
                                                     <CellContents>
-                                                      <Textbox Name="TV_Criteria">
+                                                      <Textbox Name="TV_RuleName">
                                                         <CanGrow>true</CanGrow>
                                                         <KeepTogether>true</KeepTogether>
                                                         <Paragraphs>
                                                           <Paragraph>
                                                             <TextRuns>
                                                               <TextRun>
-                                                                <Value>=Fields!Criteria.Value</Value>
+                                                                <Value>=Fields!RuleName.Value</Value>
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
                                                                 </Style>
@@ -2434,7 +2415,53 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                     </CellContents>
                                                   </TablixHeader>
                                                   <TablixMembers>
-                                                    <TablixMember />
+                                                    <TablixMember>
+                                                      <Group Name="Details" />
+                                                      <SortExpressions>
+                                                        <SortExpression>
+                                                          <Value>Details</Value>
+                                                        </SortExpression>
+                                                      </SortExpressions>
+                                                      <TablixHeader>
+                                                        <Size>2.34125cm</Size>
+                                                        <CellContents>
+                                                          <Textbox Name="TV_Criteria">
+                                                            <CanGrow>true</CanGrow>
+                                                            <KeepTogether>true</KeepTogether>
+                                                            <Paragraphs>
+                                                              <Paragraph>
+                                                                <TextRuns>
+                                                                  <TextRun>
+                                                                    <Value>=Fields!Criteria.Value</Value>
+                                                                    <Style>
+                                                                      <FontFamily>Segoe UI</FontFamily>
+                                                                    </Style>
+                                                                  </TextRun>
+                                                                </TextRuns>
+                                                                <Style>
+                                                                  <TextAlign>Left</TextAlign>
+                                                                </Style>
+                                                              </Paragraph>
+                                                            </Paragraphs>
+                                                            <Style>
+                                                              <Border>
+                                                                <Color>#e5e5e5</Color>
+                                                                <Style>Solid</Style>
+                                                              </Border>
+                                                              <BackgroundColor>#e6eefc</BackgroundColor>
+                                                              <VerticalAlign>Middle</VerticalAlign>
+                                                              <PaddingLeft>2pt</PaddingLeft>
+                                                              <PaddingRight>2pt</PaddingRight>
+                                                              <PaddingTop>2pt</PaddingTop>
+                                                              <PaddingBottom>2pt</PaddingBottom>
+                                                            </Style>
+                                                          </Textbox>
+                                                        </CellContents>
+                                                      </TablixHeader>
+                                                      <TablixMembers>
+                                                        <TablixMember />
+                                                      </TablixMembers>
+                                                    </TablixMember>
                                                   </TablixMembers>
                                                 </TablixMember>
                                               </TablixMembers>
@@ -2445,62 +2472,18 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                     </TablixMember>
                                   </TablixMembers>
                                 </TablixMember>
-                              </TablixMembers>
-                            </TablixMember>
-                            <TablixMember>
-                              <TablixHeader>
-                                <Size>2.5cm</Size>
-                                <CellContents>
-                                  <Textbox Name="TV_Values_Label">
-                                    <CanGrow>true</CanGrow>
-                                    <KeepTogether>true</KeepTogether>
-                                    <Paragraphs>
-                                      <Paragraph>
-                                        <TextRuns>
-                                          <TextRun>
-                                            <Value>Values</Value>
-                                            <Style>
-                                              <FontFamily>Segoe UI</FontFamily>
-                                              <FontWeight>Bold</FontWeight>
-                                            </Style>
-                                          </TextRun>
-                                        </TextRuns>
-                                        <Style>
-                                          <TextAlign>Left</TextAlign>
-                                        </Style>
-                                      </Paragraph>
-                                    </Paragraphs>
-                                    <Style>
-                                      <Border>
-                                        <Color>#e6eefc</Color>
-                                        <Style>Solid</Style>
-                                      </Border>
-                                      <RightBorder>
-                                        <Style>None</Style>
-                                      </RightBorder>
-                                      <BackgroundColor>#c6daf8</BackgroundColor>
-                                      <VerticalAlign>Middle</VerticalAlign>
-                                      <PaddingLeft>2pt</PaddingLeft>
-                                      <PaddingRight>2pt</PaddingRight>
-                                      <PaddingTop>2pt</PaddingTop>
-                                      <PaddingBottom>2pt</PaddingBottom>
-                                    </Style>
-                                  </Textbox>
-                                </CellContents>
-                              </TablixHeader>
-                              <TablixMembers>
                                 <TablixMember>
                                   <TablixHeader>
-                                    <Size>4.61667cm</Size>
+                                    <Size>2.94978cm</Size>
                                     <CellContents>
-                                      <Textbox Name="Textbox36">
+                                      <Textbox Name="TV_Values_Label">
                                         <CanGrow>true</CanGrow>
                                         <KeepTogether>true</KeepTogether>
                                         <Paragraphs>
                                           <Paragraph>
                                             <TextRuns>
                                               <TextRun>
-                                                <Value />
+                                                <Value>Values</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
                                                   <FontWeight>Bold</FontWeight>
@@ -2512,7 +2495,6 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                             </Style>
                                           </Paragraph>
                                         </Paragraphs>
-                                        <rd:DefaultName>Textbox36</rd:DefaultName>
                                         <Style>
                                           <Border>
                                             <Color>#e6eefc</Color>
@@ -2534,9 +2516,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>2.5cm</Size>
+                                        <Size>4.61667cm</Size>
                                         <CellContents>
-                                          <Textbox Name="Textbox53">
+                                          <Textbox Name="Textbox36">
                                             <CanGrow>true</CanGrow>
                                             <KeepTogether>true</KeepTogether>
                                             <Paragraphs>
@@ -2555,7 +2537,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                 </Style>
                                               </Paragraph>
                                             </Paragraphs>
-                                            <rd:DefaultName>Textbox53</rd:DefaultName>
+                                            <rd:DefaultName>Textbox36</rd:DefaultName>
                                             <Style>
                                               <Border>
                                                 <Color>#e6eefc</Color>
@@ -2577,9 +2559,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                       <TablixMembers>
                                         <TablixMember>
                                           <TablixHeader>
-                                            <Size>3.4525cm</Size>
+                                            <Size>2.5cm</Size>
                                             <CellContents>
-                                              <Textbox Name="Textbox96">
+                                              <Textbox Name="Textbox53">
                                                 <CanGrow>true</CanGrow>
                                                 <KeepTogether>true</KeepTogether>
                                                 <Paragraphs>
@@ -2594,11 +2576,11 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                       </TextRun>
                                                     </TextRuns>
                                                     <Style>
-                                                      <TextAlign>Left</TextAlign>
+                                                      <TextAlign>Center</TextAlign>
                                                     </Style>
                                                   </Paragraph>
                                                 </Paragraphs>
-                                                <rd:DefaultName>Textbox96</rd:DefaultName>
+                                                <rd:DefaultName>Textbox53</rd:DefaultName>
                                                 <Style>
                                                   <Border>
                                                     <Color>#e6eefc</Color>
@@ -2620,16 +2602,16 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>3.34667cm</Size>
+                                                <Size>3.4525cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="Textbox75">
+                                                  <Textbox Name="TH2_CIName">
                                                     <CanGrow>true</CanGrow>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
                                                       <Paragraph>
                                                         <TextRuns>
                                                           <TextRun>
-                                                            <Value />
+                                                            <Value>=IIF(IsNumeric(Fields!InstanceData.Value) And IsNothing(Fields!InstanceData.Value) = False, SrsResources.Localization.GetString("CI Name", User!Language),"")</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
                                                               <FontWeight>Bold</FontWeight>
@@ -2637,11 +2619,10 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                           </TextRun>
                                                         </TextRuns>
                                                         <Style>
-                                                          <TextAlign>Left</TextAlign>
+                                                          <TextAlign>Center</TextAlign>
                                                         </Style>
                                                       </Paragraph>
                                                     </Paragraphs>
-                                                    <rd:DefaultName>Textbox75</rd:DefaultName>
                                                     <Style>
                                                       <Border>
                                                         <Color>#e6eefc</Color>
@@ -2663,16 +2644,16 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>2.34125cm</Size>
+                                                    <Size>3.34667cm</Size>
                                                     <CellContents>
-                                                      <Textbox Name="Textbox122">
+                                                      <Textbox Name="TH2_ObjectName">
                                                         <CanGrow>true</CanGrow>
                                                         <KeepTogether>true</KeepTogether>
                                                         <Paragraphs>
                                                           <Paragraph>
                                                             <TextRuns>
                                                               <TextRun>
-                                                                <Value />
+                                                                <Value>=IIF(IsNumeric(Fields!InstanceData.Value) And IsNothing(Fields!InstanceData.Value) = False, SrsResources.Localization.GetString("Object Name", User!Language),"")</Value>
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
                                                                   <FontWeight>Bold</FontWeight>
@@ -2680,11 +2661,10 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                               </TextRun>
                                                             </TextRuns>
                                                             <Style>
-                                                              <TextAlign>Left</TextAlign>
+                                                              <TextAlign>Center</TextAlign>
                                                             </Style>
                                                           </Paragraph>
                                                         </Paragraphs>
-                                                        <rd:DefaultName>Textbox122</rd:DefaultName>
                                                         <Style>
                                                           <Border>
                                                             <Color>#e6eefc</Color>
@@ -2704,7 +2684,51 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                     </CellContents>
                                                   </TablixHeader>
                                                   <TablixMembers>
-                                                    <TablixMember />
+                                                    <TablixMember>
+                                                      <TablixHeader>
+                                                        <Size>2.34125cm</Size>
+                                                        <CellContents>
+                                                          <Textbox Name="TH2_ObjectType">
+                                                            <CanGrow>true</CanGrow>
+                                                            <KeepTogether>true</KeepTogether>
+                                                            <Paragraphs>
+                                                              <Paragraph>
+                                                                <TextRuns>
+                                                                  <TextRun>
+                                                                    <Value>=IIF(IsNumeric(Fields!InstanceData.Value) And IsNothing(Fields!InstanceData.Value) = False, SrsResources.Localization.GetString("ObjectType", User!Language),"")</Value>
+                                                                    <Style>
+                                                                      <FontFamily>Segoe UI</FontFamily>
+                                                                      <FontWeight>Bold</FontWeight>
+                                                                    </Style>
+                                                                  </TextRun>
+                                                                </TextRuns>
+                                                                <Style>
+                                                                  <TextAlign>Center</TextAlign>
+                                                                </Style>
+                                                              </Paragraph>
+                                                            </Paragraphs>
+                                                            <Style>
+                                                              <Border>
+                                                                <Color>#e6eefc</Color>
+                                                                <Style>Solid</Style>
+                                                              </Border>
+                                                              <RightBorder>
+                                                                <Style>None</Style>
+                                                              </RightBorder>
+                                                              <BackgroundColor>#c6daf8</BackgroundColor>
+                                                              <VerticalAlign>Middle</VerticalAlign>
+                                                              <PaddingLeft>2pt</PaddingLeft>
+                                                              <PaddingRight>2pt</PaddingRight>
+                                                              <PaddingTop>2pt</PaddingTop>
+                                                              <PaddingBottom>2pt</PaddingBottom>
+                                                            </Style>
+                                                          </Textbox>
+                                                        </CellContents>
+                                                      </TablixHeader>
+                                                      <TablixMembers>
+                                                        <TablixMember />
+                                                      </TablixMembers>
+                                                    </TablixMember>
                                                   </TablixMembers>
                                                 </TablixMember>
                                               </TablixMembers>
@@ -2716,76 +2740,23 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                   </TablixMembers>
                                 </TablixMember>
                               </TablixMembers>
+                              <Visibility>
+                                <Hidden>true</Hidden>
+                                <ToggleItem>TV_ComplianceState</ToggleItem>
+                              </Visibility>
                             </TablixMember>
-                          </TablixMembers>
-                          <Visibility>
-                            <Hidden>true</Hidden>
-                            <ToggleItem>TV_ComplianceState</ToggleItem>
-                          </Visibility>
-                        </TablixMember>
-                        <TablixMember>
-                          <TablixHeader>
-                            <Size>3.43265cm</Size>
-                            <CellContents>
-                              <Textbox Name="TV_Computers_Label">
-                                <CanGrow>true</CanGrow>
-                                <KeepTogether>true</KeepTogether>
-                                <Paragraphs>
-                                  <Paragraph>
-                                    <TextRuns>
-                                      <TextRun>
-                                        <Value>Computers</Value>
-                                        <Style>
-                                          <FontFamily>Segoe UI</FontFamily>
-                                          <FontWeight>Bold</FontWeight>
-                                        </Style>
-                                      </TextRun>
-                                    </TextRuns>
-                                    <Style>
-                                      <TextAlign>Left</TextAlign>
-                                    </Style>
-                                  </Paragraph>
-                                </Paragraphs>
-                                <Style>
-                                  <Border>
-                                    <Color>#c6daf8</Color>
-                                    <Style>Solid</Style>
-                                  </Border>
-                                  <TopBorder>
-                                    <Style>None</Style>
-                                  </TopBorder>
-                                  <BottomBorder>
-                                    <Style>Solid</Style>
-                                  </BottomBorder>
-                                  <LeftBorder>
-                                    <Style>Solid</Style>
-                                  </LeftBorder>
-                                  <RightBorder>
-                                    <Style>None</Style>
-                                  </RightBorder>
-                                  <BackgroundColor>#9eb6e4</BackgroundColor>
-                                  <VerticalAlign>Middle</VerticalAlign>
-                                  <PaddingLeft>2pt</PaddingLeft>
-                                  <PaddingRight>2pt</PaddingRight>
-                                  <PaddingTop>2pt</PaddingTop>
-                                  <PaddingBottom>2pt</PaddingBottom>
-                                </Style>
-                              </Textbox>
-                            </CellContents>
-                          </TablixHeader>
-                          <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>2.5cm</Size>
+                                <Size>3.43265cm</Size>
                                 <CellContents>
-                                  <Textbox Name="Textbox14">
+                                  <Textbox Name="TV_Computers_Label">
                                     <CanGrow>true</CanGrow>
                                     <KeepTogether>true</KeepTogether>
                                     <Paragraphs>
                                       <Paragraph>
                                         <TextRuns>
                                           <TextRun>
-                                            <Value />
+                                            <Value>Computers</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
                                               <FontWeight>Bold</FontWeight>
@@ -2797,7 +2768,6 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                         </Style>
                                       </Paragraph>
                                     </Paragraphs>
-                                    <rd:DefaultName>Textbox14</rd:DefaultName>
                                     <Style>
                                       <Border>
                                         <Color>#c6daf8</Color>
@@ -2828,9 +2798,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                               <TablixMembers>
                                 <TablixMember>
                                   <TablixHeader>
-                                    <Size>4.61667cm</Size>
+                                    <Size>2.94978cm</Size>
                                     <CellContents>
-                                      <Textbox Name="Textbox37">
+                                      <Textbox Name="Textbox14">
                                         <CanGrow>true</CanGrow>
                                         <KeepTogether>true</KeepTogether>
                                         <Paragraphs>
@@ -2849,7 +2819,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                             </Style>
                                           </Paragraph>
                                         </Paragraphs>
-                                        <rd:DefaultName>Textbox37</rd:DefaultName>
+                                        <rd:DefaultName>Textbox14</rd:DefaultName>
                                         <Style>
                                           <Border>
                                             <Color>#c6daf8</Color>
@@ -2880,9 +2850,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                   <TablixMembers>
                                     <TablixMember>
                                       <TablixHeader>
-                                        <Size>2.5cm</Size>
+                                        <Size>4.61667cm</Size>
                                         <CellContents>
-                                          <Textbox Name="Textbox54">
+                                          <Textbox Name="Textbox37">
                                             <CanGrow>true</CanGrow>
                                             <KeepTogether>true</KeepTogether>
                                             <Paragraphs>
@@ -2901,7 +2871,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                 </Style>
                                               </Paragraph>
                                             </Paragraphs>
-                                            <rd:DefaultName>Textbox54</rd:DefaultName>
+                                            <rd:DefaultName>Textbox37</rd:DefaultName>
                                             <Style>
                                               <Border>
                                                 <Color>#c6daf8</Color>
@@ -2932,9 +2902,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                       <TablixMembers>
                                         <TablixMember>
                                           <TablixHeader>
-                                            <Size>3.4525cm</Size>
+                                            <Size>2.5cm</Size>
                                             <CellContents>
-                                              <Textbox Name="Textbox97">
+                                              <Textbox Name="Textbox54">
                                                 <CanGrow>true</CanGrow>
                                                 <KeepTogether>true</KeepTogether>
                                                 <Paragraphs>
@@ -2953,7 +2923,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                     </Style>
                                                   </Paragraph>
                                                 </Paragraphs>
-                                                <rd:DefaultName>Textbox97</rd:DefaultName>
+                                                <rd:DefaultName>Textbox54</rd:DefaultName>
                                                 <Style>
                                                   <Border>
                                                     <Color>#c6daf8</Color>
@@ -2984,9 +2954,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>3.34667cm</Size>
+                                                <Size>3.4525cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="Textbox76">
+                                                  <Textbox Name="Textbox97">
                                                     <CanGrow>true</CanGrow>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
@@ -3005,7 +2975,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                         </Style>
                                                       </Paragraph>
                                                     </Paragraphs>
-                                                    <rd:DefaultName>Textbox76</rd:DefaultName>
+                                                    <rd:DefaultName>Textbox97</rd:DefaultName>
                                                     <Style>
                                                       <Border>
                                                         <Color>#c6daf8</Color>
@@ -3036,9 +3006,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>2.34125cm</Size>
+                                                    <Size>3.34667cm</Size>
                                                     <CellContents>
-                                                      <Textbox Name="Textbox123">
+                                                      <Textbox Name="Textbox76">
                                                         <CanGrow>true</CanGrow>
                                                         <KeepTogether>true</KeepTogether>
                                                         <Paragraphs>
@@ -3057,7 +3027,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                             </Style>
                                                           </Paragraph>
                                                         </Paragraphs>
-                                                        <rd:DefaultName>Textbox123</rd:DefaultName>
+                                                        <rd:DefaultName>Textbox76</rd:DefaultName>
                                                         <Style>
                                                           <Border>
                                                             <Color>#c6daf8</Color>
@@ -3086,7 +3056,61 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                                     </CellContents>
                                                   </TablixHeader>
                                                   <TablixMembers>
-                                                    <TablixMember />
+                                                    <TablixMember>
+                                                      <TablixHeader>
+                                                        <Size>2.34125cm</Size>
+                                                        <CellContents>
+                                                          <Textbox Name="Textbox123">
+                                                            <CanGrow>true</CanGrow>
+                                                            <KeepTogether>true</KeepTogether>
+                                                            <Paragraphs>
+                                                              <Paragraph>
+                                                                <TextRuns>
+                                                                  <TextRun>
+                                                                    <Value />
+                                                                    <Style>
+                                                                      <FontFamily>Segoe UI</FontFamily>
+                                                                      <FontWeight>Bold</FontWeight>
+                                                                    </Style>
+                                                                  </TextRun>
+                                                                </TextRuns>
+                                                                <Style>
+                                                                  <TextAlign>Left</TextAlign>
+                                                                </Style>
+                                                              </Paragraph>
+                                                            </Paragraphs>
+                                                            <rd:DefaultName>Textbox123</rd:DefaultName>
+                                                            <Style>
+                                                              <Border>
+                                                                <Color>#c6daf8</Color>
+                                                                <Style>Solid</Style>
+                                                              </Border>
+                                                              <TopBorder>
+                                                                <Style>None</Style>
+                                                              </TopBorder>
+                                                              <BottomBorder>
+                                                                <Style>Solid</Style>
+                                                              </BottomBorder>
+                                                              <LeftBorder>
+                                                                <Style>Solid</Style>
+                                                              </LeftBorder>
+                                                              <RightBorder>
+                                                                <Style>None</Style>
+                                                              </RightBorder>
+                                                              <BackgroundColor>#9eb6e4</BackgroundColor>
+                                                              <VerticalAlign>Middle</VerticalAlign>
+                                                              <PaddingLeft>2pt</PaddingLeft>
+                                                              <PaddingRight>2pt</PaddingRight>
+                                                              <PaddingTop>2pt</PaddingTop>
+                                                              <PaddingBottom>2pt</PaddingBottom>
+                                                            </Style>
+                                                          </Textbox>
+                                                        </CellContents>
+                                                      </TablixHeader>
+                                                      <TablixMembers>
+                                                        <TablixMember />
+                                                      </TablixMembers>
+                                                    </TablixMember>
                                                   </TablixMembers>
                                                 </TablixMember>
                                               </TablixMembers>
@@ -3098,9 +3122,9 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                                   </TablixMembers>
                                 </TablixMember>
                               </TablixMembers>
+                              <KeepWithGroup>Before</KeepWithGroup>
                             </TablixMember>
                           </TablixMembers>
-                          <KeepWithGroup>Before</KeepWithGroup>
                         </TablixMember>
                       </TablixMembers>
                     </TablixMember>
@@ -3249,7 +3273,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>2.5cm</Size>
+                                <Size>2.94978cm</Size>
                                 <CellContents>
                                   <Textbox Name="Textbox138">
                                     <CanGrow>true</CanGrow>
@@ -3572,7 +3596,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
             <Top>1.22349cm</Top>
             <Left>0.09525cm</Left>
             <Height>3cm</Height>
-            <Width>54.631cm</Width>
+            <Width>55.08078cm</Width>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -3694,7 +3718,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
             <Top>0.42917in</Top>
             <Left>0.02387in</Left>
             <Height>0in</Height>
-            <Width>21.52189in</Width>
+            <Width>21.69898in</Width>
             <ZIndex>2</ZIndex>
             <Style>
               <Border>
@@ -3733,7 +3757,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
           <BackgroundColor>#6e7b8b</BackgroundColor>
         </Style>
       </Body>
-      <Width>54.88499cm</Width>
+      <Width>55.30832cm</Width>
       <Page>
         <PageHeader>
           <Height>2.54668cm</Height>
@@ -3744,7 +3768,7 @@ SELECT dbo.fn_LShortNameToLCID(@Locale)</CommandText>
               <Top>0.60597in</Top>
               <Left>0.02387in</Left>
               <Height>0in</Height>
-              <Width>21.52189in</Width>
+              <Width>21.69898in</Width>
               <Style>
                 <Border>
                   <Color>White</Color>

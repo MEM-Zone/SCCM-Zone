@@ -4,17 +4,16 @@
 .DESCRIPTION
     Gets the Compliance and Actual Values of a Configuration Baseline setting result.
 .NOTES
-    Created by
-        Ioan Popovici   2017-09-22
-    Requires
-        SQL, SCCM Configuration Baseline
-    Release notes
-        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Reporting/Compliance/CB%20Configuration%20Baseline%20Compliance/CHANGELOG.md
-    Part of a report should not be run separately.
+    Created by Ioan Popovici
+    Requires SSRS/SQL, SCCM Configuration Baseline
 .LINK
-    https://SCCM-Zone.com
+    BlogPost: https://sccm-zone.com/baseline-reporting-with-actual-values-output-in-sccm-73fec334ba8f
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    Changes : https://SCCM.Zone/cb-configuration-baseline-compliance-changelog
+.LINK
+    Github  : https://SCCM.Zone/cb-configuration-baseline-compliance
+.LINK
+    Issues  : https://SCCM.Zone/issues
 */
 
 /*##=============================================*/
@@ -23,7 +22,7 @@
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs     AS NVARCHAR(250) = 1;
---DECLARE @CollectionID AS NVARCHAR(10)  = 'A01000B3';
+--DECLARE @CollectionID AS NVARCHAR(10)  = 'A01000EC';
 --DECLARE @LocaleID     AS INT           = 2;
 --DECLARE @BaselineID   AS INT           = 503286;
 
@@ -147,13 +146,33 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
         AND CIRules.CIVersion = CISettingsStatus.CIVersion --Select only curent baseline version
     INNER JOIN fn_ListCISettings(@LocaleID) AS CISettings ON CISettings.Setting_UniqueID = CISettingsStatus.Setting_UniqueID
         AND CISettings.CIVersion = CISettingsStatus.CIVersion
-    INNER JOIN fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.CI_ID = @BaselineID
+    INNER JOIN fn_rbac_ListCI_ComplianceState(@LocaleID, @UserSIDs) AS CIComplianceState ON CIComplianceState.ResourceID = CollectionMembers.ResourceID
+        AND CIComplianceState.CI_ID = @BaselineID
 WHERE CollectionMembers.CollectionID = @CollectionID
     AND CISettingsStatus.CI_ID IN (SELECT CIID FROM @CIID)
+	AND CIComplianceState.ComplianceStateName != 'Error' --We are adding errors below, removing artefacts if any
+
+/* Get error data and add it to ComplianceInfo table */
+INSERT INTO @ComplianceInfo (ResourceID, ComplianceState, UserName, CIVersion, SettingVersion, SettingName, RuleName, Criteria, ActualValue, InstanceData)
+SELECT
+    ResourceID        = ErrorDetails.AssetID
+    , ComplianceState = 'Error'
+    , UserName        = ErrorDetails.ADUserName
+    , CIVersion       = ErrorDetails.BLRevision
+    , SettingVersion  = ErrorDetails.Revision
+    , SettigName      = ErrorDetails.CIName
+    , RuleName        = ErrorDetails.ObjectName
+    , Criteria        = ErrorDetails.ObjectTypeName
+    , ActualValue     = ErrorDetails.ErrorTypeDisplay
+    , InstanceData    = ErrorDetails.ErrorCode
+FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
+INNER JOIN fn_DCMDeploymentErrorDetailsPerAsset(@LocaleID) AS ErrorDetails ON ErrorDetails.AssetID = CollectionMembers.ResourceID
+    AND ErrorDetails.BL_ID = @BaselineID
+WHERE CollectionMembers.CollectionID = @CollectionID
 
 /* Join SystemsInfo and ComplianceInfo data */
 SELECT
-    ComplianceState = ( SELECT ISNULL(ComplianceInfo.ComplianceState, 'Unknown' ))
+    ComplianceState   = ( SELECT ISNULL(ComplianceInfo.ComplianceState, 'Unknown' ))
     , Managed         = SystemsInfo.Managed
     , ClientState     = SystemsInfo.ClientState
     , DeviceName      = SystemsInfo.DeviceName
@@ -170,6 +189,7 @@ SELECT
     , Severity        = ComplianceInfo.Severity
 FROM @SystemsInfo AS SystemsInfo
     LEFT JOIN @ComplianceInfo AS ComplianceInfo ON ComplianceInfo.ResourceID = SystemsInfo.ResourceID
+WHERE DeviceName != '' --Eliminate artefacts with no device name
 ORDER BY
     ComplianceState
     , Managed
