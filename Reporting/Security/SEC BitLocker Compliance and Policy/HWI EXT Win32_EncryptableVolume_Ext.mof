@@ -1,4 +1,4 @@
-//——————————————— // BitLocker Status Definitions //———————————————
+//——————————————— // BitLocker Status //———————————————
 
 //-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists
 #PRAGMA Namespace   ("\\\\.\\Root\\CIMv2")

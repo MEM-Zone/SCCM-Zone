@@ -1,4 +1,4 @@
-//——————————————— // BitLocker Status Reporting //———————————————
+//——————————————— // BitLocker Status Definitions //———————————————
 
 //-- Set default Namespace and delete the Win32_EncryptableVolume_Ext if it already exists. Use only inside of Configuration.mof
 //#PRAGMA Namespace     ("\\\\.\\Root\\CIMv2\\SMS")
