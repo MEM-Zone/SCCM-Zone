@@ -113,7 +113,7 @@ SELECT
 	, BitlockerPolicy                  =
     (
 
-    /* Only keys with values will be selected. It looks like shit, need to create a function in SSRS fro this */
+    /* Only keys with values will be selected. It looks like shit, need to create a function in SSRS for this */
         SELECT
             'General:;;'
             + CASE ActiveDirectoryBackup0        WHEN '' THEN '' ELSE 'ActiveDirectoryBackup'                        + ' = ' + COALESCE(CAST(ActiveDirectoryBackup0        AS NVARCHAR), '') + ';' END
