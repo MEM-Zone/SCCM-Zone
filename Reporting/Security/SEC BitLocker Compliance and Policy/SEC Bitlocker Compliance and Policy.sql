@@ -7,7 +7,7 @@
     Created by Ioan Popovici
     Requires SCCM with SSRS/SQL, HWI Extension
 .LINK
-    BlogPost: https://SCCM-Zone.com/baseline-reporting-with-actual-values-output-in-sccm-73fec334ba8f
+    BlogPost: https://sccm-zone.com/bitlocker-compliance-and-policy-reporting-with-sccm-86539b6940a6
 .LINK
     Changes : https://SCCM.Zone/sec-bitlocker-compliance-and-policy-CHANGELOG
 .LINK
