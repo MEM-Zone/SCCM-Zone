@@ -1,30 +1,30 @@
 <#
-*********************************************************************************************************
-* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2017-09-26 | v1.0     | First version                                                 *
-* Ioan Popovici | 2017-09-26 | v1.1     | Fixed compliance output                                       *
-* Ioan Popovici | 2017-10-11 | v1.2     | Removed result table headers                                  *
-* Ioan Popovici | 2017-10-11 | v1.3     | Added automatic space removal for cerSerialNumber             *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
-    This PowerShell Script is used to find a certificate in the certificate store.
+    Selects a certificate in the certificate store.
 .DESCRIPTION
-    This PowerShell Script is used to find a certificate in a specified certificate store using the certificate Serial Number.
+    Selects a certificate in a specified certificate store using the certificate Serial Number.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Select-Certificate.ps1
+    Select-Certificate.ps1
 .NOTES
-    Credit to FTW:
-    https://home.configmgrftw.com/certificate-deployment-with-configmgr/
+    Created by Ioan Popovici
 .LINK
-    https://SCCM-Zone.com
-    https://github.com/Ioan-Popovici/SCCMZone
+    Credit  : https://SCCM.Zone/Add-Certificate-CREDIT (FTW)
+.LINK
+    BlogPost: https://SCCM.Zone/Add-Certificate
+.LINK
+    Changes : https://SCCM.Zone/Select-Certificate-CHANGELOG
+.LINK
+    Github  : https://SCCM.Zone/Select-Certificate-GIT
+.LINK
+    Issues  : https://SCCM.Zone/Issues
+.COMPONENT
+    Certificate Store
+.FUNCTIONALITY
+    Select certificate
 #>
+
+## Set script requirements
+#Requires -Version 3.0
 
 ##*=============================================
 ##* VARIABLE DECLARATION
@@ -100,8 +100,9 @@ Function Select-Certificate {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
-    https://github.com/Ioan-Popovici/SCCMZone
+    Github  : https://SCCM.Zone/Select-Certificate-GIT
+.LINK
+    Issues  : https://SCCM.Zone/Issues
 #>
     [CmdletBinding()]
     Param (
