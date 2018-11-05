@@ -1,29 +1,32 @@
 <#
-*********************************************************************************************************
-* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2017-09-26 | v1.0     | First version                                                 *
-* Ioan Popovici | 2017-10-11 | v1.1     | Removed result table headers, fixed result object output      *
-* Ioan Popovici | 2017-10-11 | v1.2     | Added Error Handling                                          *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
-    This PowerShell Script is used to add a certificate to the certificate store.
+    Adds a certificate to the certificate store.
 .DESCRIPTION
-    This PowerShell Script is used to add a certificate to the certificate store using the certificate key in base64 format.
+    Adds a certificate to the certificate store using the certificate key in base64 format.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Add-Certificate.ps1
+    Add-Certificate.ps1
+.INPUTS
+    None.
+.OUTPUTS
+    System.String.
 .NOTES
-    Credit to FTW:
-    https://home.configmgrftw.com/certificate-deployment-with-configmgr/
+    Created by Ioan Popovici
 .LINK
-    https://SCCM-Zone.com
-    https://github.com/Ioan-Popovici/SCCMZone
+    Credit  : https://home.configmgrftw.com/certificate-deployment-with-configmgr/ (FTW)
+.LINK
+    BlogPost: https://SCCM.Zone/Add-Certificate
+.LINK
+    Github  : https://SCCM.Zone/Add-Certificate-GIT
+.LINK
+    Issues  : https://SCCM.Zone/Issues
+.COMPONENT
+    Certificate Store
+.FUNCTIONALITY
+    Add certificate
 #>
+
+## Set script requirements
+#Requires -Version 3.0
 
 ##*=============================================
 ##* VARIABLE DECLARATION
@@ -65,58 +68,59 @@
 
 #region Function Add-Certificate
 Function Add-Certificate {
-    <#
-    .SYNOPSIS
-        This function is used to add a certificate to the certificate store.
-    .DESCRIPTION
-        This function is used to add a certificate to the certificate store using the certificate base64 key.
-    .PARAMETER cerStringBase64
-        The certificate key to add in base64 format.
-    .PARAMETER cerStoreLocation
-        The certificate Store Location to search. The Default value used is 'LocalMachine'.
-        Available Values:
-            CurrentUser
-            LocalMachine
-    .PARAMETER cerStoreName
-        The certificate Store Name to search.
-        Available Values for CurentUser:
-            ACRS
-            SmartCardRoot
-            Root
-            Trust
-            AuthRoot
-            CA
-            UserDS
-            Disallowed
-            My
-            TrustedPeople
-            TrustedPublisher
-            ClientAuthIssuer
-        Available Values for LocalMachine:
-            rustedPublisher
-            ClientAuthIssuer
-            Remote Desktop
-            Root
-            TrustedDevices
-            WebHosting
-            CA
-            WSUS
-            Request
-            AuthRoot
-            TrustedPeople
-            My
-            SmartCardRoot
-            Trust
-            Disallowed
-            SMS
-    .EXAMPLE
-        Add-Certificate -cerStringBase64 $cerStringBase64 -cerStoreName 'TrustedPublisher'
-    .NOTES
-        This is an internal script function and should typically not be called directly.
-    .LINK
-        https://SCCM-Zone.com
-        https://github.com/Ioan-Popovici/SCCMZone
-    #>
+<#
+.SYNOPSIS
+    This function is used to add a certificate to the certificate store.
+.DESCRIPTION
+    This function is used to add a certificate to the certificate store using the certificate base64 key.
+.PARAMETER cerStringBase64
+    The certificate key to add in base64 format.
+.PARAMETER cerStoreLocation
+    The certificate Store Location to search. The Default value used is 'LocalMachine'.
+    Available Values:
+        CurrentUser
+        LocalMachine
+.PARAMETER cerStoreName
+    The certificate Store Name to search.
+    Available Values for CurentUser:
+        ACRS
+        SmartCardRoot
+        Root
+        Trust
+        AuthRoot
+        CA
+        UserDS
+        Disallowed
+        My
+        TrustedPeople
+        TrustedPublisher
+        ClientAuthIssuer
+    Available Values for LocalMachine:
+        rustedPublisher
+        ClientAuthIssuer
+        Remote Desktop
+        Root
+        TrustedDevices
+        WebHosting
+        CA
+        WSUS
+        Request
+        AuthRoot
+        TrustedPeople
+        My
+        SmartCardRoot
+        Trust
+        Disallowed
+        SMS
+.EXAMPLE
+    Add-Certificate -cerStringBase64 $cerStringBase64 -cerStoreName 'TrustedPublisher'
+.NOTES
+    This is an internal script function and should typically not be called directly.
+.LINK
+    Github  : https://SCCM.Zone/Add-Certificate-GIT
+.LINK
+    Issues  : https://SCCM.Zone/Issues
+#>
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory=$true,Position=0)]
