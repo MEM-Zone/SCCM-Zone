@@ -14,7 +14,7 @@
     Namespace       ("\\\\.\\Root\\CIMV2")
 ]
 //-  Class properties
-Class Win32_EncryptableVolume_Ext : SMS_Class_Template
+Class Win32_EncryptableVolume_Ext
 {
     [ SMS_Report (TRUE), KEY ]
     String              DeviceID;

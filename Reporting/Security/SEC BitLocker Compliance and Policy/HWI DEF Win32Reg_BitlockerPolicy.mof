@@ -15,7 +15,7 @@
     SMS_Context_2   ("__RequiredArchitecture=true|Boolean")
 ]
 //-  Class properties
-Class Win32Reg_BitLockerPolicy : SMS_Class_Template
+Class Win32Reg_BitLockerPolicy
 {
     [ SMS_Report (TRUE), KEY ]
     String    KeyName;
