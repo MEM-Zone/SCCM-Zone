@@ -4,7 +4,7 @@
 
 ### Changes
 
-* Added Error Handling
+    * Added Error Handling
 
 ## 1.1 - 2017-10-11
 
