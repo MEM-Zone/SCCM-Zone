@@ -12,9 +12,11 @@
 .NOTES
     Created by Ioan Popovici
 .LINK
-    Credit  : https://home.configmgrftw.com/certificate-deployment-with-configmgr/ (FTW)
+    Credit  : https://SCCM.Zone/Add-Certificate-CREDIT (FTW)
 .LINK
     BlogPost: https://SCCM.Zone/Add-Certificate
+.LINK
+    Changes : https://SCCM.Zone/Add-Certificate-CHANGELOG
 .LINK
     Github  : https://SCCM.Zone/Add-Certificate-GIT
 .LINK
