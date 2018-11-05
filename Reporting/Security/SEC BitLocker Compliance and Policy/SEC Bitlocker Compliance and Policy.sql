@@ -7,13 +7,13 @@
     Created by Ioan Popovici
     Requires SCCM with SSRS/SQL, HWI Extension
 .LINK
-    BlogPost: https://sccm-zone.com/bitlocker-compliance-and-policy-reporting-with-sccm-86539b6940a6
+    BlogPost: https://SCCM.Zone/SEC-BitLocker-Compliance-And-Policy
 .LINK
-    Changes : https://SCCM.Zone/sec-bitlocker-compliance-and-policy-CHANGELOG
+    Changes : https://SCCM.Zone/SEC-BitLocker-Compliance-And-Policy-CHANGELOG
 .LINK
-    Github  : https://SCCM.Zone/sec-bitlocker-compliance-and-policy
+    Github  : https://SCCM.Zone/SEC-BitLocker-Compliance-And-Policy-GIT
 .LINK
-    Issues  : https://SCCM.Zone/issues
+    Issues  : https://SCCM.Zone/Issues
 */
 
 /*##=============================================*/
