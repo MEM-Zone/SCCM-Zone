@@ -31,18 +31,17 @@
 .OUTPUTS
     System.Management.Automation.PSObject
 .NOTES
-    Created by
-        Ioan Popovici   2015-11-13
-    Release notes
-        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Powershell/Clean-CMClientCache/CHANGELOG.md
-    For issue reporting please use github
-        https://github.com/Ioan-Popovici/SCCMZone/issues
+    Created by Ioan Popovici
 .LINK
-    https://SCCM-Zone.com
+    BlogPost: https://SCCM-Zone.com/deleting-the-sccm-cache-the-right-way-3c1de8dc4b48
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    Changes : https://ioan.in/Clean-CMClientCache-CHANGELOG
+.LINK
+    Github  : https://ioan.in/Clean-CMClientCache
+.LINK
+    Issues  : https://ioan.in/SCCM-Zone-ISSUES
 .COMPONENT
-    CM Client Cache
+    CM Client
 .FUNCTIONALITY
     Clean CM Client Cache
 #>

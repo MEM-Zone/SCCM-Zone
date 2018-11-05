@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    This PowerShell script is used get the teredo tunneling interface configuration state.
+    Gets the teredo tunneling interface configuration state.
 .DESCRIPTION
-    This PowerShell script is used get the teredo tunneling interface configuration state for use in a CI as detection script.
+    Gets the teredo tunneling interface configuration state for use in a CI as detection script.
 .NOTES
-    Created by:
+    Created by
         Ioan Popovici   2018-09-11
 #>
 

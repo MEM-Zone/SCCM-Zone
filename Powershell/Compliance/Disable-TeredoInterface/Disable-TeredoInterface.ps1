@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    This PowerShell script is used disable the teredo interface.
+    Disables the teredo interface.
 .DESCRIPTION
-    This PowerShell script is disable get the teredo interface for use in a CI as remediation script.
+    Disables the teredo interface for use in a CI as remediation script.
 .NOTES
-    Created by:
+    Created by
         Ioan Popovici   2018-09-11
 #>
 

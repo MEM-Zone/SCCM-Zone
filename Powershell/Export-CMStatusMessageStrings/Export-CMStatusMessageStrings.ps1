@@ -32,6 +32,10 @@
 .OUTPUTS
     System.String. This script outputs to a csv file
 .NOTES
+    Created by
+        Ioan Popovici
+    Changelog
+        
     Credit to SaudM, Vadims Podāns
     This script can be called directly.
 .LINK
@@ -44,6 +48,10 @@
     https://SCCM-Zone.com
 .LINK
     https://github.com/Ioan-Popovici/SCCMZone
+.COMPONENT
+    CM
+.FUNCTIONALITY
+    Export CM status messages
 #>
 
 ##*=============================================

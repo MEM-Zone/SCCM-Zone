@@ -1,20 +1,8 @@
 <#
-*********************************************************************************************************
-* Created by Ioan Popovici   | Requires PowerShell 3.0, SCCM Server                                     *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2016-10-26 | v1.0     | First version                                                 *
-* Ioan Popovici | 2017-09-11 | v1.1     | Fixed $ScriptName variable                                    *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
-    This PowerShell script is used to disable SCCM push install for a specified collection.
+    Disables SCCM push install for a specified collection.
 .DESCRIPTION
-    This PowerShell script is used to disable SCCM push install for a specified collection using the
-    ExcludeServers registry key. This script is using CIM instead of SCCM CommandLets.
+    Disables SCCM push install for a specified collection using the ExcludeServers registry key.
 .PARAMETER CMSiteServer
     The NetBIOS name of the SCCM Site Server.
 .PARAMETER CMCollection
@@ -22,14 +10,36 @@
 .PARAMETER DeleteAllCollectionMembers
     Optional switch used to Delete all Collection Device Members  and their discovery data using CIM (blazing fast :P).
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoProfile -File Disable-CMPushDeviceCollection.ps1 -CMSiteServer 'SiteServerName' -CMCollection 'Exclude from Push Collection' -DeleteAllCollectionMembers
+    Disable-CMPushDeviceCollection.ps1 -CMSiteServer 'SiteServerName' -CMCollection 'Exclude from Push Collection' -DeleteAllCollectionMembers
+.INPUTS
+    System.String.
+.OUTPUTS
+    System.String.
 .NOTES
-    This script can be run using SCCM status filter rules, on collection membership change.
-    DeleteAllCollectionMembers switch does not remove collection queries.
+    Created by
+        Ioan Popovici   2016-10-26
+    Requirements
+        Configuration Manager
+    Changelog
+        # 2016-10-26 - v1.0
+            * First version
+        # 2017-09-11 - v1.1
+            * Fixed $ScriptName variable
+    Important
+        This script can be run using SCCM status filter rules, on collection membership change.
+        DeleteAllCollectionMembers switch does not remove collection queries.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
+.COMPONENT
+    CM
+.FUNCTIONALITY
+    Disable push install for a CM collectionw
 #>
+
+## Set script requirements
+#Requires -Version 3.0
 
 ##*=============================================
 ##* VARIABLE DECLARATION
@@ -116,6 +126,7 @@ Function Write-Log {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -231,6 +242,7 @@ Function Send-Mail {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -287,6 +299,7 @@ Function Get-SMSProviderLocation {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -332,6 +345,7 @@ Function Get-CimCollectionMembers {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -383,6 +397,7 @@ Function Remove-CimCollectionMembers {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]

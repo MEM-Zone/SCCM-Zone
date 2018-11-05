@@ -1,30 +1,42 @@
 <#
-*********************************************************************************************************
-* Created by Ioan Popovici   | Requires PowerShell 3.0, SCCM client SDK, local FS only.                 *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2016-09-23 | v1.0     | First version                                                 *
-* Ioan Popovici | 2016-09-27 | v1.1     | Bugfixes, error handling                                      *
-* Ioan Popovici | 2017-09-11 | v1.2     | Fixed $ScriptName variable                                    *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
-    This PowerShell script is used to add computers from a txt file to a SCCM device collection.
+    Adds computers from a txt file to a SCCM device collection.
 .DESCRIPTION
-    This PowerShell script is used to add computers from a txt file to a SCCM device collection, triggered when the txt file is saved.
+    Adds computers from a txt file to a SCCM device collection, triggered when the txt file is saved.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File Add-CMDeviceDirectMemebershipRules.ps1
+    Add-CMDeviceDirectMemebershipRules.ps1
+.INPUTS
+    None.
+.OUTPUTS
+    System.String.
 .NOTES
+    Created by
+        Ioan Popovici
+    Requirements
+        * SCCM client SDK
+        * Local file system only
+    Changelog
+        # 2016-09-23 - v1.0
+            * First version
+        # 2016-09-27 - v1.1
+            * Bugfixes, error handling
+        # 2017-09-11- v1.2
+            * Fixed $ScriptName variable
     To do:
-    * Remove direct membership rules using CIM.
-    * Add option to add new computers without removing all direct membership rules first.
+        * Remove direct membership rules using CIM.
+        * Add option to add new computers without removing all direct membership rules first.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
+.COMPONENT
+    CM
+.FUNCTIONALITY
+    Add computers to collection
 #>
+
+## Set script requirements
+#Requires -Version 3.0
 
 ##*=============================================
 ##* VARIABLE DECLARATION
@@ -94,6 +106,7 @@ Function Write-Log {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -209,6 +222,7 @@ Function Send-Mail {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -265,6 +279,7 @@ Function Get-DeviceDirectMembershipRules {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -309,6 +324,7 @@ Function Remove-DeviceDirectMembershipRule {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -359,6 +375,7 @@ Function Add-DeviceDirectMembershipRule {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]
@@ -406,6 +423,7 @@ Function Start-DataProcessing {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     ## Import SCCM PSH module and changing context
@@ -530,6 +548,7 @@ Function Test-FileChangeEvent {
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
 #>
     [CmdletBinding()]

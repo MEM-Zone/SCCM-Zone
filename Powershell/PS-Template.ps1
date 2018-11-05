@@ -1,26 +1,33 @@
 <#
-*********************************************************************************************************
-* Created by Ioan Popovici   | Requires PowerShell 3.0                                                  *
-* ===================================================================================================== *
-* Modified by   |    Date    | Revision | Comments                                                      *
-* _____________________________________________________________________________________________________ *
-* Ioan Popovici | 2017-09-06 | v1.0     | First version                                                 *
-* ===================================================================================================== *
-*                                                                                                       *
-*********************************************************************************************************
-
 .SYNOPSIS
-    This PowerShell Script is used to --.
+    --.
 .DESCRIPTION
-    This PowerShell Script is used to --.
+    --.
 .EXAMPLE
-    C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe -NoExit -NoProfile -File --.ps1
+    --.ps1
+.INPUTS
+    None.
+.OUTPUTS
+    None.
 .NOTES
-    --
+    Created by
+        Ioan Popovici
+    Changelog
+        # YYYY-MM-dd - v1.0
+            * First version
+    Credit to --
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
+.COMPONENT
+    --
+.FUNCTIONALITY
+    --
 #>
+
+## Set script requirements
+#Requires -Version 3.0
 
 ##*=============================================
 ##* VARIABLE DECLARATION
@@ -38,7 +45,7 @@
 #region FunctionListings
 
 #region Function --
-Function -- {
+Function Verb- {
 <#
 .SYNOPSIS
     --.
@@ -48,11 +55,20 @@ Function -- {
     --.
 .EXAMPLE
     --
+.INPUTS
+    None.
+.OUTPUTS
+    None.
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
     https://SCCM-Zone.com
+.LINK
     https://github.com/Ioan-Popovici/SCCMZone
+.COMPONENT
+    --
+.FUNCTIONALITY
+    --
 #>
     [CmdletBinding()]
     Param (
