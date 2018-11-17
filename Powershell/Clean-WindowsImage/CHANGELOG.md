@@ -1,5 +1,11 @@
 # Clean-WindowsImage release history
 
+## 2.8 - 2018-11-17
+
+### Changes
+
+    * Added support for windows server 2019
+
 ## 2.7 - 2018-10-18
 
 ### Changes

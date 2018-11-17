@@ -222,6 +222,9 @@ If ($MachineOS) {
         'Windows Server 2016' {
             Start-Cleanup ('updCacheCleanup', 'comCacheCleanup', 'ccmCacheCleanup')
         }
+        'Windows Server 2019' {
+            Start-Cleanup ('updCacheCleanup', 'comCacheCleanup', 'ccmCacheCleanup')
+        }
         Default {
             Write-Host "Unknown Operating System, Skipping Cleanup! `n" -ForegroundColor 'Red' -BackgroundColor 'Black'
         }
