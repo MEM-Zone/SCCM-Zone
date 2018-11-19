@@ -42,7 +42,7 @@ Param (
     [switch]$CleanCCMCache = $false
 )
 ## Variables: Get Machine Operating System
-[String]$RegExPattern = '(Windows\ (?:7|8\.1|8|10|Server\ (?:2008\ R2|2012\ R2|2012|2016)))'
+[String]$RegExPattern = '(Windows\ (?:7|8\.1|8|10|Server\ (?:2008\ R2|2012\ R2|2012|2016|2019)))'
 [String]$MachineOS = (Get-WmiObject -Class 'Win32_OperatingSystem' | Select-Object -ExpandProperty 'Caption' | `
     Select-String -AllMatches -Pattern $RegExPattern | Select-Object -ExpandProperty 'Matches').Value
 ## Variables: Get Volume Caches registry paths

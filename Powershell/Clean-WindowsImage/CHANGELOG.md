@@ -1,5 +1,11 @@
 # Clean-WindowsImage release history
 
+## 2.9 - 2018-11-19
+
+### Changes
+
+    * Fixed regex pattern for windows server 2019 detection
+
 ## 2.8 - 2018-11-17
 
 ### Changes
