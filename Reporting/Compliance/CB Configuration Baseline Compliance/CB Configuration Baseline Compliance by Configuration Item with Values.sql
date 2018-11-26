@@ -142,7 +142,7 @@ SELECT DISTINCT
         END
 FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
     INNER JOIN fn_rbac_CIComplianceStatusDetail(@UserSIDs) AS CISettingsStatus ON CISettingsStatus.ResourceID = CollectionMembers.ResourceID
-    INNER JOIN fn_rbac_ListCIRules(@LocaleID, @UserSIDs) AS CIRules ON CIRules.Rule_UniqueID = CISettingsStatus.Rule_UniqueID
+    INNER JOIN fn_ListCIRules(@UserSIDs) AS CIRules ON CIRules.Rule_UniqueID = CISettingsStatus.Rule_UniqueID
         AND CIRules.CIVersion = CISettingsStatus.CIVersion --Select only curent baseline version
     INNER JOIN fn_ListCISettings(@LocaleID) AS CISettings ON CISettings.Setting_UniqueID = CISettingsStatus.Setting_UniqueID
         AND CISettings.CIVersion = CISettingsStatus.CIVersion

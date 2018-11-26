@@ -1,5 +1,11 @@
 # CB Configuration Baseline Compliance release history
 
+## 3.2.1 - 2018-11-26
+
+### Changes
+
+    * Fixed missing 'fn_rbac_ListCIRules' function (replaced with 'fn_ListCIRules')
+
 ## 3.2 - 2018-10-29
 
 ### Changes
