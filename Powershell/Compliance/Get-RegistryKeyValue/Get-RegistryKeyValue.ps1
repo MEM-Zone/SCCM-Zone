@@ -6,6 +6,10 @@
 .NOTES
     Created by
         Ioan Popovici   2018-10-23
+.LINK
+    https://SCCM.Zone
+.LINK
+    https://SCCM.Zone/Git
 #>
 
 [PSObject]$RegistryKeys = @(

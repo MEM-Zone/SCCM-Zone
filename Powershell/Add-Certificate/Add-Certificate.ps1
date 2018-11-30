@@ -12,15 +12,15 @@
 .NOTES
     Created by Ioan Popovici
 .LINK
-    Credit  : https://SCCM.Zone/Add-Certificate-CREDIT (FTW)
+    https://SCCM.Zone/Add-Certificate-CREDIT (FTW)
 .LINK
-    BlogPost: https://SCCM.Zone/Add-Certificate
+    https://SCCM.Zone/Add-Certificate
 .LINK
-    Changes : https://SCCM.Zone/Add-Certificate-CHANGELOG
+    https://SCCM.Zone/Add-Certificate-CHANGELOG
 .LINK
-    Github  : https://SCCM.Zone/Add-Certificate-GIT
+    https://SCCM.Zone/Add-Certificate-GIT
 .LINK
-    Issues  : https://SCCM.Zone/Issues
+    https://SCCM.Zone/Issues
 .COMPONENT
     Certificate Store
 .FUNCTIONALITY
@@ -119,9 +119,9 @@ Function Add-Certificate {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    Github  : https://SCCM.Zone/Add-Certificate-GIT
+    https://SCCM.Zone
 .LINK
-    Issues  : https://SCCM.Zone/Issues
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -200,7 +200,7 @@ ForEach ($cerStore in $cerStores) {
 If ($Error.Count -ne 0) {
 
     #  Return result object as an error removing table header for cleaner reporting
-     $host.ui.WriteErrorLine($($Result | Format-Table -HideTableHeaders | Out-String))
+    $host.ui.WriteErrorLine($($Result | Format-Table -HideTableHeaders | Out-String))
 }
 Else {
 

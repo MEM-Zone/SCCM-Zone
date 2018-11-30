@@ -33,13 +33,13 @@
 .NOTES
     Created by Ioan Popovici
 .LINK
-    BlogPost: https://SCCM-Zone.com/deleting-the-sccm-cache-the-right-way-3c1de8dc4b48
+    https://SCCM.Zone/Clean-CMClientCache
 .LINK
-    Changes : https://ioan.in/Clean-CMClientCache-CHANGELOG
+    https://SCCM.Zone/Clean-CMClientCache-CHANGELOG
 .LINK
-    Github  : https://ioan.in/Clean-CMClientCache
+    https://SCCM.Zone/Clean-CMClientCache-GIT
 .LINK
-    Issues  : https://ioan.in/SCCM-Zone-ISSUES
+    https://SCCM.Zone/Issues
 .COMPONENT
     CM Client
 .FUNCTIONALITY
@@ -667,9 +667,9 @@ Function Get-CCMCachedApplications {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -790,9 +790,9 @@ Function Get-CCMCachedPackages {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -907,9 +907,9 @@ Function Get-CCMCachedUpdates {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1022,9 +1022,9 @@ Function Remove-CCMCacheElement {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1154,9 +1154,9 @@ Function Remove-CCMCachedApplications {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1252,9 +1252,9 @@ Function Remove-CCMCachedPackages {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1356,9 +1356,9 @@ Function Remove-CCMCachedUpdates {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY
@@ -1455,9 +1455,9 @@ Function Remove-CCMOrphanedCache {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM Client Cache
 .FUNCTIONALITY

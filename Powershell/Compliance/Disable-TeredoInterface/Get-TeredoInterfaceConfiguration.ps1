@@ -6,6 +6,10 @@
 .NOTES
     Created by
         Ioan Popovici   2018-09-11
+.LINK
+    https://SCCM.Zone
+.LINK
+    https://SCCM.Zone/Git
 #>
 
 Try {

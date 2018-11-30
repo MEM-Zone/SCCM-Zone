@@ -10,18 +10,18 @@
 .OUTPUTS
     None.
 .NOTES
-    Created by
-        Ioan Popovici   2017-07-10
-    Credit
-        Original VBScript by: @mikael_nystrom https://deploymentbunny.com
-    Release notes
-        https://github.com/Ioan-Popovici/SCCMZone/blob/master/Powershell/Clean-WindowsImage/CHANGELOG.md
-    For issue reporting please use github
-        https://github.com/Ioan-Popovici/SCCMZone/issues
+    Created by Ioan Popovici
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone/Clean-WindowsImage-CREDIT (@mikael_nystrom [Deplyment Bunny] - Original VB Script)
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Clean-WindowsImage
+.LINK
+    https://SCCM.Zone/Clean-WindowsImage-CHANGELOG
+.LINK
+    https://SCCM.Zone/Clean-WindowsImage-GIT
+.LINK
+    https://SCCM.Zone/Issues
+.COMPONENT
 .COMPONENT
     Cleanup
 .FUNCTIONALITY
@@ -78,9 +78,9 @@ Function Start-Cleanup {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (

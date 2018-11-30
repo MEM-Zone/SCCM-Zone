@@ -1,38 +1,34 @@
 <#
 .SYNOPSIS
-    Adds computers from a txt file to a SCCM device collection.
+    Adds devices from a txt file to a SCCM device collection.
 .DESCRIPTION
-    Adds computers from a txt file to a SCCM device collection, triggered when the txt file is saved.
+    Adds devices from a txt file to a SCCM device collection, triggered when the txt file is saved.
 .EXAMPLE
     Add-CMDeviceDirectMemebershipRules.ps1
 .INPUTS
-    None.
+    System.String
 .OUTPUTS
     System.String.
 .NOTES
-    Created by
-        Ioan Popovici
+    Created by Ioan Popovici
     Requirements
         * SCCM client SDK
         * Local file system only
-    Changelog
-        # 2016-09-23 - v1.0
-            * First version
-        # 2016-09-27 - v1.1
-            * Bugfixes, error handling
-        # 2017-09-11- v1.2
-            * Fixed $ScriptName variable
-    To do:
+    To do
         * Remove direct membership rules using CIM.
-        * Add option to add new computers without removing all direct membership rules first.
+        * Add option to add new devices without removing all direct membership rules first.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone/Add-CMDeviceDirectMemebershipRules
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Add-CMDeviceDirectMemebershipRules-CHANGELOG
+.LINK
+    https://SCCM.Zone/Add-CMDeviceDirectMemebershipRules-GIT
+.LINK
+    https://SCCM.Zone/Issues
 .COMPONENT
     CM
 .FUNCTIONALITY
-    Add computers to collection
+    Add devices to a collection
 #>
 
 ## Set script requirements
@@ -105,9 +101,9 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -221,9 +217,9 @@ Function Send-Mail {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -278,9 +274,9 @@ Function Get-DeviceDirectMembershipRules {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -323,9 +319,11 @@ Function Remove-DeviceDirectMembershipRule {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    Blog    : https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    Github  : https://SCCM.Zone/Git
+.LINK
+    Issues  : https://SCCM.Zone/Issues
 #>
     [CmdletBinding()]
     Param (
@@ -374,9 +372,9 @@ Function Add-DeviceDirectMembershipRule {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -422,9 +420,9 @@ Function Start-DataProcessing {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     ## Import SCCM PSH module and changing context
     Try {
@@ -547,9 +545,9 @@ Function Test-FileChangeEvent {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (

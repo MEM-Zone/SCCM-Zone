@@ -20,22 +20,17 @@
         Ioan Popovici   2016-10-26
     Requirements
         Configuration Manager
-    Changelog
-        # 2016-10-26 - v1.0
-            * First version
-        # 2017-09-11 - v1.1
-            * Fixed $ScriptName variable
     Important
         This script can be run using SCCM status filter rules, on collection membership change.
         DeleteAllCollectionMembers switch does not remove collection queries.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 .COMPONENT
     CM
 .FUNCTIONALITY
-    Disable push install for a CM collectionw
+    Disable push install for a CM collection
 #>
 
 ## Set script requirements
@@ -125,9 +120,9 @@ Function Write-Log {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -241,9 +236,9 @@ Function Send-Mail {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -298,9 +293,9 @@ Function Get-SMSProviderLocation {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -344,9 +339,9 @@ Function Get-CimCollectionMembers {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
@@ -396,9 +391,9 @@ Function Remove-CimCollectionMembers {
 .NOTES
     This is an internal script function and should typically not be called directly.
 .LINK
-    https://SCCM-Zone.com
+    https://SCCM.Zone
 .LINK
-    https://github.com/Ioan-Popovici/SCCMZone
+    https://SCCM.Zone/Git
 #>
     [CmdletBinding()]
     Param (
